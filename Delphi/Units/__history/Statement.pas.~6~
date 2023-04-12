@@ -1,0 +1,259 @@
+﻿unit Statement;
+
+interface
+
+uses
+  System.Generics.Collections;
+
+type
+
+  TBaseStatement = class abstract
+  private
+    FYStart: Integer;
+    FYLast: Integer;
+    FAction: String;
+  protected
+    constructor Create(AYLast, AYStart: Integer; AAction : String); virtual;
+  public
+    property YStart: Integer read FYStart write FYStart;
+    property YLast: Integer read FYLast write FYLast;
+  end;
+
+  TBlock = class
+  private
+    FXStart: Integer;
+    FXLast: Integer;
+    FStatements: TList<TBaseStatement>;
+  public
+    constructor Create(XLast, XStart: Integer);
+    destructor Destroy; override;
+    property XStart: Integer read FXStart write FXStart;
+    property XLast: Integer read FXLast write FXLast;
+    property Statements: TList<TBaseStatement> read FStatements;
+  end;
+
+
+  IBaseOperator = class abstract(TBaseStatement)
+  private
+    FBlocks: TList<TBlock>;
+  public
+    destructor Destroy; override;
+    property Blocks: TList<TBlock> read FBlocks;
+  end;
+
+  { Сlasses }
+
+
+
+  TProcessStatement = class(TBaseStatement)
+  private
+
+  end;
+
+  TIfBranching = class(TInterfacedObject, IBaseOperator)
+  private
+  public
+    constructor Create(Condition: string; YLast, YStart, XLast, XStart: Integer); override;
+  end;
+
+  {
+  TTestFirstLoop = class(TInterfacedObject, IStatement)
+  private
+    FYStart: Integer;
+    FYLast: Integer;
+    FCondition: string;
+    FBlocks: TList<IBlock>;
+    function GetYStart: Integer;
+    function GetYLast: Integer;
+    function GetBlocks: TList<IBlock>;
+    procedure SetYStart(const Value: Integer);
+    procedure SetYLast(const Value: Integer);
+  public
+    constructor Create(Condition: string; YLast, YStart: Integer);
+    destructor Destroy; override;
+    property YStart: Integer read GetYStart;
+    property YLast: Integer read GetYLast;
+    property Blocks: TList<IBlock> read GetBlocks;
+  end;
+  }
+
+
+
+
+implementation
+
+  { TBaseStatement }
+
+  constructor TBaseStatement.Create(AYLast, AYStart: Integer; AAction : String);
+  begin
+    FAction := FAction;
+    FYStart := YStart;
+    FYLast := YLast;
+  end;
+
+  { IBaseOperator }
+
+  destructor IBaseOperator.Destroy;
+  var
+    I : Integer;
+  begin
+
+    for I := 0 to FBlocks.Count - 1 do
+      FBlocks[i].Destroy;
+
+    FBlocks.Free;
+    inherited;
+  end;
+
+  { TBlock }
+
+  constructor TBlock.Create(XLast, XStart: Integer);
+  begin
+    FStatements := TList<TBaseStatement>.Create;
+    FXStart := XStart;
+    FXLast := XLast;
+  end;
+
+  destructor TBlock.Destroy;
+  var
+    I: Integer;
+  begin
+
+    for I := 0 to FStatements.Count - 1 do
+      FStatements[I].Free;
+
+    FStatements.Free;
+    inherited;
+  end;
+
+
+{
+  { TProcessStatement
+
+  constructor TProcessStatement.Create(Action: string; YLast, YStart: Integer);
+  begin
+    FAction := Action;
+    FYLast := YLast;
+    FYStart := YStart;
+  end;
+
+  function TProcessStatement.GetYStart: Integer;
+  begin
+    Result := FYStart;
+  end;
+
+  function TProcessStatement.GetYLast: Integer;
+  begin
+    Result := FYLast;
+  end;
+
+  procedure TProcessStatement.SetYLast(const Value: Integer);
+  begin
+    FYLast := Value;
+  end;
+
+  procedure TProcessStatement.SetYStart(const Value: Integer);
+  begin
+    FYStart := Value;
+  end;
+
+  { TIfBranching
+
+  constructor TIfBranching.Create(Condition: string; YLast, YStart, XLast, XStart: Integer);
+  begin
+    FCondition := Condition;
+
+    FYStart := YStart;
+    FYLast := YLast;
+
+    FBlocks := TList<IBlock>.Create();
+    FBlocks.Add(TBlock.Create( (XStart + XLast) div 2, XStart));
+    FBlocks.Add(TBlock.Create( XLast, (XStart + XLast) div 2));
+  end;
+
+  destructor TIfBranching.Destroy;
+  var
+    I : Integer;
+  begin
+
+    for I := 0 to FBlocks.Count - 1 do
+      TBlock(FBlocks[i]).Destroy;
+
+    FBlocks.Free;
+    inherited;
+  end;
+
+  function TIfBranching.GetYStart: Integer;
+  begin
+    Result := FYStart;
+  end;
+
+  procedure TIfBranching.SetYStart(const Value: Integer);
+  begin
+    FYStart := Value;
+  end;
+
+  function TIfBranching.GetYLast: Integer;
+  begin
+    Result := FYLast;
+  end;
+
+  procedure TIfBranching.SetYLast(const Value: Integer);
+  begin
+    FYLast := Value;
+  end;
+
+  function TIfBranching.GetBlocks: TList<IBlock>;
+  begin
+    Result := FBlocks;
+  end;
+
+  { TTestFirstLoop
+
+  constructor TTestFirstLoop.Create(Condition: string; YLast, YStart: Integer);
+  begin
+    FCondition := Condition;
+    FYStart := YStart;
+    FYLast := YLast;
+    FBlocks := TList<IBlock>.Create;
+  end;
+
+  destructor TTestFirstLoop.Destroy;
+  var
+    I : Integer;
+  begin
+
+    for I := 0 to FBlocks.Count - 1 do
+      TBlock(FBlocks[i]).Destroy;
+
+    FBlocks.Free;
+    inherited;
+  end;
+
+  function TTestFirstLoop.GetBlocks: TList<IBlock>;
+  begin
+    Result := FBlocks;
+  end;
+
+  function TTestFirstLoop.GetYLast: Integer;
+  begin
+    Result := FYLast;
+  end;
+
+  function TTestFirstLoop.GetYStart: Integer;
+  begin
+    Result := FYStart;
+  end;
+
+  procedure TTestFirstLoop.SetYLast(const Value: Integer);
+  begin
+    FYLast := Value;
+  end;
+
+  procedure TTestFirstLoop.SetYStart(const Value: Integer);
+  begin
+    FYStart := Value;
+  end;
+  }
+
+end.

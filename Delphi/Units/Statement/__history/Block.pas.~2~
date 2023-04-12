@@ -1,0 +1,72 @@
+unit Block;
+
+interface
+uses
+  BaseStatement, System.Generics.Collections;
+type
+
+  TBlock = class
+  private const
+    DefaultBlockSize = 28;
+  private
+    FXStart, FXLast: Integer;
+    FStatements: TList<TBaseStatement>;
+    function GetXStart: Integer;
+    procedure SetXStart(const AValue: Integer);
+    function GetXLast: Integer;
+    procedure SetXLast(const AValue: Integer);
+  public
+    constructor Create(AXLast, AXStart: Integer);
+    destructor Destroy; override;
+    property XStart: Integer read GetXStart write SetXStart;
+    property XLast: Integer read GetXLast write SetXLast;
+    function GetStatementEnumerator: TEnumerator<TBaseStatement>;
+  end;
+
+implementation
+
+  destructor TBlock.Destroy;
+  var
+    I: Integer;
+  begin
+
+    for I := 0 to FStatements.Count - 1 do
+      FStatements[I].Free;
+
+    FStatements.Free;
+    inherited;
+  end;
+
+  constructor TBlock.Create(AXLast, AXStart: Integer);
+  begin
+    FStatements := TList<TBaseStatement>.Create;
+    FXStart := AXStart;
+    FXLast := AXLast;
+  end;
+
+  function TBlock.GetXStart: Integer;
+  begin
+    Result := FXStart;
+  end;
+
+  procedure TBlock.SetXStart(const AValue: Integer);
+  begin
+    FXStart := AValue;
+  end;
+
+  function TBlock.GetXLast: Integer;
+  begin
+    Result := FXLast;
+  end;
+
+  procedure TBlock.SetXLast(const AValue: Integer);
+  begin
+    FXLast := AValue;
+  end;
+
+  function TBlock.GetStatementEnumerator: TEnumerator<TBaseStatement>;
+  begin
+    Result := FStatements.GetEnumerator;
+  end;
+
+end.

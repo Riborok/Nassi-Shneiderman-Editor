@@ -1,0 +1,80 @@
+unit Stack;
+
+interface
+
+type
+  TStack = class
+  private
+    type
+      PStackItem = ^TStackItem;
+      TStackItem = record
+        Value: Integer;
+        Next: PStackItem;
+      end;
+  var
+    FTop: PStackItem;
+    FCount: Integer;
+  public
+    constructor Create;
+    destructor Destroy; override;
+    procedure Push(AValue: Integer);
+    function Pop: Integer;
+    function Peek: Integer;
+    function IsEmpty: Boolean;
+    property Count: Integer read FCount;
+  end;
+
+implementation
+
+constructor TStack.Create;
+begin
+  inherited;
+  FTop := nil;
+  FCount := 0;
+end;
+
+destructor TStack.Destroy;
+begin
+  while FTop <> nil do
+    Pop;
+  inherited;
+end;
+
+procedure TStack.Push(AValue: Integer);
+var
+  NewItem: PStackItem;
+begin
+  New(NewItem);
+  NewItem^.Value := AValue;
+  NewItem^.Next := FTop;
+  FTop := NewItem;
+  Inc(FCount);
+end;
+
+function TStack.Pop: Integer;
+var
+  TopItem: PStackItem;
+begin
+  if FTop = nil then
+    raise Exception.Create('Stack is empty');
+  TopItem := FTop;
+  FTop := FTop^.Next;
+  Result := TopItem^.Value;
+  Dispose(TopItem);
+  Dec(FCount);
+end;
+
+function TStack.Peek: Integer;
+begin
+  if FTop = nil then
+    raise Exception.Create('Stack is empty');
+  Result := FTop^.Value;
+end;
+
+function TStack.IsEmpty: Boolean;
+begin
+  Result := FTop = nil;
+end;
+
+end.
+

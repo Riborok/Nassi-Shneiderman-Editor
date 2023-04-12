@@ -1,0 +1,49 @@
+﻿unit ProcessStatement;
+
+interface
+uses Base, vcl.graphics, DrawShapes;
+type
+
+  TProcessStatement = class(TStatement)
+  protected
+    function GetOptimalWidth: Integer; override;
+    procedure DefineBlockWidth; override;
+  public
+    constructor Create(const AYStart: Integer; const AAction: String;
+                       const ABaseBlock: TBlock; const ACanvas: TCanvas);
+    procedure Draw; override;
+    procedure SetOptimalHeight; override;
+  end;
+
+implementation
+
+  constructor TProcessStatement.Create(const AYStart: Integer; const AAction: String;
+                                       const ABaseBlock: TBlock; const ACanvas: TCanvas);
+  begin
+    inherited Create(AYStart, AAction, ABaseBlock, ACanvas);
+  end;
+
+  function TProcessStatement.GetOptimalWidth: Integer;
+  begin
+    result:= GetTextWidth(FCanvas, FAction) + 2 * XMinIndentText;
+  end;
+
+  procedure TProcessStatement.DefineBlockWidth;
+  begin
+    BaseBlock.SetOptimalXLastBlock;
+  end;
+
+  procedure TProcessStatement.Draw;
+  begin
+    DrawRectangle(BaseBlock.XStart, BaseBlock.XLast, FYStart, FYLast, FCanvas);
+
+    DrawText(FCanvas, BaseBlock.XStart + ((BaseBlock.XLast - BaseBlock.XStart) div 2)
+      - (GetTextWidth(FCanvas, Action) div 2), FYStart + YIndentText, Action);
+  end;
+
+  procedure TProcessStatement.SetOptimalHeight;
+  begin
+    FYLast := FYStart + GetTextHeight(FCanvas, FAction) + 2 * YIndentText;
+  end;
+
+end.

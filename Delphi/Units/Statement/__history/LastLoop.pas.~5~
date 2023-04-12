@@ -1,0 +1,19 @@
+unit LastLoop;
+
+interface
+uses FirstLoop, BaseStatement;
+type
+
+  TLastLoop = class(TFirstLoop)
+  public
+    constructor Create(AYStart, AXStart, AXLast: Integer; const AAction: string; const ABaseBlock: TBlock); override;
+  end;
+
+implementation
+
+  constructor TLastLoop.Create(AYStart, AXStart, AXLast: Integer; const AAction: string; const ABaseBlock: TBlock);
+  begin
+    inherited Create(AYStart + TBlock.DefaultBlockSize, AXStart, AXLast, AAction, ABaseBlock);
+  end;
+
+end.
