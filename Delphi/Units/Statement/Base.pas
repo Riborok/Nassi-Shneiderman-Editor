@@ -25,8 +25,8 @@ type
     // FBaseBlock is a reference to the block that the statement belongs to
     FBaseBlock: TBlock;
 
-    // FCanvas is a reference to the canvas used for drawing
-    FCanvas: TCanvas;
+    // FImage is a reference to the image used for drawing
+    FImage: TImage;
 
     // These functions are used to get the Y and X indentation of the statement
     function YIndentText : Integer;
@@ -55,11 +55,11 @@ type
     procedure SetInitiaWidth; virtual; abstract;
 
     constructor Create(const AYStart: Integer; const AAction : String;
-                              const ABaseBlock: TBlock; const ACanvas: TCanvas); virtual;
+                              const ABaseBlock: TBlock; const AImage: TImage); virtual;
   public
     // This constructor creates an uncertainty statement
     constructor CreateUncertainty(const AYStart: Integer;
-                    const ABaseBlock: TBlock; const ACanvas: TCanvas); virtual;
+                    const ABaseBlock: TBlock; const AImage: TImage); virtual;
 
     // These properties return the text of the statement and base block
     property Action: String read FAction;
@@ -89,7 +89,7 @@ type
   protected
     procedure CreateBlock(const ABaseBlock: TBlock); virtual; abstract;
     constructor Create(const AYStart: Integer; const AAction : String;
-                       const ABaseBlock: TBlock; const ACanvas: TCanvas); override;
+                       const ABaseBlock: TBlock; const AImage: TImage); override;
     procedure InitializeBlock; virtual; abstract;
 
     procedure SetYBottom(const AYBottom: Integer); override;
@@ -98,7 +98,7 @@ type
     function GetOptimalWidthForBlock(const Block: TBlock): Integer; virtual; abstract;
   public
     constructor CreateUncertainty(const AYStart: Integer;
-                    const ABaseBlock: TBlock; const ACanvas: TCanvas); override;
+                    const ABaseBlock: TBlock; const AImage: TImage); override;
     function GetBlocks: TBlockArr; virtual; abstract;
     function GetBlockCount: Integer; virtual; abstract;
     function GetYBottom: Integer; override;
@@ -160,12 +160,12 @@ implementation
 
   function TStatement.YIndentText : Integer;
   begin
-    result:= FCanvas.Font.Size + 3;
+    result:= FImage.Canvas.Font.Size + 3;
   end;
 
   function TStatement.XMinIndentText : Integer;
   begin
-    result:= FCanvas.Font.Size + 5;
+    result:= FImage.Canvas.Font.Size + 5;
   end;
 
   function TStatement.HasOptimalHeight : Boolean;
@@ -176,20 +176,20 @@ implementation
   end;
 
   constructor TStatement.CreateUncertainty(const AYStart: Integer;
-                              const ABaseBlock: TBlock; const ACanvas: TCanvas);
+                              const ABaseBlock: TBlock; const AImage: TImage);
   begin
-    Create(AYStart, UncertaintySymbol, ABaseBlock, ACanvas);
+    Create(AYStart, UncertaintySymbol, ABaseBlock, AImage);
   end;
 
   constructor TStatement.Create(const AYStart: Integer;
               const AAction : String; const ABaseBlock: TBlock;
-              const ACanvas: TCanvas);
+              const AImage: TImage);
   begin
     FYStart := AYStart;
 
     FBaseBlock := ABaseBlock;
 
-    FCanvas := ACanvas;
+    FImage := AImage;
 
     FAction := GetCorrectAction(AAction);
   end;
@@ -313,7 +313,7 @@ implementation
     Index:= FindStatementIndex(AStatement.FYStart);
 
     NewStatement:= TypeStatement.Create(AStatement.GetYBottom, AAction, Self,
-                                        AStatement.FCanvas);
+                                        AStatement.FImage);
 
     FStatements.Insert(NewStatement, Index + 1);
 
@@ -354,7 +354,7 @@ implementation
     if FStatements.Count = 0 then
     begin
       AddStatement(DefaultBlock.CreateUncertainty(
-                                AStatement.FYStart, Self, AStatement.FCanvas));
+                                AStatement.FYStart, Self, AStatement.FImage));
       FStatements[0].FixYStatementsPosition;
     end
     else if Index = 0 then
@@ -576,17 +576,17 @@ implementation
 
   { TOperator }
   constructor TOperator.Create(const AYStart: Integer; const AAction : String;
-                       const ABaseBlock: TBlock; const ACanvas: TCanvas);
+                       const ABaseBlock: TBlock; const AImage: TImage);
   begin
-    inherited Create(AYStart, AAction, ABaseBlock, ACanvas);
+    inherited Create(AYStart, AAction, ABaseBlock, AImage);
     CreateBlock(ABaseBlock);
     InitializeBlock;
   end;
 
   constructor TOperator.CreateUncertainty(const AYStart: Integer;
-                              const ABaseBlock: TBlock; const ACanvas: TCanvas);
+                              const ABaseBlock: TBlock; const AImage: TImage);
   begin
-    Create(AYStart, UncertaintySymbol, ABaseBlock, ACanvas);
+    Create(AYStart, UncertaintySymbol, ABaseBlock, AImage);
   end;
 
   function TOperator.GetYBottom: Integer;

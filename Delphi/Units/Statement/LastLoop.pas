@@ -1,24 +1,24 @@
 unit LastLoop;
 
 interface
-uses FirstLoop, Base, vcl.graphics;
+uses FirstLoop, Base, vcl.graphics, Vcl.ExtCtrls;
 type
 
   TLastLoop = class(TFirstLoop)
   public
     constructor Create(AYStart: Integer; const AAction: string;
-                       const ABaseBlock: TBlock; const ACanvas: TCanvas); override;
+                       const ABaseBlock: TBlock; const AImage: TImage); override;
   end;
 
 implementation
 
   constructor TLastLoop.Create(AYStart: Integer; const AAction: string;
-                               const ABaseBlock: TBlock; const ACanvas: TCanvas);
+                               const ABaseBlock: TBlock; const AImage: TImage);
   begin
 
     // AYStart + ÿ»–»Õ¿ ¡ÀŒ ¿ —¬≈–’”
     inherited Create(AYStart, AAction,
-                     ABaseBlock, ACanvas);
+                     ABaseBlock, AImage);
   end;
 
 end.

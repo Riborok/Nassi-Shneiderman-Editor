@@ -1,7 +1,7 @@
 ﻿unit IfBranching;
 
 interface
-uses Base, vcl.graphics, ProcessStatement, DrawShapes, MinMaxInt;
+uses Base, vcl.graphics, ProcessStatement, DrawShapes, MinMaxInt, Vcl.ExtCtrls;
 type
 
   TIfBranching = class(TOperator)
@@ -23,7 +23,7 @@ type
   public
     destructor Destroy; override;
     constructor Create(AYStart: Integer; const AAction: string;
-                       const ABaseBlock: TBlock; const ACanvas: TCanvas);
+                       const ABaseBlock: TBlock; const AImage: TImage);
     procedure Draw; override;
     function GetBlocks: TBlockArr; override;
     function GetBlockCount: Integer; override;
@@ -62,9 +62,9 @@ implementation
   end;
 
   constructor TIfBranching.Create(AYStart: Integer; const AAction:
-                           string; const ABaseBlock: TBlock; const ACanvas: TCanvas);
+                           string; const ABaseBlock: TBlock; const AImage: TImage);
   begin
-    inherited Create(AYStart, AAction, ABaseBlock, ACanvas);
+    inherited Create(AYStart, AAction, ABaseBlock, AImage);
   end;
 
   procedure TIfBranching.InitializeBlock;
@@ -84,23 +84,23 @@ implementation
   begin
     Result:= -1;
     if ABlock = Blocks[0] then
-      result:= GetMinValidPartWidth(GetTextHeight(FImage, TrueText),
-                                              GetTextWidth(FImage, TrueText))
+      result:= GetMinValidPartWidth(GetTextHeight(FImage.Canvas, TrueText),
+                                              GetTextWidth(FImage.Canvas, TrueText))
     else if ABlock = Blocks[1] then
-      result:= GetMinValidPartWidth(GetTextHeight(FImage, FalseText),
-                                              GetTextWidth(FImage, FalseText));
+      result:= GetMinValidPartWidth(GetTextHeight(FImage.Canvas, FalseText),
+                                              GetTextWidth(FImage.Canvas, FalseText));
   end;
 
   function TIfBranching.GetOptimalWidth: Integer;
   begin
-    Result:= GetMinValidPartWidth(GetTextHeight(FImage, FAction),
-                                              GetTextWidth(FImage, FAction));
+    Result:= GetMinValidPartWidth(GetTextHeight(FImage.Canvas, FAction),
+                                              GetTextWidth(FImage.Canvas, FAction));
   end;
 
   function TIfBranching.GetOptimalHeight: Integer;
   begin
-    Result := FYStart + GetTextHeight(FImage, TrueText) +
-              GetTextHeight(FImage, FAction) + 3 * YIndentText;
+    Result := FYStart + GetTextHeight(FImage.Canvas, TrueText) +
+              GetTextHeight(FImage.Canvas, FAction) + 3 * YIndentText;
   end;
 
   function TIfBranching.GetAvailablePartWidth(const PartWidth, ATextHeight: Integer): Integer;
@@ -130,20 +130,20 @@ implementation
   begin
 
     // Calculate the dimensions of the text
-    TextWidth := GetTextWidth(FImage, FAction);
-    TextHeight := GetTextHeight(FImage, FAction);
+    TextWidth := GetTextWidth(FImage.Canvas, FAction);
+    TextHeight := GetTextHeight(FImage.Canvas, FAction);
 
-    TrueWidth := GetTextWidth(FImage, TrueText);
-    TrueHeight := GetTextHeight(FImage, TrueText);
+    TrueWidth := GetTextWidth(FImage.Canvas, TrueText);
+    TrueHeight := GetTextHeight(FImage.Canvas, TrueText);
 
-    FalseWidth := GetTextWidth(FImage, FalseText);
-    FalseHeight := GetTextHeight(FImage, FalseText);
+    FalseWidth := GetTextWidth(FImage.Canvas, FalseText);
+    FalseHeight := GetTextHeight(FImage.Canvas, FalseText);
 
     // Drawing the main block
     DrawRectangle(BaseBlock.XStart, BaseBlock.XLast, FYStart, FYLast, FImage);
 
     // Drawing the text
-    DrawText(FImage,
+    DrawText(FImage.Canvas,
       Blocks[0].XStart +
       GetAvailablePartWidth(Blocks[0].XLast - Blocks[0].XStart, TrueHeight + YIndentText) +
       GetAvailablePartWidth(BaseBlock.XLast - BaseBlock.XStart, TextHeight) div 2 -
@@ -151,20 +151,20 @@ implementation
       FYStart + YIndentText, Action);
 
     // Drawing the True and False text
-    DrawText(FImage,
+    DrawText(FImage.Canvas,
                     Blocks[0].XStart + GetAvailablePartWidth(
                     Blocks[0].XLast - Blocks[0].XStart, TrueHeight) div 2 -
                     TrueWidth div 2,
                     FYStart + 2*YIndentText + TextHeight, TrueText);
 
-    DrawText(FImage,
+    DrawText(FImage.Canvas,
                     Blocks[1].XLast - GetAvailablePartWidth(
                     Blocks[1].XLast - Blocks[1].XStart, FalseHeight) div 2 -
                     FalseWidth div 2,
                     FYStart + 2*YIndentText + TextHeight, FalseText);
 
     DrawInvertedTriangle(BaseBlock.XStart, Blocks[0].XLast, BaseBlock.XLast,
-                                                      FYStart, FYLast, FImage);
+                                                      FYStart, FYLast, FImage.Canvas);
 
     Blocks[0].DrawBlock;
     Blocks[1].DrawBlock;

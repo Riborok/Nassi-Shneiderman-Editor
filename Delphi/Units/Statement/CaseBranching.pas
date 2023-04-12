@@ -1,7 +1,7 @@
 unit CaseBranching;
 
 interface
-uses Base, System.Generics.Collections, vcl.graphics;
+uses Base, System.Generics.Collections, vcl.graphics, Vcl.ExtCtrls;
 type
 
   TCaseBranching = class(TOperator)
@@ -10,7 +10,7 @@ type
   public
     destructor Destroy; override;
     constructor Create(AYStart, AmountCase: Integer;
-                const AAction: string; const ABaseBlock: TBlock; const ACanvas: TCanvas);
+                const AAction: string; const ABaseBlock: TBlock; const AImage: TImage);
   end;
 
 implementation
@@ -29,11 +29,11 @@ implementation
   end;
 
   constructor TCaseBranching.Create(AYStart, AmountCase: Integer;
-              const AAction: string; const ABaseBlock: TBlock; const ACanvas: TCanvas);
+              const AAction: string; const ABaseBlock: TBlock; const AImage: TImage);
   var
     I, BlockSize, BlockEnd, XStart: Integer;
   begin
-    inherited Create(AYStart, AAction, ABaseBlock, ACanvas);
+    inherited Create(AYStart, AAction, ABaseBlock, AImage);
 
     FBlocks := TList<TBlock>.Create();
 

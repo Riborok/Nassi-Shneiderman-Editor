@@ -48,7 +48,7 @@ type
   private class
     function ConvertToBlockType(AIndex: Integer): TStatementClass;
   private const
-    InitialIndent = 5;
+    InitialIndent = 10;
     InitialFontSize = 14;
     InitialFont = 'Times New Roman';
   public
@@ -80,7 +80,7 @@ implementation
     MainBlock:= TBlock.Create(InitialIndent, 0, nil);
 
     MainBlock.AddStatement(TProcessStatement.CreateUncertainty(InitialIndent,
-                           MainBlock, Image.Canvas));
+                           MainBlock, Image));
 
     ClearAndRedraw;
   end;
@@ -106,8 +106,8 @@ implementation
     Clear(Image.Canvas);
 
     if DedicatedStatement <> nil then
-      DrawYellowRect(Image.Canvas, DedicatedStatement.BaseBlock.XStart, DedicatedStatement.BaseBlock.XLast,
-                      DedicatedStatement.YStart, DedicatedStatement.GetYBottom);
+      ColorizeRectangle(Image.Canvas, DedicatedStatement.BaseBlock.XStart, DedicatedStatement.BaseBlock.XLast,
+                      DedicatedStatement.YStart, DedicatedStatement.GetYBottom, clYellow);
 
     MainBlock.DrawBlock;
     //DrawCoordinates(Canv.Canvas, 50);

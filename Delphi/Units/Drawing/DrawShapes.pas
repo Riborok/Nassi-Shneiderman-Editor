@@ -3,9 +3,9 @@ unit DrawShapes;
 interface
 uses Vcl.graphics, System.StrUtils, System.Types, System.SysUtils, MinMaxInt, Vcl.ExtCtrls;
 
-procedure DrawRectangle(const AXStart, AXLast, AYStart, AYLast : Integer; const ACanvas: TCanvas);
+procedure DrawRectangle(const AXStart, AXLast, AYStart, AYLast : Integer; const AImage: TImage);
 procedure DrawInvertedTriangle(const AXStart, AXMiddle, AXLast, AYStart, AYLast : Integer; const ACanvas: TCanvas);
-procedure DrawYellowRect(const ACanvas: TCanvas; const AXStart, AXLast, AYStart, AYLast: Integer);
+procedure ColorizeRectangle(const ACanvas: TCanvas; const AXStart, AXLast, AYStart, AYLast: Integer; const AColor: TColor);
 
 function GetTextHeight(const ACanvas: TCanvas; const AText: string): Integer;
 procedure DrawText(const ACanvas: TCanvas; const AX, AY: Integer; const AText: string);
@@ -15,15 +15,32 @@ procedure DrawCoordinates(Canvas: TCanvas; Step: Integer);
 procedure Clear(const ACanvas: TCanvas);
 implementation
 
-  procedure DrawRectangle(const AXStart, AXLast, AYStart, AYLast : Integer; const ACanvas: TCanvas);
+  procedure AdjustRightBoundary(AXLast: Integer; const AImage: TImage);
   begin
-    //AdjustImageSizeToFitCanvas(AXStart, AXLast, AYStart, AYLast);
+    Inc(AXLast, 10);
+    if AXLast > AImage.Picture.Bitmap.Width then
+      AImage.Picture.Bitmap.Width := AImage.Width;
 
-    ACanvas.MoveTo(AXStart, AYStart);
-    ACanvas.LineTo(AXLast, AYStart);
-    ACanvas.LineTo(AXLast, AYLast);
-    ACanvas.LineTo(AXStart, AYLast);
-    ACanvas.LineTo(AXStart, AYStart);
+  end;
+
+  procedure AdjustDownBoundary(AYLast: Integer; const AImage: TImage);
+  begin
+    Inc(AYLast, 10);
+    if AYLast > AImage.Picture.Bitmap.Height then
+      AImage.Picture.Bitmap.Height := AYLAST;
+
+  end;
+
+  procedure DrawRectangle(const AXStart, AXLast, AYStart, AYLast : Integer; const AImage: TImage);
+  begin
+    AdjustRightBoundary(AXLast, AImage);
+    AdjustDownBoundary(AYLast, AImage);
+
+    AImage.Canvas.MoveTo(AXStart, AYStart);
+    AImage.Canvas.LineTo(AXLast, AYStart);
+    AImage.Canvas.LineTo(AXLast, AYLast);
+    AImage.Canvas.LineTo(AXStart, AYLast);
+    AImage.Canvas.LineTo(AXStart, AYStart);
   end;
 
   procedure DrawInvertedTriangle(const AXStart, AXMiddle, AXLast, AYStart, AYLast : Integer; const ACanvas: TCanvas);
@@ -33,13 +50,13 @@ implementation
     ACanvas.LineTo(AXLast, AYStart);
   end;
 
-  procedure DrawYellowRect(const ACanvas: TCanvas; const AXStart, AXLast, AYStart, AYLast: Integer);
+  procedure ColorizeRectangle(const ACanvas: TCanvas; const AXStart, AXLast, AYStart, AYLast: Integer; const AColor: TColor);
   var
     SavedColor: TColor;
   begin
     SavedColor := ACanvas.Brush.Color;
 
-    ACanvas.Brush.Color := clYellow;
+    ACanvas.Brush.Color := AColor;
     ACanvas.FillRect(Rect(AXStart, AYStart, AXLast, AYLast));
 
     ACanvas.Brush.Color := SavedColor;
@@ -95,25 +112,6 @@ implementation
     for i := 0 to High(Lines) do
       Result := Max(Result, FCanvas.TextWidth(Lines[i]));
   end;
-
-  procedure AdjustImageSizeToFitCanvas(AImage: TImage; AXStart, AXLast,
-                                        AYStart, AYLAST: Integer);
-  var
-    ImageWidth, ImageHeight: Integer;
-  begin
-
-    ImageWidth := Abs(AXLast - AXStart) + 1;
-    ImageHeight := Abs(AYLAST - AYStart) + 1;
-
-    if (ImageWidth > AImage.Width) or (ImageHeight > AImage.Height) then
-    begin
-      AImage.Width := Max(AImage.Width, ImageWidth);
-      AImage.Height := Max(AImage.Height, ImageHeight);
-    end;
-
-  end;
-
-
 
   procedure Clear(const ACanvas: TCanvas);
   begin

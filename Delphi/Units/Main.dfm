@@ -113,6 +113,8 @@ object NassiShneiderman: TNassiShneiderman
     Height = 373
     Align = alClient
     AutoSize = True
+    Color = clBtnFace
+    ParentColor = False
     TabOrder = 1
     ExplicitTop = 27
     ExplicitWidth = 185
