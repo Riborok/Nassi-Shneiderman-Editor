@@ -1,0 +1,60 @@
+unit LastLoop;
+
+interface
+uses FirstLoop, Base, vcl.graphics, Vcl.ExtCtrls, DrawShapes;
+type
+
+  TLastLoop = class(TFirstLoop)
+  protected
+    procedure CreateBlock(const ABaseBlock: TBlock); override;
+    procedure InitializeBlock; override;
+  public
+    constructor Create(AYStart: Integer; const AAction: string;
+                       const ABaseBlock: TBlock; const AImage: TImage); override;
+    procedure Draw; override;
+  end;
+
+implementation
+
+  constructor TLastLoop.Create(AYStart: Integer; const AAction: string;
+                               const ABaseBlock: TBlock; const AImage: TImage);
+  begin
+
+    CreateBlock(ABaseBlock);
+
+    InitializeBlock;
+
+    TStatement.Create(GetYBottom, AAction, ABaseBlock, AImage);
+  end;
+
+  procedure TLastLoop.CreateBlock(const ABaseBlock: TBlock);
+  begin
+    SetLength(FBlock, FBlockCount);
+    FBlock[0] := TBlock.Create(GetXLastStrip, ABaseBlock.XLast, Self);
+  end;
+
+  procedure TLastLoop.InitializeBlock;
+  var
+    NewStatement: TStatement;
+  begin
+    NewStatement:= DefaultBlock.CreateUncertainty(FYStart, FBlock[0], FImage);
+    FBlock[0].Statements.Add(NewStatement);
+    NewStatement.SetOptimalHeight;
+  end;
+
+  procedure TLastLoop.Draw;
+  begin
+    DrawRectangle(BaseBlock.XStart, BaseBlock.XLast, FYStart, FYLast, FImage);
+
+    DrawRectangle(BaseBlock.XStart, GetXLastStrip, FBlock[0].Statements[0].YStart,
+                                                              FYStart, FImage);
+
+    Erase(BaseBlock.XStart +  1, GetXLastStrip, FYLast, FYLast, FImage.Canvas);
+
+    DrawText(FImage.Canvas, BaseBlock.XStart + ((BaseBlock.XLast - BaseBlock.XStart) div 2)
+      - (GetTextWidth(FImage.Canvas, Action) div 2), FYStart + YIndentText, Action);
+
+    FBlock[0].DrawBlock;
+  end;
+
+end.

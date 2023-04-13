@@ -1,7 +1,7 @@
 ﻿unit IfBranching;
 
 interface
-uses Base, vcl.graphics, ProcessStatement, DrawShapes, MinMaxInt, Vcl.ExtCtrls;
+uses Base, vcl.graphics, DrawShapes, MinMaxInt, Vcl.ExtCtrls;
 type
 
   TIfBranching = class(TOperator)
@@ -12,10 +12,10 @@ type
   protected
     procedure CreateBlock(const ABaseBlock: TBlock); override;
     procedure InitializeBlock; override;
-    function GetOptimalWidth: Integer; override;
+    function GetOptimalXLast: Integer; override;
     function GetOptimalWidthForBlock(const ABlock: TBlock): Integer; override;
-    procedure SetInitiaWidth; override;
-    function GetOptimalHeight: Integer; override;
+    procedure SetInitiaXLast; override;
+    function GetOptimalYLast: Integer; override;
   private class var
     FTrueText, FFalseText: string;
   private const
@@ -27,9 +27,15 @@ type
     procedure Draw; override;
     function GetBlocks: TBlockArr; override;
     function GetBlockCount: Integer; override;
+    function IsPreсOperator: Boolean; override;
   end;
 
 implementation
+
+  function TIfBranching.IsPreсOperator: Boolean;
+  begin
+    Result:= True;
+  end;
 
   function TIfBranching.GetBlocks: TBlockArr;
   begin
@@ -54,8 +60,7 @@ implementation
   begin
     SetLength(FBlocks, FBlockCount);
 
-    FBlocks[0]:= TBlock.Create(
-                       ABaseBlock.XStart,
+    FBlocks[0]:= TBlock.Create(ABaseBlock.XStart,
                        (ABaseBlock.XStart + ABaseBlock.XLast) div 2, Self);
 
     FBlocks[1]:= TBlock.Create(FBlocks[0].XLast, ABaseBlock.XLast, Self);
@@ -71,11 +76,11 @@ implementation
   var
     NewStatement: TStatement;
   begin
-    NewStatement:= TProcessStatement.CreateUncertainty(FYLast, FBlocks[0], FImage);
+    NewStatement:= DefaultBlock.CreateUncertainty(FYLast, FBlocks[0], FImage);
     FBlocks[0].Statements.Add(NewStatement);
     NewStatement.SetOptimalHeight;
 
-    NewStatement:= TProcessStatement.CreateUncertainty(FYLast, FBlocks[1], FImage);
+    NewStatement:= DefaultBlock.CreateUncertainty(FYLast, FBlocks[1], FImage);
     FBlocks[1].Statements.Add(NewStatement);
     NewStatement.SetOptimalHeight;
   end;
@@ -91,15 +96,15 @@ implementation
                                               GetTextWidth(FImage.Canvas, FFalseText));
   end;
 
-  function TIfBranching.GetOptimalWidth: Integer;
+  function TIfBranching.GetOptimalXLast: Integer;
   begin
     Result:= GetMinValidPartWidth(GetTextHeight(FImage.Canvas, FAction),
                                               GetTextWidth(FImage.Canvas, FAction));
   end;
 
-  function TIfBranching.GetOptimalHeight: Integer;
+  function TIfBranching.GetOptimalYLast: Integer;
   begin
-    Result := GetTextHeight(FImage.Canvas, FTrueText) +
+    Result := FYStart + GetTextHeight(FImage.Canvas, FTrueText) +
               GetTextHeight(FImage.Canvas, FAction) + 3 * YIndentText;
   end;
 
@@ -116,7 +121,7 @@ implementation
              (FYLast - FYStart) / (FYLast - FYStart - ATextHeight - YIndentText));
   end;
 
-  procedure TIfBranching.SetInitiaWidth;
+  procedure TIfBranching.SetInitiaXLast;
   begin
     FBlocks[0].SetOptimalXLastBlock;
   end;

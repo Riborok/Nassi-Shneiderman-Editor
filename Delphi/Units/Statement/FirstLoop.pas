@@ -1,21 +1,21 @@
 unit FirstLoop;
 
 interface
-uses Base, Vcl.graphics, Vcl.ExtCtrls, ProcessStatement, DrawShapes;
+uses Base, Vcl.graphics, Vcl.ExtCtrls, DrawShapes;
 type
 
   TFirstLoop = class(TOperator)
-  private const
+  protected const
     FBlockCount = 1;
-  private
-      FBlock: TBlockArr;
-      function GetAmountOfPixelCorrection: Integer;
   protected
+    FBlock: TBlockArr;
+    function GetAmountOfPixelCorrection: Integer;
+
     procedure CreateBlock(const ABaseBlock: TBlock); override;
     procedure InitializeBlock; override;
-    function GetOptimalWidth: Integer; override;
-    procedure SetInitiaWidth; override;
-    function GetOptimalHeight: Integer; override;
+    function GetOptimalXLast: Integer; override;
+    procedure SetInitiaXLast; override;
+    function GetOptimalYLast: Integer; override;
     function GetOptimalWidthForBlock(const ABlock: TBlock): Integer; override;
   public
     destructor Destroy; override;
@@ -24,11 +24,17 @@ type
     function GetBlocks: TBlockArr; override;
     function GetBlockCount: Integer; override;
     procedure Draw; override;
+    function IsPreñOperator: Boolean; override;
 
     function GetXLastStrip: Integer;
   end;
 
 implementation
+
+  function TFirstLoop.IsPreñOperator: Boolean;
+  begin
+    Result:= True;
+  end;
 
   function TFirstLoop.GetAmountOfPixelCorrection: Integer;
   begin
@@ -74,24 +80,24 @@ implementation
   var
     NewStatement: TStatement;
   begin
-    NewStatement:= TProcessStatement.CreateUncertainty(FYLast, FBlock[0], FImage);
+    NewStatement:= DefaultBlock.CreateUncertainty(FYLast, FBlock[0], FImage);
     FBlock[0].Statements.Add(NewStatement);
     NewStatement.SetOptimalHeight;
   end;
 
-  function TFirstLoop.GetOptimalWidth: Integer;
+  function TFirstLoop.GetOptimalXLast: Integer;
   begin
     Result := GetTextWidth(FImage.Canvas, FAction) + 2 * XMinIndentText;
   end;
 
-  procedure TFirstLoop.SetInitiaWidth;
+  procedure TFirstLoop.SetInitiaXLast;
   begin
     FBlock[0].SetOptimalXLastBlock;
   end;
 
-  function TFirstLoop.GetOptimalHeight: Integer;
+  function TFirstLoop.GetOptimalYLast: Integer;
   begin
-    Result := GetTextHeight(FImage.Canvas, FAction) + 2 * YIndentText;
+    Result := FYStart + GetTextHeight(FImage.Canvas, FAction) + 2 * YIndentText;
   end;
 
   function TFirstLoop.GetOptimalWidthForBlock(const ABlock: TBlock): Integer;

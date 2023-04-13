@@ -114,6 +114,7 @@ object NassiShneiderman: TNassiShneiderman
     Color = clBtnFace
     ParentColor = False
     TabOrder = 1
+    OnMouseWheel = ScrollBoxMouseWheel
     object Image: TImage
       Left = -2
       Top = 0

@@ -42,6 +42,8 @@ type
     procedure ImageDblClick(Sender: TObject);
 
     procedure spStatementClick(Sender: TObject);
+    procedure ScrollBoxMouseWheel(Sender: TObject; Shift: TShiftState;
+      WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
     { Private declarations }
   private
     function GetAction(AInitialStr: String = ''): String;
@@ -49,7 +51,7 @@ type
     function ConvertToBlockType(AIndex: Integer): TStatementClass;
   private const
     InitialIndent = 10;
-    InitialFontSize = 30;
+    InitialFontSize = 24;
     InitialFont = 'Times New Roman';
   public
     { Public declarations }
@@ -119,7 +121,7 @@ implementation
                       DedicatedStatement.YStart, DedicatedStatement.GetYBottom, HighlightColor);
 
     MainBlock.DrawBlock;
-    //DrawCoordinates(Canv.Canvas, 50);
+    //DrawCoordinates(Image.Canvas, 50);
   end;
 
   procedure TNassiShneiderman.ImageDblClick(Sender: TObject);
@@ -145,7 +147,17 @@ implementation
     ClearAndRedraw;
   end;
 
-  function TNassiShneiderman.GetAction(AInitialStr: String = ''): String;
+  procedure TNassiShneiderman.ScrollBoxMouseWheel(Sender: TObject;
+  Shift: TShiftState; WheelDelta: Integer; MousePos: TPoint;
+    var Handled: Boolean);
+  begin
+    if WheelDelta > 0 then
+      ScrollBox.VertScrollBar.Position := ScrollBox.VertScrollBar.Position - 15
+    else
+      ScrollBox.VertScrollBar.Position := ScrollBox.VertScrollBar.Position + 15;
+  end;
+
+function TNassiShneiderman.GetAction(AInitialStr: String = ''): String;
   var
     writeActionForm: TWriteAction;
   begin

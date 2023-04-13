@@ -44,15 +44,15 @@ type
     procedure Lower(const Offset: Integer);
 
     // Returns whether the current height is optimal
-    function HasOptimalHeight: boolean;
-    function GetOptimalHeight: Integer; virtual; abstract;
+    function HasOptimalYLast: boolean;
+    function GetOptimalYLast: Integer; virtual; abstract;
 
     // Returns the optimal block width
-    function GetOptimalWidth: Integer; virtual; abstract;
+    function GetOptimalXLast: Integer; virtual; abstract;
 
     // This method is abstract and will be implemented by subclasses to determine
     // the size of the statement
-    procedure SetInitiaWidth; virtual; abstract;
+    procedure SetInitiaXLast; virtual; abstract;
 
     constructor Create(const AYStart: Integer; const AAction : String;
                               const ABaseBlock: TBlock; const AImage: TImage); virtual;
@@ -87,6 +87,7 @@ type
 
   TOperator = class abstract(TStatement)
   protected
+
     procedure CreateBlock(const ABaseBlock: TBlock); virtual; abstract;
     constructor Create(const AYStart: Integer; const AAction : String;
                        const ABaseBlock: TBlock; const AImage: TImage); override;
@@ -99,8 +100,13 @@ type
   public
     constructor CreateUncertainty(const AYStart: Integer;
                     const ABaseBlock: TBlock; const AImage: TImage); override;
+
+    function IsPreсOperator : Boolean; virtual; abstract;
+
     function GetBlocks: TBlockArr; virtual; abstract;
     function GetBlockCount: Integer; virtual; abstract;
+
+    function GetBlockYStart: Integer; virtual;
     function GetYBottom: Integer; override;
 
     property YLast: Integer read FYLast;
@@ -168,11 +174,11 @@ implementation
     Result:= FImage.Canvas.Font.Size + 5;
   end;
 
-  function TStatement.HasOptimalHeight : Boolean;
+  function TStatement.HasOptimalYLast : Boolean;
   var
     PrevYLast: Integer;
   begin
-    Result:= FYLast = FYStart + GetOptimalHeight;
+    Result:= FYLast = GetOptimalYLast;
   end;
 
   constructor TStatement.CreateUncertainty(const AYStart: Integer;
@@ -216,7 +222,7 @@ implementation
 
   function TStatement.GetOptimalYBottom: Integer;
   begin
-    result:= FYStart + GetOptimalHeight;
+    result:= GetOptimalYLast;
   end;
 
   procedure TStatement.FixYStatementsPosition;
@@ -267,7 +273,7 @@ implementation
 
   procedure TStatement.SetOptimalHeight;
   begin
-    FYLast := FYStart + GetOptimalHeight;
+    FYLast := GetOptimalYLast;
   end;
 
   procedure TStatement.Lower(const Offset: Integer);
@@ -325,7 +331,7 @@ implementation
 
     NewStatement.FixYStatementsPosition;
 
-    NewStatement.SetInitiaWidth;
+    NewStatement.SetInitiaXLast;
   end;
 
   procedure TBlock.AddStatement(const AStatement: TStatement);
@@ -340,7 +346,7 @@ implementation
 
     AStatement.FixYStatementsPosition;
 
-    AStatement.SetInitiaWidth;
+    AStatement.SetInitiaXLast;
   end;
 
   procedure TBlock.DeleteStatement(const AStatement: TStatement);
@@ -382,7 +388,11 @@ implementation
     if AIndex = 0 then
     begin
       if BaseOperator <> nil then
-        FStatements[AIndex].Lower(BaseOperator.FYLast - FStatements[AIndex].FYStart);
+      begin
+        FStatements[AIndex].Lower(BaseOperator.GetBlockYStart - FStatements[AIndex].FYStart);
+
+        if not BaseOperator.IsPreсOperator then
+      end;
 
       if FStatements[AIndex] is TOperator then
       begin
@@ -406,6 +416,9 @@ implementation
           Blocks[J].ChangeYStatement;
       end;
     end;
+
+    if (BaseOperator <> nil) and not BaseOperator.IsPreсOperator then
+      BaseOperator.SetOptimalHeight;
   end;
 
   function TBlock.FindOptimalXLast: Integer;
@@ -424,7 +437,7 @@ implementation
     for I := 0 to FStatements.Count - 1 do
     begin
 
-      CurrOptimalX:= FXStart + FStatements[I].GetOptimalWidth;
+      CurrOptimalX:= FXStart + FStatements[I].GetOptimalXLast;
       CheckNewOptimalX;
 
       if FStatements[I] is TOperator then
@@ -587,6 +600,11 @@ implementation
                               const ABaseBlock: TBlock; const AImage: TImage);
   begin
     Create(AYStart, UncertaintySymbol, ABaseBlock, AImage);
+  end;
+
+  function TOperator.GetBlockYStart: Integer;
+  begin
+    Result:= FYLast;
   end;
 
   function TOperator.GetYBottom: Integer;

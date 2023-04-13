@@ -6,9 +6,9 @@ type
 
   TProcessStatement = class(TStatement)
   protected
-    function GetOptimalWidth: Integer; override;
-    procedure SetInitiaWidth; override;
-    function GetOptimalHeight: Integer; override;
+    function GetOptimalXLast: Integer; override;
+    procedure SetInitiaXLast; override;
+    function GetOptimalYLast: Integer; override;
   public
     constructor Create(const AYStart: Integer; const AAction: String;
                        const ABaseBlock: TBlock; const AImage: TImage);
@@ -23,12 +23,12 @@ implementation
     inherited Create(AYStart, AAction, ABaseBlock, AImage);
   end;
 
-  function TProcessStatement.GetOptimalWidth: Integer;
+  function TProcessStatement.GetOptimalXLast: Integer;
   begin
     result:= GetTextWidth(FImage.Canvas, FAction) + 2 * XMinIndentText;
   end;
 
-  procedure TProcessStatement.SetInitiaWidth;
+  procedure TProcessStatement.SetInitiaXLast;
   begin
     BaseBlock.SetOptimalXLastBlock;
   end;
@@ -41,9 +41,9 @@ implementation
       - (GetTextWidth(FImage.Canvas, Action) div 2), FYStart + YIndentText, Action);
   end;
 
-  function TProcessStatement.GetOptimalHeight: Integer;
+  function TProcessStatement.GetOptimalYLast: Integer;
   begin
-    Result := GetTextHeight(FImage.Canvas, FAction) + 2 * YIndentText;
+    Result := FYStart + GetTextHeight(FImage.Canvas, FAction) + 2 * YIndentText;
   end;
 
 end.

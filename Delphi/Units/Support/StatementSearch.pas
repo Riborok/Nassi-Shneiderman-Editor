@@ -59,10 +59,19 @@ implementation
 
             Blocks:= CurrOperator.GetBlocks;
 
-            // онрнл днохяюрэ кнцхйс дкъ жхйкнб (врн с мху еярэ кебюъ онкняю
-            // х опх ршйх мю мее рнфе бшдекъеряъ щрнр жхйк
-            if (AY <= CurrOperator.YLast) or ((CurrOperator is TFirstLoop) and
-                          (AX <= TFirstLoop(CurrOperator).GetXLastStrip)) then
+            if CurrOperator.IsPreЯOperator then
+            begin
+              if AY <= CurrOperator.GetBlockYStart then
+                Exit(Statement);
+            end
+            else
+            begin
+              if AY >= CurrOperator.GetBlocks[0].Statements.GetLast.GetYBottom then
+                Exit(Statement);
+            end;
+
+            if (CurrOperator is TFirstLoop) and
+                          (AX <= TFirstLoop(CurrOperator).GetXLastStrip) then
               Exit(Statement);
 
             Exit(BinarySearchStatement(AX, AY, BinarySearchBlockArray(Blocks, AX)));
