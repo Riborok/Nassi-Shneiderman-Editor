@@ -13,7 +13,7 @@ type
     function GetAmountOfPixelCorrection: Integer;
     function GetOptimalWidthForBlock(const ABlock: TBlock): Integer; override;
     procedure SetInitiaXLast; override;
-    function GetOptimalXLast: Integer; override;
+    function GetOptimaWidth: Integer; override;
   public
     function GetXLastStrip: Integer;
     function GetBlocks: TBlockArr; override;
@@ -29,7 +29,7 @@ implementation
     FBlock[0] := TBlock.Create(GetXLastStrip, ABaseBlock.XLast, Self);
   end;
 
-  function TLoop.GetOptimalXLast: Integer;
+  function TLoop.GetOptimaWidth: Integer;
   begin
     Result := GetTextWidth(FImage.Canvas, FAction) + 2 * XMinIndentText;
   end;
@@ -64,7 +64,7 @@ implementation
     Result:= -1;
 
     if ABlock = FBlock[0] then
-      Result:= BaseBlock.XLast - GetXLastStrip;
+      Result:= GetOptimaWidth + GetXLastStrip;
   end;
 
 end.

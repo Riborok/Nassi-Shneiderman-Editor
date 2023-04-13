@@ -51,7 +51,7 @@ type
     function GetOptimalYLast: Integer; virtual; abstract;
 
     // Returns the optimal block width
-    function GetOptimalXLast: Integer; virtual; abstract;
+    function GetOptimaWidth: Integer; virtual; abstract;
 
     // This method is abstract and will be implemented by subclasses to determine
     // the size of the statement
@@ -450,7 +450,7 @@ implementation
     for I := 0 to FStatements.Count - 1 do
     begin
 
-      CurrOptimalX:= FXStart + FStatements[I].GetOptimalXLast;
+      CurrOptimalX:= FXStart + FStatements[I].GetOptimaWidth;
       CheckNewOptimalX;
 
       if FStatements[I] is TOperator then

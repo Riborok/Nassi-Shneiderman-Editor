@@ -12,7 +12,7 @@ type
   protected
     procedure CreateBlock(const ABaseBlock: TBlock); override;
     procedure InitializeBlock; override;
-    function GetOptimalXLast: Integer; override;
+    function GetOptimaWidth: Integer; override;
     function GetOptimalWidthForBlock(const ABlock: TBlock): Integer; override;
     procedure SetInitiaXLast; override;
     function GetOptimalYLast: Integer; override;
@@ -78,7 +78,7 @@ implementation
                                               GetTextWidth(FImage.Canvas, FFalseText));
   end;
 
-  function TIfBranching.GetOptimalXLast: Integer;
+  function TIfBranching.GetOptimaWidth: Integer;
   begin
     Result:= GetMinValidPartWidth(GetTextHeight(FImage.Canvas, FAction),
                                               GetTextWidth(FImage.Canvas, FAction));

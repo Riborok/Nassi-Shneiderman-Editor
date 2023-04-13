@@ -6,7 +6,7 @@ type
 
   TProcessStatement = class(TStatement)
   protected
-    function GetOptimalXLast: Integer; override;
+    function GetOptimaWidth: Integer; override;
     procedure SetInitiaXLast; override;
     function GetOptimalYLast: Integer; override;
   public
@@ -15,7 +15,7 @@ type
 
 implementation
 
-  function TProcessStatement.GetOptimalXLast: Integer;
+  function TProcessStatement.GetOptimaWidth: Integer;
   begin
     result:= GetTextWidth(FImage.Canvas, FAction) + 2 * XMinIndentText;
   end;

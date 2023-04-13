@@ -121,7 +121,7 @@ implementation
                       DedicatedStatement.YStart, DedicatedStatement.GetYBottom, HighlightColor);
 
     MainBlock.DrawBlock;
-    //DrawCoordinates(Image.Canvas, 50);
+    DrawCoordinates(Image.Canvas, 50);
   end;
 
   procedure TNassiShneiderman.ImageDblClick(Sender: TObject);
