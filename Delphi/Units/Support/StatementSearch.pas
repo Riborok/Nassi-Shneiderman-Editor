@@ -59,15 +59,13 @@ implementation
 
             Blocks:= CurrOperator.GetBlocks;
 
-            if CurrOperator.IsPreñOperator then
-            begin
-              if AY <= CurrOperator.GetBlockYStart then
-                Exit(Statement);
-            end
-            else
-            begin
-              if AY >= CurrOperator.GetBlocks[0].Statements.GetLast.GetYBottom then
-                Exit(Statement);
+            case CurrOperator.IsPreñOperator of
+              True:
+                if AY <= CurrOperator.GetBlockYStart then
+                  Exit(Statement);
+              False:
+                if AY >= Blocks[0].Statements.GetLast.GetYBottom then
+                  Exit(Statement);
             end;
 
             if (CurrOperator is TLoop) and

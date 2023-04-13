@@ -151,13 +151,23 @@ implementation
   Shift: TShiftState; WheelDelta: Integer; MousePos: TPoint;
     var Handled: Boolean);
   begin
-    if WheelDelta > 0 then
-      ScrollBox.VertScrollBar.Position := ScrollBox.VertScrollBar.Position - 15
+    if ssCtrl in Shift then
+    begin
+      if WheelDelta > 0 then
+        ScrollBox.HorzScrollBar.Position := ScrollBox.HorzScrollBar.Position - 15
+      else
+        ScrollBox.HorzScrollBar.Position := ScrollBox.HorzScrollBar.Position + 15;
+    end
     else
-      ScrollBox.VertScrollBar.Position := ScrollBox.VertScrollBar.Position + 15;
+    begin
+      if WheelDelta > 0 then
+        ScrollBox.VertScrollBar.Position := ScrollBox.VertScrollBar.Position - 15
+      else
+        ScrollBox.VertScrollBar.Position := ScrollBox.VertScrollBar.Position + 15;
+    end;
   end;
 
-function TNassiShneiderman.GetAction(AInitialStr: String = ''): String;
+  function TNassiShneiderman.GetAction(AInitialStr: String = ''): String;
   var
     writeActionForm: TWriteAction;
   begin

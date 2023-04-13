@@ -241,7 +241,7 @@ implementation
 
     function GetLastStatement(const ABlock: TBlock): TStatement;
     begin
-      if (ABlock.BaseOperator = nil) or (ABlock.BaseOperator.IsPreсOperator) then
+      if (ABlock.BaseOperator = nil) or ABlock.BaseOperator.IsPreсOperator then
         Result:= ABlock.FStatements.GetLast
       else
         Result:= ABlock.BaseOperator;
@@ -401,11 +401,7 @@ implementation
     if AIndex = 0 then
     begin
       if BaseOperator <> nil then
-      begin
         FStatements[AIndex].Lower(BaseOperator.GetBlockYStart - FStatements[AIndex].FYStart);
-
-        if not BaseOperator.IsPreсOperator then
-      end;
 
       if FStatements[AIndex] is TOperator then
       begin
@@ -630,45 +626,48 @@ implementation
 
   function TOperator.GetBlockYStart: Integer;
   begin
-    if IsPreсOperator then
-      Result:= FYLast
-    else
-      Result:= FYStart;
+    case IsPreсOperator of
+      True: Result := FYLast;
+      False: Result := FYStart;
+    end;
   end;
 
   function TOperator.GetYBottom: Integer;
   var
     I: Integer;
   begin
-    Result:= 0;
-    if IsPreсOperator then
-      for I := 0 to High(GetBlocks) do
-        Result:= Max(Result, GetBlocks[I].FStatements.GetLast.GetYBottom)
-    else
-      Result:= FYLast;
+    Result := 0;
+    case IsPreсOperator of
+      True:
+        for I := 0 to High(GetBlocks) do
+          Result := Max(Result, GetBlocks[I].FStatements.GetLast.GetYBottom);
+      False: Result := FYLast;
+    end;
   end;
 
   procedure TOperator.SetYBottom(const AYBottom: Integer);
   var
     I: Integer;
   begin
-    if IsPreсOperator then
-      for I:= 0 to High(GetBlocks) do
-        GetBlocks[I].Statements.GetLast.SetYBottom(AYBottom)
-    else
-      FYLast:= AYBottom;
+    case IsPreсOperator of
+      True:
+        for I := 0 to High(GetBlocks) do
+          GetBlocks[I].Statements.GetLast.SetYBottom(AYBottom);
+      False: FYLast := AYBottom;
+    end;
   end;
 
   function TOperator.GetOptimalYBottom: Integer;
   var
     I: Integer;
   begin
-    Result:= 0;
-    if IsPreсOperator then
-      for I:= 0 to High(GetBlocks) do
-        Result:= Max(Result, GetBlocks[I].Statements.GetLast.GetOptimalYBottom)
-    else
-      Result:= GetOptimalYLast;
+    Result := 0;
+    case IsPreсOperator of
+      True:
+        for I := 0 to High(GetBlocks) do
+          Result := Max(Result, GetBlocks[I].Statements.GetLast.GetOptimalYBottom);
+      False: Result := GetOptimalYLast;
+    end;
   end;
 
 end.
