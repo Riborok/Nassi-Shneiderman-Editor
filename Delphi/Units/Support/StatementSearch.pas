@@ -1,7 +1,7 @@
 unit StatementSearch;
 
 interface
-uses Base;
+uses Base, FirstLoop, LastLoop;
 
   function BinarySearchStatement(const AX, AY: Integer; const ABlock: TBlock): TStatement;
 implementation
@@ -22,7 +22,6 @@ implementation
       L := 0;
       R := High(Blocks);
       while L <= R do
-
       begin
         Mid := (L + R) div 2;
 
@@ -62,16 +61,15 @@ implementation
 
             // ÏÎÒÎÌ ÄÎÏÈÑÀÒÜ ËÎÃÈÊÓ ÄËß ÖÈÊËÎÂ (×ÒÎ Ó ÍÈÕ ÅÑÒÜ ËÅÂÀß ÏÎËÎÑÀ
             // È ÏÐÈ ÒÛÊÈ ÍÀ ÍÅÅ ÒÎÆÅ ÂÛÄÅËßÅÒÑß ÝÒÎÒ ÖÈÊË
-            if AY <= CurrOperator.YLast then
+            if (AY <= CurrOperator.YLast) or ((CurrOperator is TFirstLoop) and
+                          (AX <= TFirstLoop(CurrOperator).GetXLastStrip)) then
               Exit(Statement);
 
             Exit(BinarySearchStatement(AX, AY, BinarySearchBlockArray(Blocks, AX)));
 
-          end
-          else
-            Exit(Statement);
+          end;
 
-
+          Exit(Statement);
         end
         else if AY < Statement.YStart then
           R := M - 1

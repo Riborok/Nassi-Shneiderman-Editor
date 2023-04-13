@@ -43,7 +43,7 @@ implementation
 
   function TProcessStatement.GetOptimalHeight: Integer;
   begin
-    Result := FYStart + GetTextHeight(FImage.Canvas, FAction) + 2 * YIndentText;
+    Result := GetTextHeight(FImage.Canvas, FAction) + 2 * YIndentText;
   end;
 
 end.

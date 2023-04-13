@@ -160,19 +160,19 @@ implementation
 
   function TStatement.YIndentText : Integer;
   begin
-    result:= FImage.Canvas.Font.Size + 3;
+    Result:= FImage.Canvas.Font.Size + 3;
   end;
 
   function TStatement.XMinIndentText : Integer;
   begin
-    result:= FImage.Canvas.Font.Size + 5;
+    Result:= FImage.Canvas.Font.Size + 5;
   end;
 
   function TStatement.HasOptimalHeight : Boolean;
   var
     PrevYLast: Integer;
   begin
-    Result:= FYLast = GetOptimalHeight;
+    Result:= FYLast = FYStart + GetOptimalHeight;
   end;
 
   constructor TStatement.CreateUncertainty(const AYStart: Integer;
@@ -216,7 +216,7 @@ implementation
 
   function TStatement.GetOptimalYBottom: Integer;
   begin
-    result:= GetOptimalHeight;
+    result:= FYStart + GetOptimalHeight;
   end;
 
   procedure TStatement.FixYStatementsPosition;
@@ -267,7 +267,7 @@ implementation
 
   procedure TStatement.SetOptimalHeight;
   begin
-    FYLast := GetOptimalHeight;
+    FYLast := FYStart + GetOptimalHeight;
   end;
 
   procedure TStatement.Lower(const Offset: Integer);

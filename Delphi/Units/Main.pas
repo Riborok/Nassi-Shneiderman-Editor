@@ -49,12 +49,14 @@ type
     function ConvertToBlockType(AIndex: Integer): TStatementClass;
   private const
     InitialIndent = 10;
-    InitialFontSize = 14;
+    InitialFontSize = 30;
     InitialFont = 'Times New Roman';
   public
     { Public declarations }
     MainBlock : TBlock;
     DedicatedStatement: TStatement;
+
+    HighlightColor: TColor;
   end;
 
 var
@@ -62,10 +64,11 @@ var
 
 implementation
 
-{$R *.dfm}
+  {$R *.dfm}
 
   procedure TNassiShneiderman.FormCreate(Sender: TObject);
   begin
+
     Constraints.MinWidth := 600;
     Constraints.MinHeight := 400;
 
@@ -77,10 +80,16 @@ implementation
 
     Image.Canvas.Font.Name := InitialFont;
 
+    HighlightColor:= clYellow;
+
     MainBlock:= TBlock.Create(InitialIndent, 0, nil);
 
     MainBlock.AddStatement(TProcessStatement.CreateUncertainty(InitialIndent,
                            MainBlock, Image));
+
+    // Пока так
+    Image.Picture.Bitmap.Width := Screen.Width;
+    Image.Picture.Bitmap.Height := Screen.Height;
 
     ClearAndRedraw;
   end;
@@ -107,7 +116,7 @@ implementation
 
     if DedicatedStatement <> nil then
       ColorizeRectangle(Image.Canvas, DedicatedStatement.BaseBlock.XStart, DedicatedStatement.BaseBlock.XLast,
-                      DedicatedStatement.YStart, DedicatedStatement.GetYBottom, clYellow);
+                      DedicatedStatement.YStart, DedicatedStatement.GetYBottom, HighlightColor);
 
     MainBlock.DrawBlock;
     //DrawCoordinates(Canv.Canvas, 50);
@@ -122,7 +131,8 @@ implementation
 
     Statement := BinarySearchStatement(MousePos.X, MousePos.Y, MainBlock);
 
-    Statement.ChangeAction(GetAction(Statement.Action));
+    if Statement <> nil then
+      Statement.ChangeAction(GetAction(Statement.Action));
 
     ClearAndRedraw;
   end;

@@ -11,9 +11,24 @@ function GetTextHeight(const ACanvas: TCanvas; const AText: string): Integer;
 procedure DrawText(const ACanvas: TCanvas; const AX, AY: Integer; const AText: string);
 function GetTextWidth(const FCanvas: TCanvas; const Text: string): Integer;
 
-procedure DrawCoordinates(Canvas: TCanvas; Step: Integer);
 procedure Clear(const ACanvas: TCanvas);
+
+procedure Erase(const AXStart, AXLast, AYStart, AYLast: Integer; const ACanvas: TCanvas);
 implementation
+
+  procedure Erase(const AXStart, AXLast, AYStart, AYLast: Integer; const ACanvas: TCanvas);
+  var
+    SavedPenColor: TColor;
+  begin
+    SavedPenColor := ACanvas.Pen.Color;
+
+    ACanvas.Pen.Color := ACanvas.Pixels[AXStart, AYStart + 1];
+
+    ACanvas.MoveTo(AXStart, AYStart);
+    ACanvas.LineTo(AXLast, AYLast);
+
+    ACanvas.Pen.Color := SavedPenColor;
+  end;
 
   procedure AdjustRightBoundary(AXLast: Integer; const AImage: TImage);
   begin
@@ -117,29 +132,5 @@ implementation
   begin
     ACanvas.FillRect(Rect(0, 0, ACanvas.ClipRect.Right, ACanvas.ClipRect.Bottom));
   end;
-
-  procedure DrawCoordinates(Canvas: TCanvas; Step: Integer);
-  var
-    i, PrevFontSize: Integer;
-  begin
-    PrevFontSize:= Canvas.Font.Size;
-    Canvas.Font.Size:= 7;
-
-    for i := 0 to Canvas.ClipRect.Height div Step do
-    begin
-      Canvas.MoveTo(0, i * Step);
-      Canvas.TextOut(5, i * Step - 10, IntToStr(i * Step));
-    end;
-
-    for i := 0 to Canvas.ClipRect.Width div Step do
-    begin
-      Canvas.MoveTo(i * Step, 0);
-      Canvas.TextOut(i * Step + 5, 5, IntToStr(i * Step));
-    end;
-
-    Canvas.Font.Size:= PrevFontSize;
-  end;
-
-
 
 end.

@@ -4,7 +4,7 @@ object NassiShneiderman: TNassiShneiderman
   Caption = 'NassiShneiderman'
   ClientHeight = 398
   ClientWidth = 526
-  Color = clBtnFace
+  Color = clCream
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -11
@@ -34,7 +34,6 @@ object NassiShneiderman: TNassiShneiderman
     ParentDoubleBuffered = False
     TabOrder = 0
     Transparent = False
-    ExplicitWidth = 536
     object spProcess: TSpeedButton
       Left = 0
       Top = 0
@@ -112,18 +111,14 @@ object NassiShneiderman: TNassiShneiderman
     Width = 526
     Height = 373
     Align = alClient
-    AutoSize = True
     Color = clBtnFace
     ParentColor = False
     TabOrder = 1
-    ExplicitTop = 27
-    ExplicitWidth = 185
-    ExplicitHeight = 41
     object Image: TImage
       Left = -2
       Top = 0
-      Width = 521
-      Height = 369
+      Width = 507
+      Height = 353
       AutoSize = True
       Proportional = True
       OnDblClick = ImageDblClick
