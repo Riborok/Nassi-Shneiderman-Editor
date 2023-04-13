@@ -111,7 +111,6 @@
         <DCCReference Include="Units\Statement\CaseBranching.pas"/>
         <DCCReference Include="Units\Statement\FirstLoop.pas"/>
         <DCCReference Include="Units\Statement\LastLoop.pas"/>
-        <DCCReference Include="Units\Drawing\DrawShapes.pas"/>
         <DCCReference Include="Units\DataStructures\ArrayList.pas"/>
         <DCCReference Include="Units\DataStructures\Stack.pas"/>
         <DCCReference Include="Units\Support\StatementSearch.pas"/>
@@ -120,6 +119,10 @@
             <Form>WriteAction</Form>
             <FormType>dfm</FormType>
         </DCCReference>
+        <DCCReference Include="Units\Image\DetermineDimensions.pas"/>
+        <DCCReference Include="Units\Image\DrawShapes.pas"/>
+        <DCCReference Include="Units\Image\AdjustBorders.pas"/>
+        <DCCReference Include="Units\Statement\Loop.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>

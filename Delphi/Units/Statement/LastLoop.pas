@@ -1,19 +1,17 @@
 unit LastLoop;
 
 interface
-uses FirstLoop, Base, vcl.graphics, Vcl.ExtCtrls, DrawShapes;
+uses Base, vcl.graphics, Vcl.ExtCtrls, DrawShapes, DetermineDimensions, Loop;
 type
 
-  TLastLoop = class(TFirstLoop)
+  TLastLoop = class(TLoop)
   private
     function GetBlockYBottom: Integer;
   protected
     procedure InitializeBlock; override;
     function GetOptimalYLast: Integer; override;
-    function GetBlockYStart: Integer; override;
   public
     procedure Draw; override;
-    function GetYBottom: Integer; override;
     function IsPreñOperator: Boolean; override;
   end;
 
@@ -30,7 +28,7 @@ implementation
   begin
     NewStatement:= DefaultBlock.CreateUncertainty(FYStart, FBlock[0], FImage);
     FBlock[0].Statements.Add(NewStatement);
-    NewStatement.SetOptimalHeight;
+    NewStatement.SetOptimalYLast;
   end;
 
   procedure TLastLoop.Draw;
@@ -48,19 +46,9 @@ implementation
     FBlock[0].DrawBlock;
   end;
 
-  function TLastLoop.GetBlockYStart: Integer;
-  begin
-    Result:= FYStart;
-  end;
-
   function TLastLoop.GetOptimalYLast: Integer;
   begin
     Result := GetBlockYBottom + GetTextHeight(FImage.Canvas, FAction) + 2 * XMinIndentText;
-  end;
-
-  function TLastLoop.GetYBottom: Integer;
-  begin
-    Result:= FYLast;
   end;
 
   function TLastLoop.GetBlockYBottom: Integer;

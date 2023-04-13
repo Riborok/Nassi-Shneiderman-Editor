@@ -6,7 +6,6 @@ type
   TBlock = class;
 
   { TBaseStatement }
-
   // Define abstract class TStatement
   // This class is a base class for all statements and is abstract
   // UncertaintySymbol is a constant field used to represent an unknown value
@@ -35,16 +34,20 @@ type
     // Set the bottommost part
     procedure SetYBottom(const AYBottom: Integer); virtual;
 
+    // Get the optimal lower part
     function GetOptimalYBottom: Integer; virtual;
 
     // After changing the Y coordinate, need to call the procedure in order to
     // change the Y coordinates of others
     procedure FixYStatementsPosition;
 
+    // Lowers the statement on Offset
     procedure Lower(const Offset: Integer);
 
-    // Returns whether the current height is optimal
+    // Returns whether the current Y last is optimal
     function HasOptimalYLast: boolean;
+
+    // Get the optimal Y last
     function GetOptimalYLast: Integer; virtual; abstract;
 
     // Returns the optimal block width
@@ -54,6 +57,7 @@ type
     // the size of the statement
     procedure SetInitiaXLast; virtual; abstract;
 
+    // Create
     constructor Create(const AYStart: Integer; const AAction : String;
                               const ABaseBlock: TBlock; const AImage: TImage); virtual;
   public
@@ -64,6 +68,8 @@ type
     // These properties return the text of the statement and base block
     property Action: String read FAction;
     property BaseBlock: TBlock read FBaseBlock;
+
+    // Returnts the Y statrt coordinate
     property YStart: Integer read FYStart;
 
     // Returns the Y coordinate of the bottommost part
@@ -75,22 +81,21 @@ type
     // Change action
     procedure ChangeAction(const AAction: String);
 
-    // Set the optimal block height
-    procedure SetOptimalHeight;
+    // Set the optimal Y last
+    procedure SetOptimalYLast;
   end;
 
   { TStatementClass }
   TStatementClass = class of TStatement;
 
-  { TOperator }
+  { TBlockArr }
   TBlockArr = array of TBlock;
 
+  { TOperator }
   TOperator = class abstract(TStatement)
   protected
 
     procedure CreateBlock(const ABaseBlock: TBlock); virtual; abstract;
-    constructor Create(const AYStart: Integer; const AAction : String;
-                       const ABaseBlock: TBlock; const AImage: TImage); override;
     procedure InitializeBlock; virtual; abstract;
 
     procedure SetYBottom(const AYBottom: Integer); override;
@@ -100,13 +105,16 @@ type
   public
     constructor CreateUncertainty(const AYStart: Integer;
                     const ABaseBlock: TBlock; const AImage: TImage); override;
+    constructor Create(const AYStart: Integer; const AAction : String;
+                       const ABaseBlock: TBlock; const AImage: TImage); override;
+    destructor Destroy; override;
 
     function IsPreсOperator : Boolean; virtual; abstract;
 
     function GetBlocks: TBlockArr; virtual; abstract;
     function GetBlockCount: Integer; virtual; abstract;
 
-    function GetBlockYStart: Integer; virtual;
+    function GetBlockYStart: Integer;
     function GetYBottom: Integer; override;
 
     property YLast: Integer read FYLast;
@@ -206,7 +214,7 @@ implementation
     FAction := GetCorrectAction(AAction);
 
     BaseBlock.SetOptimalXLastBlock;
-    SetOptimalHeight;
+    SetOptimalYLast;
     FixYStatementsPosition;
   end;
 
@@ -222,7 +230,7 @@ implementation
 
   function TStatement.GetOptimalYBottom: Integer;
   begin
-    result:= GetOptimalYLast;
+    Result:= GetOptimalYLast;
   end;
 
   procedure TStatement.FixYStatementsPosition;
@@ -231,22 +239,29 @@ implementation
     CurrBlock: TBlock;
     CurrOperator: TOperator;
 
+    function GetLastStatement(const ABlock: TBlock): TStatement;
+    begin
+      if (ABlock.BaseOperator = nil) or (ABlock.BaseOperator.IsPreсOperator) then
+        Result:= ABlock.FStatements.GetLast
+      else
+        Result:= ABlock.BaseOperator;
+    end;
     procedure AlignBlocks(const ABlockArr: TBlockArr);
     var
       I, MaxYLast, CurrYLast: Integer;
     begin
 
-      MaxYLast := ABlockArr[0].FStatements.GetLast.GetOptimalYBottom;
+      MaxYLast := GetLastStatement(ABlockArr[0]).GetOptimalYBottom;
       for I := 1 to High(ABlockArr) do
       begin
-        CurrYLast := ABlockArr[I].FStatements.GetLast.GetOptimalYBottom;
+        CurrYLast := GetLastStatement(ABlockArr[I]).GetOptimalYBottom;;
         if MaxYLast < CurrYLast then
           MaxYLast := CurrYLast;
       end;
 
       for I := 0 to High(ABlockArr) do
-        if ABlockArr[I].FStatements.GetLast.GetYBottom <> MaxYLast then
-          ABlockArr[I].FStatements.GetLast.SetYBottom(MaxYLast);
+        if GetLastStatement(ABlockArr[I]).GetYBottom <> MaxYLast then
+          GetLastStatement(ABlockArr[I]).SetYBottom(MaxYLast);
     end;
   begin
 
@@ -271,7 +286,7 @@ implementation
     end;
   end;
 
-  procedure TStatement.SetOptimalHeight;
+  procedure TStatement.SetOptimalYLast;
   begin
     FYLast := GetOptimalYLast;
   end;
@@ -292,9 +307,7 @@ implementation
     for I := 0 to FStatements.Count - 1 do
       FStatements[I].Free;
 
-    FStatements.Clear;
-
-    FStatements.Free;
+    FStatements.Destroy;
     inherited;
   end;
 
@@ -323,11 +336,11 @@ implementation
 
     FStatements.Insert(NewStatement, Index + 1);
 
-    NewStatement.SetOptimalHeight;
+    NewStatement.SetOptimalYLast;
 
     if (BaseOperator <> nil) and (BaseOperator.GetBlockCount > 1) and
                                             (Index = FStatements.Count - 2) then
-      Statements[Statements.Count - 2].SetOptimalHeight;
+      Statements[Statements.Count - 2].SetOptimalYLast;
 
     NewStatement.FixYStatementsPosition;
 
@@ -338,11 +351,11 @@ implementation
   begin
     FStatements.Add(AStatement);
 
-    AStatement.SetOptimalHeight;
+    AStatement.SetOptimalYLast;
 
     if (BaseOperator <> nil)and (BaseOperator.GetBlockCount > 1) and
           (FindStatementIndex(AStatement.FYStart) = FStatements.Count - 2) then
-      Statements[Statements.Count - 2].SetOptimalHeight;
+      Statements[Statements.Count - 2].SetOptimalYLast;
 
     AStatement.FixYStatementsPosition;
 
@@ -418,7 +431,7 @@ implementation
     end;
 
     if (BaseOperator <> nil) and not BaseOperator.IsPreсOperator then
-      BaseOperator.SetOptimalHeight;
+      BaseOperator.SetOptimalYLast;
   end;
 
   function TBlock.FindOptimalXLast: Integer;
@@ -596,6 +609,19 @@ implementation
     InitializeBlock;
   end;
 
+  destructor TOperator.Destroy;
+  var
+    I: Integer;
+    Blocks: TBlockArr;
+  begin
+    Blocks:= GetBlocks;
+
+    for I := 0 to High(GetBlocks) do
+      Blocks[I].Destroy;
+
+    inherited;
+  end;
+
   constructor TOperator.CreateUncertainty(const AYStart: Integer;
                               const ABaseBlock: TBlock; const AImage: TImage);
   begin
@@ -604,7 +630,10 @@ implementation
 
   function TOperator.GetBlockYStart: Integer;
   begin
-    Result:= FYLast;
+    if IsPreсOperator then
+      Result:= FYLast
+    else
+      Result:= FYStart;
   end;
 
   function TOperator.GetYBottom: Integer;
@@ -612,16 +641,22 @@ implementation
     I: Integer;
   begin
     Result:= 0;
-    for I := 0 to High(GetBlocks) do
-      Result:= Max(Result, GetBlocks[I].FStatements.GetLast.GetYBottom);
+    if IsPreсOperator then
+      for I := 0 to High(GetBlocks) do
+        Result:= Max(Result, GetBlocks[I].FStatements.GetLast.GetYBottom)
+    else
+      Result:= FYLast;
   end;
 
   procedure TOperator.SetYBottom(const AYBottom: Integer);
   var
     I: Integer;
   begin
-    for I:= 0 to High(GetBlocks) do
-      GetBlocks[I].Statements.GetLast.SetYBottom(AYBottom);
+    if IsPreсOperator then
+      for I:= 0 to High(GetBlocks) do
+        GetBlocks[I].Statements.GetLast.SetYBottom(AYBottom)
+    else
+      FYLast:= AYBottom;
   end;
 
   function TOperator.GetOptimalYBottom: Integer;
@@ -629,8 +664,11 @@ implementation
     I: Integer;
   begin
     Result:= 0;
-    for I:= 0 to High(GetBlocks) do
-      Result:= Max(Result, GetBlocks[I].Statements.GetLast.GetOptimalYBottom);
+    if IsPreсOperator then
+      for I:= 0 to High(GetBlocks) do
+        Result:= Max(Result, GetBlocks[I].Statements.GetLast.GetOptimalYBottom)
+    else
+      Result:= GetOptimalYLast;
   end;
 
 end.

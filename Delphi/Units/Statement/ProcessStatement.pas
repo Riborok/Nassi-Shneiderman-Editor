@@ -1,7 +1,7 @@
 ﻿unit ProcessStatement;
 
 interface
-uses Base, vcl.graphics, DrawShapes, Vcl.ExtCtrls;
+uses Base, vcl.graphics, DrawShapes, Vcl.ExtCtrls, DetermineDimensions;
 type
 
   TProcessStatement = class(TStatement)
@@ -10,18 +10,10 @@ type
     procedure SetInitiaXLast; override;
     function GetOptimalYLast: Integer; override;
   public
-    constructor Create(const AYStart: Integer; const AAction: String;
-                       const ABaseBlock: TBlock; const AImage: TImage);
     procedure Draw; override;
   end;
 
 implementation
-
-  constructor TProcessStatement.Create(const AYStart: Integer; const AAction: String;
-                                       const ABaseBlock: TBlock; const AImage: TImage);
-  begin
-    inherited Create(AYStart, AAction, ABaseBlock, AImage);
-  end;
 
   function TProcessStatement.GetOptimalXLast: Integer;
   begin

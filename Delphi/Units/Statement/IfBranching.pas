@@ -1,7 +1,7 @@
 ﻿unit IfBranching;
 
 interface
-uses Base, vcl.graphics, DrawShapes, MinMaxInt, Vcl.ExtCtrls;
+uses Base, vcl.graphics, DrawShapes, MinMaxInt, Vcl.ExtCtrls, DetermineDimensions;
 type
 
   TIfBranching = class(TOperator)
@@ -21,9 +21,6 @@ type
   private const
     FBlockCount = 2;
   public
-    destructor Destroy; override;
-    constructor Create(AYStart: Integer; const AAction: string;
-                       const ABaseBlock: TBlock; const AImage: TImage);
     procedure Draw; override;
     function GetBlocks: TBlockArr; override;
     function GetBlockCount: Integer; override;
@@ -47,15 +44,6 @@ implementation
     Result:= FBlockCount;
   end;
 
-  destructor TIfBranching.Destroy;
-  begin
-
-    FBlocks[0].Destroy;
-    FBlocks[1].Destroy;
-
-    inherited;
-  end;
-
   procedure TIfBranching.CreateBlock (const ABaseBlock: TBlock);
   begin
     SetLength(FBlocks, FBlockCount);
@@ -66,23 +54,17 @@ implementation
     FBlocks[1]:= TBlock.Create(FBlocks[0].XLast, ABaseBlock.XLast, Self);
   end;
 
-  constructor TIfBranching.Create(AYStart: Integer; const AAction:
-                           string; const ABaseBlock: TBlock; const AImage: TImage);
-  begin
-    inherited Create(AYStart, AAction, ABaseBlock, AImage);
-  end;
-
   procedure TIfBranching.InitializeBlock;
   var
     NewStatement: TStatement;
   begin
     NewStatement:= DefaultBlock.CreateUncertainty(FYLast, FBlocks[0], FImage);
     FBlocks[0].Statements.Add(NewStatement);
-    NewStatement.SetOptimalHeight;
+    NewStatement.SetOptimalYLast;
 
     NewStatement:= DefaultBlock.CreateUncertainty(FYLast, FBlocks[1], FImage);
     FBlocks[1].Statements.Add(NewStatement);
-    NewStatement.SetOptimalHeight;
+    NewStatement.SetOptimalYLast;
   end;
 
   function TIfBranching.GetOptimalWidthForBlock(const ABlock: TBlock): Integer;
