@@ -10,7 +10,6 @@ implementation
   var
     L, R, M: Integer;
     CurrOperator: TOperator;
-    Blocks: TBlockArr;
     Statement: TStatement;
 
     function BinarySearchBlockArray(const Blocks: TBlockArr; const AX: Integer): TBlock;
@@ -52,31 +51,29 @@ implementation
         if (AY >= Statement.YStart) and (AY <= Statement.GetYBottom) then
         begin
 
-          if (Statement is TOperator) then
+          if Statement is TOperator then
           begin
 
             CurrOperator:= TOperator(Statement);
-
-            Blocks:= CurrOperator.GetBlocks;
 
             case CurrOperator.IsPreñOperator of
               True:
                 if AY <= CurrOperator.GetBlockYStart then
                   Exit(Statement);
               False:
-                if AY >= Blocks[0].Statements.GetLast.GetYBottom then
+                if AY >= CurrOperator.Blocks[0].Statements.GetLast.GetYBottom then
                   Exit(Statement);
             end;
 
-            if (CurrOperator is TLoop) and
+            if CurrOperator is TLoop and
                           (AX <= TLoop(CurrOperator).GetXLastStrip) then
               Exit(Statement);
 
-            Exit(BinarySearchStatement(AX, AY, BinarySearchBlockArray(Blocks, AX)));
+            Exit(BinarySearchStatement(AX, AY, BinarySearchBlockArray(CurrOperator.Blocks, AX)));
 
-          end;
-
-          Exit(Statement);
+          end
+          else
+            Exit(Statement);
         end
         else if AY < Statement.YStart then
           R := M - 1

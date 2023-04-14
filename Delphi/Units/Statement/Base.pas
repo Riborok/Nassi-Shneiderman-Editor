@@ -1,7 +1,7 @@
 ﻿unit Base;
 
 interface
-uses Vcl.graphics, System.Generics.Collections, ArrayList, MinMaxInt, Vcl.ExtCtrls;
+uses Vcl.graphics, System.Generics.Collections, ArrayList, MinMaxInt, Vcl.ExtCtrls, CorrectAction;
 type
   TBlock = class;
 
@@ -55,7 +55,7 @@ type
 
     // This method is abstract and will be implemented by subclasses to determine
     // the size of the statement
-    procedure SetInitiaXLast; virtual; abstract;
+    procedure SetInitiaXLast; virtual;
 
     // Create
     constructor Create(const AYStart: Integer; const AAction : String;
@@ -94,6 +94,7 @@ type
   { TOperator }
   TOperator = class abstract(TStatement)
   protected
+    FBlocks: TBlockArr;
 
     procedure CreateBlock(const ABaseBlock: TBlock); virtual; abstract;
     procedure InitializeBlock; virtual; abstract;
@@ -102,6 +103,8 @@ type
     function GetOptimalYBottom: Integer; override;
 
     function GetOptimalWidthForBlock(const Block: TBlock): Integer; virtual; abstract;
+
+    procedure SetInitiaXLast; override;
   public
     constructor CreateUncertainty(const AYStart: Integer;
                     const ABaseBlock: TBlock; const AImage: TImage); override;
@@ -111,13 +114,11 @@ type
 
     function IsPreсOperator : Boolean; virtual; abstract;
 
-    function GetBlocks: TBlockArr; virtual; abstract;
-    function GetBlockCount: Integer; virtual; abstract;
-
     function GetBlockYStart: Integer;
     function GetYBottom: Integer; override;
 
     property YLast: Integer read FYLast;
+    property Blocks: TBlockArr read FBlocks;
   end;
 
   { TBlock }
@@ -134,6 +135,7 @@ type
     procedure MoveRightExceptXLast(const AOffset: Integer);
     procedure MoveRight(const AOffset: Integer);
     procedure ChangeXLastBlock(const ANewXLast: Integer);
+
   public
     constructor Create(const AXStart, AXLast: Integer; const ABaseOperator: TOperator);
     destructor Destroy; override;
@@ -154,21 +156,14 @@ type
 
     procedure SetOptimalXLastBlock;
 
+  function GetLastStatement: TStatement;
+
   end;
 
   var
     DefaultBlock: TStatementClass = nil;
 
 implementation
-
-  { GetCorrectAction }
-  function GetCorrectAction(const Astring: String): String;
-  begin
-    if Astring <> '' then
-      Result := Astring
-    else
-      Result := ' ';
-  end;
 
   { TStatement }
 
@@ -218,6 +213,11 @@ implementation
     FixYStatementsPosition;
   end;
 
+  procedure TStatement.SetInitiaXLast;
+  begin
+    BaseBlock.SetOptimalXLastBlock;
+  end;
+
   function TStatement.GetYBottom: Integer;
   begin
     Result:= FYLast;
@@ -238,30 +238,22 @@ implementation
     Index: Integer;
     CurrBlock: TBlock;
     CurrOperator: TOperator;
-
-    function GetLastStatement(const ABlock: TBlock): TStatement;
-    begin
-      if (ABlock.BaseOperator = nil) or ABlock.BaseOperator.IsPreсOperator then
-        Result:= ABlock.FStatements.GetLast
-      else
-        Result:= ABlock.BaseOperator;
-    end;
     procedure AlignBlocks(const ABlockArr: TBlockArr);
     var
       I, MaxYLast, CurrYLast: Integer;
     begin
 
-      MaxYLast := GetLastStatement(ABlockArr[0]).GetOptimalYBottom;
+      MaxYLast := ABlockArr[0].GetLastStatement.GetOptimalYBottom;
       for I := 1 to High(ABlockArr) do
       begin
-        CurrYLast := GetLastStatement(ABlockArr[I]).GetOptimalYBottom;;
+        CurrYLast := ABlockArr[I].GetLastStatement.GetOptimalYBottom;;
         if MaxYLast < CurrYLast then
           MaxYLast := CurrYLast;
       end;
 
       for I := 0 to High(ABlockArr) do
-        if GetLastStatement(ABlockArr[I]).GetYBottom <> MaxYLast then
-          GetLastStatement(ABlockArr[I]).SetYBottom(MaxYLast);
+        if ABlockArr[I].GetLastStatement.GetYBottom <> MaxYLast then
+          ABlockArr[I].GetLastStatement.SetYBottom(MaxYLast);
     end;
   begin
 
@@ -270,6 +262,13 @@ implementation
 
     // Shift all statements after and childrens
     BaseBlock.ChangeYStatement(Index);
+
+    if Self is TOperator then
+    begin
+      CurrOperator:= TOperator(Self);
+      if Length(CurrOperator.FBlocks) > 1 then
+        AlignBlocks(CurrOperator.FBlocks);
+    end;
 
     // Next, shift the statements in all basic blocks
     CurrBlock:= BaseBlock;
@@ -281,8 +280,8 @@ implementation
       Index := CurrBlock.FindStatementIndex(CurrOperator.FYStart);
       CurrBlock.ChangeYStatement(Index + 1);
 
-      if CurrOperator.GetBlockCount > 1 then
-        AlignBlocks(CurrOperator.GetBlocks);
+      if Length(CurrOperator.FBlocks) > 1 then
+        AlignBlocks(CurrOperator.FBlocks);
     end;
   end;
 
@@ -338,7 +337,7 @@ implementation
 
     NewStatement.SetOptimalYLast;
 
-    if (BaseOperator <> nil) and (BaseOperator.GetBlockCount > 1) and
+    if (BaseOperator <> nil) and (Length(BaseOperator.FBlocks) > 1) and
                                             (Index = FStatements.Count - 2) then
       Statements[Statements.Count - 2].SetOptimalYLast;
 
@@ -353,7 +352,7 @@ implementation
 
     AStatement.SetOptimalYLast;
 
-    if (BaseOperator <> nil)and (BaseOperator.GetBlockCount > 1) and
+    if (BaseOperator <> nil) and (Length(BaseOperator.FBlocks) > 1) and
           (FindStatementIndex(AStatement.FYStart) = FStatements.Count - 2) then
       Statements[Statements.Count - 2].SetOptimalYLast;
 
@@ -405,7 +404,7 @@ implementation
 
       if FStatements[AIndex] is TOperator then
       begin
-        Blocks:= TOperator(FStatements[AIndex]).GetBlocks;
+        Blocks:= TOperator(FStatements[AIndex]).FBlocks;
         for J := 0 to High(Blocks) do
           Blocks[J].ChangeYStatement;
       end;
@@ -420,7 +419,7 @@ implementation
 
       if FStatements[I] is TOperator then
       begin
-        Blocks:= TOperator(FStatements[I]).GetBlocks;
+        Blocks:= TOperator(FStatements[I]).FBlocks;
         for J := 0 to High(Blocks) do
           Blocks[J].ChangeYStatement;
       end;
@@ -451,7 +450,7 @@ implementation
 
       if FStatements[I] is TOperator then
       begin
-        Blocks:= TOperator(FStatements[I]).GetBlocks;
+        Blocks:= TOperator(FStatements[I]).FBlocks;
         CurrOptimalX:= Blocks[High(Blocks)].FindOptimalXLast;
         CheckNewOptimalX;
       end;
@@ -474,7 +473,7 @@ implementation
     for I := 0 to FStatements.Count - 1 do
       if FStatements[I] is TOperator then
       begin
-        Blocks:= TOperator(FStatements[I]).GetBlocks;
+        Blocks:= TOperator(FStatements[I]).FBlocks;
         for J := 0 to High(Blocks) - 1 do
           Blocks[J].MoveRight(AOffset);
 
@@ -492,7 +491,7 @@ implementation
     for I := 0 to FStatements.Count - 1 do
       if FStatements[I] is TOperator then
       begin
-        Blocks:= TOperator(FStatements[I]).GetBlocks;
+        Blocks:= TOperator(FStatements[I]).FBlocks;
         for J := 0 to High(Blocks) do
           Blocks[J].MoveRight(AOffset);
       end;
@@ -507,7 +506,7 @@ implementation
     for I := 0 to FStatements.Count - 1 do
       if FStatements[I] is TOperator then
       begin
-        Blocks:= TOperator(FStatements[I]).GetBlocks;
+        Blocks:= TOperator(FStatements[I]).FBlocks;
         Blocks[High(Blocks)].ChangeXLastBlock(ANewXLast);
       end;
   end;
@@ -538,7 +537,7 @@ implementation
         if CurrBlock.FStatements[I] is TOperator then
         begin
 
-          Blocks:= TOperator(CurrBlock.FStatements[I]).GetBlocks;
+          Blocks:= TOperator(CurrBlock.FStatements[I]).FBlocks;
 
           for J := 0 to High(Blocks) do
             if Blocks[J].FXLast = NewXLast then
@@ -596,6 +595,14 @@ implementation
       FStatements[I].Draw;
   end;
 
+  function TBlock.GetLastStatement: TStatement;
+  begin
+    if (BaseOperator = nil) or BaseOperator.IsPreсOperator then
+      Result:= FStatements.GetLast
+    else
+      Result:= BaseOperator;
+  end;
+
   { TOperator }
   constructor TOperator.Create(const AYStart: Integer; const AAction : String;
                        const ABaseBlock: TBlock; const AImage: TImage);
@@ -608,12 +615,10 @@ implementation
   destructor TOperator.Destroy;
   var
     I: Integer;
-    Blocks: TBlockArr;
   begin
-    Blocks:= GetBlocks;
 
-    for I := 0 to High(GetBlocks) do
-      Blocks[I].Destroy;
+    for I := 0 to High(FBlocks) do
+      FBlocks[I].Destroy;
 
     inherited;
   end;
@@ -632,6 +637,11 @@ implementation
     end;
   end;
 
+  procedure TOperator.SetInitiaXLast;
+  begin
+    FBlocks[0].SetOptimalXLastBlock;
+  end;
+
   function TOperator.GetYBottom: Integer;
   var
     I: Integer;
@@ -639,8 +649,8 @@ implementation
     Result := 0;
     case IsPreсOperator of
       True:
-        for I := 0 to High(GetBlocks) do
-          Result := Max(Result, GetBlocks[I].FStatements.GetLast.GetYBottom);
+        for I := 0 to High(FBlocks) do
+          Result := Max(Result, FBlocks[I].FStatements.GetLast.GetYBottom);
       False: Result := FYLast;
     end;
   end;
@@ -651,8 +661,8 @@ implementation
   begin
     case IsPreсOperator of
       True:
-        for I := 0 to High(GetBlocks) do
-          GetBlocks[I].Statements.GetLast.SetYBottom(AYBottom);
+        for I := 0 to High(FBlocks) do
+          FBlocks[I].Statements.GetLast.SetYBottom(AYBottom);
       False: FYLast := AYBottom;
     end;
   end;
@@ -664,8 +674,8 @@ implementation
     Result := 0;
     case IsPreсOperator of
       True:
-        for I := 0 to High(GetBlocks) do
-          Result := Max(Result, GetBlocks[I].Statements.GetLast.GetOptimalYBottom);
+        for I := 0 to High(FBlocks) do
+          Result := Max(Result, FBlocks[I].Statements.GetLast.GetOptimalYBottom);
       False: Result := GetOptimalYLast;
     end;
   end;

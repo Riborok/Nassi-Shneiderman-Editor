@@ -150,20 +150,22 @@ implementation
   procedure TNassiShneiderman.ScrollBoxMouseWheel(Sender: TObject;
   Shift: TShiftState; WheelDelta: Integer; MousePos: TPoint;
     var Handled: Boolean);
+  const
+    ScrotStep = 42;
   begin
     if ssCtrl in Shift then
     begin
       if WheelDelta > 0 then
-        ScrollBox.HorzScrollBar.Position := ScrollBox.HorzScrollBar.Position - 15
+        ScrollBox.HorzScrollBar.Position := ScrollBox.HorzScrollBar.Position - ScrotStep
       else
-        ScrollBox.HorzScrollBar.Position := ScrollBox.HorzScrollBar.Position + 15;
+        ScrollBox.HorzScrollBar.Position := ScrollBox.HorzScrollBar.Position + ScrotStep;
     end
     else
     begin
       if WheelDelta > 0 then
-        ScrollBox.VertScrollBar.Position := ScrollBox.VertScrollBar.Position - 15
+        ScrollBox.VertScrollBar.Position := ScrollBox.VertScrollBar.Position - ScrotStep
       else
-        ScrollBox.VertScrollBar.Position := ScrollBox.VertScrollBar.Position + 15;
+        ScrollBox.VertScrollBar.Position := ScrollBox.VertScrollBar.Position + ScrotStep;
     end;
   end;
 

@@ -24,8 +24,8 @@ implementation
   var
     NewStatement: TStatement;
   begin
-    NewStatement:= DefaultBlock.CreateUncertainty(FYLast, FBlock[0], FImage);
-    FBlock[0].Statements.Add(NewStatement);
+    NewStatement:= DefaultBlock.CreateUncertainty(FYLast, FBlocks[0], FImage);
+    FBlocks[0].Statements.Add(NewStatement);
     NewStatement.SetOptimalYLast;
   end;
 
@@ -45,7 +45,7 @@ implementation
     DrawText(FImage.Canvas, BaseBlock.XStart + ((BaseBlock.XLast - BaseBlock.XStart) div 2)
       - (GetTextWidth(FImage.Canvas, Action) div 2), FYStart + YIndentText, Action);
 
-    FBlock[0].DrawBlock;
+    FBlocks[0].DrawBlock;
   end;
 
 end.

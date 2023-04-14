@@ -26,8 +26,8 @@ implementation
   var
     NewStatement: TStatement;
   begin
-    NewStatement:= DefaultBlock.CreateUncertainty(FYStart, FBlock[0], FImage);
-    FBlock[0].Statements.Add(NewStatement);
+    NewStatement:= DefaultBlock.CreateUncertainty(FYStart, FBlocks[0], FImage);
+    FBlocks[0].Statements.Add(NewStatement);
     NewStatement.SetOptimalYLast;
   end;
 
@@ -35,7 +35,7 @@ implementation
   begin
     DrawRectangle(BaseBlock.XStart, BaseBlock.XLast, GetBlockYBottom, FYLast, FImage);
 
-    DrawRectangle(BaseBlock.XStart, GetXLastStrip, FBlock[0].Statements[0].YStart,
+    DrawRectangle(BaseBlock.XStart, GetXLastStrip, FBlocks[0].Statements[0].YStart,
                                                               GetBlockYBottom, FImage);
 
     Erase(BaseBlock.XStart +  1, GetXLastStrip, GetBlockYBottom, GetBlockYBottom, FImage.Canvas);
@@ -43,7 +43,7 @@ implementation
     DrawText(FImage.Canvas, BaseBlock.XStart + ((BaseBlock.XLast - BaseBlock.XStart) div 2)
       - (GetTextWidth(FImage.Canvas, Action) div 2), GetBlockYBottom + YIndentText, Action);
 
-    FBlock[0].DrawBlock;
+    FBlocks[0].DrawBlock;
   end;
 
   function TLastLoop.GetOptimalYLast: Integer;
@@ -53,7 +53,7 @@ implementation
 
   function TLastLoop.GetBlockYBottom: Integer;
   begin
-    Result:= FBlock[0].Statements.GetLast.GetYBottom;
+    Result:= FBlocks[0].Statements.GetLast.GetYBottom;
   end;
 
 end.

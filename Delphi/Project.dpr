@@ -21,7 +21,9 @@ uses
   DetermineDimensions in 'Units\Image\DetermineDimensions.pas',
   DrawShapes in 'Units\Image\DrawShapes.pas',
   AdjustBorders in 'Units\Image\AdjustBorders.pas',
-  Loop in 'Units\Statement\Loop.pas';
+  Loop in 'Units\Statement\Loop.pas',
+  ConditionalOperator in 'Units\Statement\ConditionalOperator.pas',
+  CorrectAction in 'Units\Support\CorrectAction.pas';
 
 {$R *.res}
 

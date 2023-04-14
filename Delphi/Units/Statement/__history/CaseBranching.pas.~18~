@@ -1,0 +1,49 @@
+unit CaseBranching;
+
+interface
+uses Base, ArrayList, vcl.graphics, Vcl.ExtCtrls;
+type
+
+  TCaseBranching = class(TOperator)
+  private
+    FBlocks : TArrayList<TBlock>;
+  protected
+
+  public
+    constructor Create(const AYStart: Integer; const AAction : String;
+                       const ABaseBlock: TBlock; const AImage: TImage); override;
+    function GetBlocks: TBlockArr; override;
+    function GetBlockCount: Integer; override;
+    function IsPreñOperator: Boolean; override;
+  end;
+
+implementation
+
+  function IncrementByOne(const AArrayLength: Integer): Integer;
+  begin
+    Result := AArrayLength + 1;
+  end;
+
+  constructor TCaseBranching.Create(const AYStart: Integer; const AAction : String;
+                     const ABaseBlock: TBlock; const AImage: TImage);
+  begin
+    FBlocks := TArrayList<TBlock>.Create(2, IncrementByOne);
+    inherited Create(AYStart, AAction, ABaseBlock, AImage);
+  end;
+
+  function TCaseBranching.IsPreñOperator: Boolean;
+  begin
+    Result:= True;
+  end;
+
+  function TCaseBranching.GetBlocks: TBlockArr;
+  begin
+    Result:= TBlockArr(FBlocks.GetArray);
+  end;
+
+  function TCaseBranching.GetBlockCount: Integer;
+  begin
+    Result:= FBlocks.Count;
+  end;
+
+end.
