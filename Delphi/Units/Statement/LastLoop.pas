@@ -26,9 +26,8 @@ implementation
   var
     NewStatement: TStatement;
   begin
-    NewStatement:= DefaultBlock.CreateUncertainty(FYStart, FBlocks[0], FImage);
-    FBlocks[0].Statements.Add(NewStatement);
-    NewStatement.SetOptimalYLast;
+    NewStatement:= DefaultBlock.CreateUncertainty(FBlocks[0], FImage);
+    FBlocks[0].AddLast(NewStatement);
   end;
 
   procedure TLastLoop.Draw;

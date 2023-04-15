@@ -57,13 +57,16 @@ type
     // the size of the statement
     procedure SetInitiaXLast; virtual;
 
-    // Create
-    constructor Create(const AYStart: Integer; const AAction : String;
-                              const ABaseBlock: TBlock; const AImage: TImage); virtual;
+    // Set the dimensions after adding and if this statement is the last one,
+    // it asks the previous to set the optimal height
+    procedure SetSizesAfterAdding(const Index: Integer); virtual;
+
   public
     // This constructor creates an uncertainty statement
-    constructor CreateUncertainty(const AYStart: Integer;
-                    const ABaseBlock: TBlock; const AImage: TImage); virtual;
+    constructor CreateUncertainty(const ABaseBlock: TBlock; const AImage: TImage);
+
+    // Create
+    constructor Create(const AAction : String; const ABaseBlock: TBlock; const AImage: TImage);
 
     // These properties return the text of the statement and base block
     property Action: String read FAction;
@@ -105,11 +108,9 @@ type
     function GetOptimalWidthForBlock(const Block: TBlock): Integer; virtual; abstract;
 
     procedure SetInitiaXLast; override;
+
+    procedure SetSizesAfterAdding(const Index: Integer); override;
   public
-    constructor CreateUncertainty(const AYStart: Integer;
-                    const ABaseBlock: TBlock; const AImage: TImage); override;
-    constructor Create(const AYStart: Integer; const AAction : String;
-                       const ABaseBlock: TBlock; const AImage: TImage); override;
     destructor Destroy; override;
 
     function IsPreсOperator : Boolean; virtual; abstract;
@@ -145,9 +146,10 @@ type
     property BaseOperator: TOperator read FBaseOperator;
     property Statements: TArrayList<TStatement> read FStatements;
 
-    procedure AddAfter(const AStatement: TStatement;
-            const TypeStatement: TStatementClass; const AAction: string);
-    procedure AddStatement(const AStatement: TStatement);
+    procedure AddAfter(const AStatement: TStatement; const InsertedStatement: TStatement);
+    procedure AddLast(const AStatement: TStatement; const IsSizesSettingNeeded : Boolean = True);
+    procedure AddFirstInBaseBlock(const AStatement: TStatement; const YStart: Integer);
+
     procedure DeleteStatement(const AStatement: TStatement);
 
     procedure DrawBlock;
@@ -184,18 +186,14 @@ implementation
     Result:= FYLast = GetOptimalYLast;
   end;
 
-  constructor TStatement.CreateUncertainty(const AYStart: Integer;
-                              const ABaseBlock: TBlock; const AImage: TImage);
+  constructor TStatement.CreateUncertainty(const ABaseBlock: TBlock; const AImage: TImage);
   begin
-    Create(AYStart, UncertaintySymbol, ABaseBlock, AImage);
+    Create(UncertaintySymbol, ABaseBlock, AImage);
   end;
 
-  constructor TStatement.Create(const AYStart: Integer;
-              const AAction : String; const ABaseBlock: TBlock;
-              const AImage: TImage);
+  constructor TStatement.Create(const AAction : String; const ABaseBlock: TBlock;
+                                const AImage: TImage);
   begin
-    FYStart := AYStart;
-
     FBaseBlock := ABaseBlock;
 
     FImage := AImage;
@@ -296,6 +294,19 @@ implementation
     Inc(FYLast, Offset);
   end;
 
+  procedure TStatement.SetSizesAfterAdding(const Index: Integer);
+  begin
+    SetOptimalYLast;
+
+    if (BaseBlock.BaseOperator <> nil) and (Length(BaseBlock.BaseOperator.FBlocks) > 1) and
+    (Index = BaseBlock.FStatements.Count - 1) and (BaseBlock.FStatements.Count > 1) then
+      BaseBlock.FStatements[BaseBlock.FStatements.Count - 2].SetOptimalYLast;
+
+    FixYStatementsPosition;
+
+    SetInitiaXLast;
+  end;
+
   { TBlock }
 
   destructor TBlock.Destroy;
@@ -322,43 +333,34 @@ implementation
   end;
 
   procedure TBlock.AddAfter(const AStatement: TStatement;
-            const TypeStatement: TStatementClass; const AAction: string);
+            const InsertedStatement: TStatement);
   var
     Index: Integer;
-    NewStatement: TStatement;
   begin
-
-    Index:= FindStatementIndex(AStatement.FYStart);
-
-    NewStatement:= TypeStatement.Create(AStatement.GetYBottom, AAction, Self,
-                                        AStatement.FImage);
-
-    FStatements.Insert(NewStatement, Index + 1);
-
-    NewStatement.SetOptimalYLast;
-
-    if (BaseOperator <> nil) and (Length(BaseOperator.FBlocks) > 1) and
-                                            (Index = FStatements.Count - 2) then
-      Statements[Statements.Count - 2].SetOptimalYLast;
-
-    NewStatement.FixYStatementsPosition;
-
-    NewStatement.SetInitiaXLast;
+    Index:= FindStatementIndex(AStatement.FYStart) + 1;
+    InsertedStatement.FYStart:= AStatement.GetYBottom;
+    FStatements.Insert(InsertedStatement, Index);
+    InsertedStatement.SetSizesAfterAdding(Index);
   end;
 
-  procedure TBlock.AddStatement(const AStatement: TStatement);
+  procedure TBlock.AddLast(const AStatement: TStatement; const IsSizesSettingNeeded : Boolean = True);
   begin
     FStatements.Add(AStatement);
 
-    AStatement.SetOptimalYLast;
+    if FStatements.Count = 1 then
+      AStatement.FYStart:= BaseOperator.FYLast
+    else
+      AStatement.FYStart:= FStatements[FStatements.Count - 2].GetYBottom;
 
-    if (BaseOperator <> nil) and (Length(BaseOperator.FBlocks) > 1) and
-          (FindStatementIndex(AStatement.FYStart) = FStatements.Count - 2) then
-      Statements[Statements.Count - 2].SetOptimalYLast;
+    if IsSizesSettingNeeded then
+      AStatement.SetSizesAfterAdding(FStatements.Count - 1);
+  end;
 
-    AStatement.FixYStatementsPosition;
-
-    AStatement.SetInitiaXLast;
+  procedure TBlock.AddFirstInBaseBlock(const AStatement: TStatement; const YStart: Integer);
+  begin
+    FStatements.Add(AStatement);
+    AStatement.FYStart:= YStart;
+    AStatement.SetSizesAfterAdding(FStatements.Count - 1);
   end;
 
   procedure TBlock.DeleteStatement(const AStatement: TStatement);
@@ -371,8 +373,7 @@ implementation
 
     if FStatements.Count = 0 then
     begin
-      AddStatement(DefaultBlock.CreateUncertainty(
-                                AStatement.FYStart, Self, AStatement.FImage));
+      AddLast(DefaultBlock.CreateUncertainty(Self, AStatement.FImage));
       FStatements[0].FixYStatementsPosition;
     end
     else if Index = 0 then
@@ -604,14 +605,6 @@ implementation
   end;
 
   { TOperator }
-  constructor TOperator.Create(const AYStart: Integer; const AAction : String;
-                       const ABaseBlock: TBlock; const AImage: TImage);
-  begin
-    inherited Create(AYStart, AAction, ABaseBlock, AImage);
-    CreateBlock(ABaseBlock);
-    InitializeBlock;
-  end;
-
   destructor TOperator.Destroy;
   var
     I: Integer;
@@ -621,12 +614,6 @@ implementation
       FBlocks[I].Destroy;
 
     inherited;
-  end;
-
-  constructor TOperator.CreateUncertainty(const AYStart: Integer;
-                              const ABaseBlock: TBlock; const AImage: TImage);
-  begin
-    Create(AYStart, UncertaintySymbol, ABaseBlock, AImage);
   end;
 
   function TOperator.GetBlockYStart: Integer;
@@ -678,6 +665,14 @@ implementation
           Result := Max(Result, FBlocks[I].Statements.GetLast.GetOptimalYBottom);
       False: Result := GetOptimalYLast;
     end;
+  end;
+
+  procedure TOperator.SetSizesAfterAdding(const Index: Integer);
+  begin
+    CreateBlock(FBaseBlock);
+    InitializeBlock;
+
+    inherited;
   end;
 
 end.

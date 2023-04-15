@@ -47,13 +47,11 @@ implementation
   var
     NewStatement: TStatement;
   begin
-    NewStatement:= DefaultBlock.CreateUncertainty(FYLast, FBlocks[0], FImage);
-    FBlocks[0].Statements.Add(NewStatement);
-    NewStatement.SetOptimalYLast;
+    NewStatement:= DefaultBlock.CreateUncertainty(FBlocks[0], FImage);
+    FBlocks[0].AddLast(NewStatement, False);
 
-    NewStatement:= DefaultBlock.CreateUncertainty(FYLast, FBlocks[1], FImage);
-    FBlocks[1].Statements.Add(NewStatement);
-    NewStatement.SetOptimalYLast;
+    NewStatement:= DefaultBlock.CreateUncertainty(FBlocks[1], FImage);
+    FBlocks[1].AddLast(NewStatement, True);
   end;
 
   procedure TIfBranching.Draw;

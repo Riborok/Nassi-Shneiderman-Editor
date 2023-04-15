@@ -9,7 +9,7 @@ type
 
   public
     constructor Create(const AYStart: Integer; const AAction : String;
-                       const ABaseBlock: TBlock; const AImage: TImage); override;
+                       const ABaseBlock: TBlock; const AImage: TImage);
     function IsPreñOperator: Boolean; override;
   end;
 
@@ -19,7 +19,7 @@ implementation
                      const ABaseBlock: TBlock; const AImage: TImage);
   begin
 
-    inherited Create(AYStart, AAction, ABaseBlock, AImage);
+    inherited Create(AAction, ABaseBlock, AImage);
   end;
 
   function TCaseBranching.IsPreñOperator: Boolean;

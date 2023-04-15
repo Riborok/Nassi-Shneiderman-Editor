@@ -86,8 +86,8 @@ implementation
 
     MainBlock:= TBlock.Create(InitialIndent, 0, nil);
 
-    MainBlock.AddStatement(TProcessStatement.CreateUncertainty(InitialIndent,
-                           MainBlock, Image));
+    MainBlock.AddFirstInBaseBlock(TProcessStatement.CreateUncertainty(
+                           MainBlock, Image), InitialIndent);
 
     // Пока так
     Image.Picture.Bitmap.Width := Screen.Width;
@@ -193,11 +193,16 @@ implementation
   end;
 
   procedure TNassiShneiderman.spStatementClick(Sender: TObject);
+  var
+    NewStatement: TStatement;
   begin
 
     if (DedicatedStatement <> nil) and (Sender is TSpeedButton) then
-      DedicatedStatement.BaseBlock.AddAfter(DedicatedStatement,
-                    ConvertToBlockType(TSpeedButton(Sender).Tag), GetAction);
+    begin
+      NewStatement:= ConvertToBlockType(TSpeedButton(Sender).Tag).
+                        Create(GetAction, DedicatedStatement.BaseBlock, Image);
+      DedicatedStatement.BaseBlock.AddAfter(DedicatedStatement, NewStatement);
+    end;
 
     ClearAndRedraw;
   end;
