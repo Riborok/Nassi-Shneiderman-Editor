@@ -1,0 +1,10 @@
+unit Constants;
+
+interface
+const
+  FontSize = 24;
+  Font = 'Times New Roman';
+
+implementation
+
+end.

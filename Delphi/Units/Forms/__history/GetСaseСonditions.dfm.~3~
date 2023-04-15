@@ -1,0 +1,37 @@
+﻿object WriteСaseСonditions: TWriteСaseСonditions
+  Left = 0
+  Top = 0
+  Caption = 'Write'#1057'ase'#1057'onditions'
+  ClientHeight = 232
+  ClientWidth = 517
+  Color = clBtnFace
+  Font.Charset = DEFAULT_CHARSET
+  Font.Color = clWindowText
+  Font.Height = -11
+  Font.Name = 'Tahoma'
+  Font.Style = []
+  OldCreateOrder = False
+  PixelsPerInch = 96
+  TextHeight = 13
+  object ScrollBox1: TScrollBox
+    Left = 0
+    Top = 0
+    Width = 517
+    Height = 232
+    Align = alClient
+    TabOrder = 0
+    ExplicitLeft = 208
+    ExplicitTop = 96
+    ExplicitWidth = 185
+    ExplicitHeight = 41
+    object btnOK: TButton
+      Left = 0
+      Top = 184
+      Width = 513
+      Height = 44
+      Align = alBottom
+      Caption = 'OK'
+      TabOrder = 0
+    end
+  end
+end

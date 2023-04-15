@@ -1,0 +1,9 @@
+unit Types;
+
+interface
+type
+  TArrString = array of String;
+
+implementation
+
+end.

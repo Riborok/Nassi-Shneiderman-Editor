@@ -8,7 +8,7 @@ type
   private const
     FBlockCount = 1;
   protected
-    procedure CreateBlock(const ABaseBlock: TBlock); override;
+    procedure CreateBlock; override;
     function GetAmountOfPixelCorrection: Integer;
     function GetOptimalWidthForBlock(const ABlock: TBlock): Integer; override;
     function GetOptimaWidth: Integer; override;
@@ -19,10 +19,10 @@ type
 
 implementation
 
-  procedure TLoop.CreateBlock(const ABaseBlock: TBlock);
+  procedure TLoop.CreateBlock;
   begin
     SetLength(FBlocks, FBlockCount);
-    FBlocks[0] := TBlock.Create(GetXLastStrip, ABaseBlock.XLast, Self);
+    FBlocks[0] := TBlock.Create(GetXLastStrip, FBaseBlock.XLast, Self);
   end;
 
   function TLoop.GetOptimaWidth: Integer;

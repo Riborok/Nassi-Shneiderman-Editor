@@ -1,0 +1,27 @@
+unit GetÑaseÑonditions;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Types;
+
+type
+  TWriteÑaseÑonditions = class(TForm)
+    ScrollBox1: TScrollBox;
+    btnOK: TButton;
+    constructor Create(AOwner: TComponent; const ACond: array of String);
+  private
+    { Private declarations }
+  public
+    { Public declarations }
+  end;
+
+var
+  WriteÑaseÑonditions: TWriteÑaseÑonditions;
+
+implementation
+
+{$R *.dfm}
+
+  end.

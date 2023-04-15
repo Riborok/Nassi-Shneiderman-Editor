@@ -6,8 +6,9 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls, ProcessStatement,
   Base, FirstLoop, IfBranching, CaseBranching, LastLoop, StatementSearch, DrawShapes,
-  Vcl.StdCtrls, Vcl.Menus, System.Actions, Vcl.ActnList, Vcl.ToolWin,
-  Vcl.ComCtrls, Vcl.Buttons, System.ImageList, Vcl.ImgList, GetAction;
+  Vcl.StdCtrls, Vcl.Menus, System.Actions, Vcl.ActnList, Vcl.ToolWin, GetСaseСonditions,
+  Vcl.ComCtrls, Vcl.Buttons, System.ImageList, Vcl.ImgList, GetAction, ArrayList, Types,
+  CorrectAction;
 
 type
   TNassiShneiderman = class(TForm)
@@ -44,15 +45,17 @@ type
     procedure spStatementClick(Sender: TObject);
     procedure ScrollBoxMouseWheel(Sender: TObject; Shift: TShiftState;
       WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
     { Private declarations }
   private
     function GetAction(AInitialStr: String = ''): String;
+    function GetCond(AInitialStr: TStringArr = nil): TStringArr;
   private class
     function ConvertToBlockType(AIndex: Integer): TStatementClass;
   private const
-    InitialIndent = 10;
-    InitialFontSize = 24;
-    InitialFont = 'Times New Roman';
+    SchemeInitialIndent = 10;
+    SchemeInitialFontSize = 24;
+    SchemeInitialFont = 'Times New Roman';
   public
     { Public declarations }
     MainBlock : TBlock;
@@ -68,6 +71,12 @@ implementation
 
   {$R *.dfm}
 
+  procedure TNassiShneiderman.FormClose(Sender: TObject;
+  var Action: TCloseAction);
+  begin
+    MainBlock.Destroy;
+  end;
+
   procedure TNassiShneiderman.FormCreate(Sender: TObject);
   begin
 
@@ -78,16 +87,16 @@ implementation
 
     Self.DoubleBuffered := true;
 
-    Image.Canvas.Font.Size := InitialFontSize;
+    Image.Canvas.Font.Size := SchemeInitialFontSize;
 
-    Image.Canvas.Font.Name := InitialFont;
+    Image.Canvas.Font.Name := SchemeInitialFont;
 
     HighlightColor:= clYellow;
 
-    MainBlock:= TBlock.Create(InitialIndent, 0, nil);
+    MainBlock:= TBlock.Create(SchemeInitialIndent, 0, nil);
 
     MainBlock.AddFirstInBaseBlock(TProcessStatement.CreateUncertainty(
-                           MainBlock, Image), InitialIndent);
+                           MainBlock, Image), SchemeInitialIndent);
 
     // Пока так
     Image.Picture.Bitmap.Width := Screen.Width;
@@ -124,21 +133,6 @@ implementation
     DrawCoordinates(Image.Canvas, 50);
   end;
 
-  procedure TNassiShneiderman.ImageDblClick(Sender: TObject);
-  var
-    MousePos: TPoint;
-    Statement: TStatement;
-  begin
-    MousePos := Image.ScreenToClient(Mouse.CursorPos);
-
-    Statement := BinarySearchStatement(MousePos.X, MousePos.Y, MainBlock);
-
-    if Statement <> nil then
-      Statement.ChangeAction(GetAction(Statement.Action));
-
-    ClearAndRedraw;
-  end;
-
   procedure TNassiShneiderman.ImageMouseDown(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
   begin
@@ -169,16 +163,39 @@ implementation
     end;
   end;
 
+  function TNassiShneiderman.GetCond(AInitialStr: TStringArr = nil): TStringArr;
+  var
+    WriteСaseСonditions: TWriteСaseСonditions;
+    I : Integer;
+  begin
+    if AInitialStr = nil then
+    begin
+      SetLength(AInitialStr, 2);
+      AInitialStr[0]:= '';
+      AInitialStr[1]:= '';
+    end;
+
+    WriteСaseСonditions := TWriteСaseСonditions.Create(Self, AInitialStr);
+    WriteСaseСonditions.ShowModal;
+
+    SetLength(Result, WriteСaseСonditions.MemoList.Count);
+
+    for I := 0 to WriteСaseСonditions.MemoList.Count - 1 do
+      Result[I]:= GetCorrectAction(WriteСaseСonditions.MemoList[I].Lines.Text);
+
+    WriteСaseСonditions.Destroy;
+  end;
+
   function TNassiShneiderman.GetAction(AInitialStr: String = ''): String;
   var
-    writeActionForm: TWriteAction;
+    WriteActionForm: TWriteAction;
   begin
-    writeActionForm := TWriteAction.Create(Self, AInitialStr);
-    writeActionForm.ShowModal;
+    WriteActionForm := TWriteAction.Create(Self, AInitialStr);
+    WriteActionForm.ShowModal;
 
-    Result:= writeActionForm.MemoAction.Lines.Text;
+    Result:= GetCorrectAction(WriteActionForm.MemoAction.Lines.Text);
 
-    writeActionForm.Free;
+    WriteActionForm.Destroy;
   end;
 
   class function TNassiShneiderman.ConvertToBlockType(AIndex: Integer): TStatementClass;
@@ -195,14 +212,39 @@ implementation
   procedure TNassiShneiderman.spStatementClick(Sender: TObject);
   var
     NewStatement: TStatement;
+    StatementClass: TStatementClass;
+    Action: String;
   begin
 
     if (DedicatedStatement <> nil) and (Sender is TSpeedButton) then
     begin
-      NewStatement:= ConvertToBlockType(TSpeedButton(Sender).Tag).
-                        Create(GetAction, DedicatedStatement.BaseBlock, Image);
+      StatementClass:= ConvertToBlockType(TSpeedButton(Sender).Tag);
+      Action := GetAction;
+
+      if StatementClass = TCaseBranching then
+         NewStatement:= TCaseBranching.Create(Action, GetCond,
+                            DedicatedStatement.BaseBlock, Image)
+      else
+        NewStatement:= StatementClass.Create(Action,
+                            DedicatedStatement.BaseBlock, Image);
+
       DedicatedStatement.BaseBlock.AddAfter(DedicatedStatement, NewStatement);
     end;
+
+    ClearAndRedraw;
+  end;
+
+  procedure TNassiShneiderman.ImageDblClick(Sender: TObject);
+  var
+    MousePos: TPoint;
+    Statement: TStatement;
+  begin
+    MousePos := Image.ScreenToClient(Mouse.CursorPos);
+
+    Statement := BinarySearchStatement(MousePos.X, MousePos.Y, MainBlock);
+
+    if Statement <> nil then
+      Statement.ChangeAction(GetAction(Statement.Action));
 
     ClearAndRedraw;
   end;

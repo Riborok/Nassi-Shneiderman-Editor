@@ -23,7 +23,10 @@ uses
   AdjustBorders in 'Units\Image\AdjustBorders.pas',
   Loop in 'Units\Statement\Loop.pas',
   ConditionalOperator in 'Units\Statement\ConditionalOperator.pas',
-  CorrectAction in 'Units\Support\CorrectAction.pas';
+  CorrectAction in 'Units\Support\CorrectAction.pas',
+  GetÑaseÑonditions in 'Units\Forms\GetÑaseÑonditions.pas' {WriteÑaseÑonditions},
+  Types in 'Units\Support\Types.pas',
+  Constants in 'Units\Support\Constants.pas';
 
 {$R *.res}
 
@@ -32,5 +35,6 @@ begin
   Application.MainFormOnTaskbar := True;
   Application.CreateForm(TNassiShneiderman, NassiShneiderman);
   Application.CreateForm(TWriteAction, WriteAction);
+  Application.CreateForm(TWriteÑaseÑonditions, WriteÑaseÑonditions);
   Application.Run;
 end.
