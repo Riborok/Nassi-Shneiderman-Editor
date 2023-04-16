@@ -154,9 +154,9 @@ type
     property BaseOperator: TOperator read FBaseOperator;
     property Statements: TArrayList<TStatement> read FStatements;
 
-    procedure AddAfter(const AStatement: TStatement; const InsertedStatement: TStatement);
-    procedure AddLast(const AStatement: TStatement; const IsSizesSettingNeeded : Boolean = True);
-    procedure AddFirstInBaseBlock(const AStatement: TStatement; const YStart: Integer);
+    procedure AddAfter(const AStatement: TStatement; const AInsertedStatement: TStatement);
+    procedure AddLast(const AStatement: TStatement);
+    procedure AddFirstStatement(const AStatement: TStatement; const AYStart: Integer);
 
     procedure DeleteStatement(const AStatement: TStatement);
 
@@ -353,7 +353,7 @@ implementation
   end;
 
   procedure TBlock.AddAfter(const AStatement: TStatement;
-            const InsertedStatement: TStatement);
+            const AInsertedStatement: TStatement);
   var
     Index: Integer;
   begin
@@ -361,15 +361,15 @@ implementation
 
     if Index <> FStatements.Count then
     begin
-      InsertedStatement.FYStart:= AStatement.GetYBottom;
-      FStatements.Insert(InsertedStatement, Index);
-      InsertedStatement.InstalAfterAdding;
+      AInsertedStatement.FYStart:= AStatement.GetYBottom;
+      FStatements.Insert(AInsertedStatement, Index);
+      AInsertedStatement.InstalAfterAdding;
     end
     else
-      AddLast(InsertedStatement);
+      AddLast(AInsertedStatement);
   end;
 
-  procedure TBlock.AddLast(const AStatement: TStatement; const IsSizesSettingNeeded : Boolean = True);
+  procedure TBlock.AddLast(const AStatement: TStatement);
   begin
     FStatements.Add(AStatement);
 
@@ -378,21 +378,17 @@ implementation
     else
       AStatement.FYStart:= FStatements[FStatements.Count - 2].GetYBottom;
 
-    if IsSizesSettingNeeded then
-    begin
-      if (BaseOperator <> nil) and (Length(BaseOperator.FBlocks) > 1) and
-                                             (FStatements.Count > 1) then
-        FStatements[FStatements.Count - 2].SetOptimalYLast;
+    if (BaseOperator <> nil) and (Length(BaseOperator.FBlocks) > 1) and
+                                           (FStatements.Count > 1) then
+      FStatements[FStatements.Count - 2].SetOptimalYLast;
 
-      AStatement.InstalAfterAdding;
-    end;
+    AStatement.InstalAfterAdding;
   end;
 
-  procedure TBlock.AddFirstInBaseBlock(const AStatement: TStatement; const YStart: Integer);
+  procedure TBlock.AddFirstStatement(const AStatement: TStatement; const AYStart: Integer);
   begin
     FStatements.Add(AStatement);
-    AStatement.FYStart:= YStart;
-    AStatement.InstalAfterAdding;
+    AStatement.FYStart:= AYStart;
   end;
 
   procedure TBlock.DeleteStatement(const AStatement: TStatement);
@@ -685,7 +681,7 @@ implementation
   var
     I: Integer;
   begin
-    for I := 0 to High(FBlocks) - 1 do
+    for I := 0 to High(FBlocks) do
       FBlocks[I].SetOptimalXLastBlock;
   end;
 

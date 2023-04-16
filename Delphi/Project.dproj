@@ -123,7 +123,6 @@
         <DCCReference Include="Units\Image\DrawShapes.pas"/>
         <DCCReference Include="Units\Image\AdjustBorders.pas"/>
         <DCCReference Include="Units\Statement\Loop.pas"/>
-        <DCCReference Include="Units\Statement\ConditionalOperator.pas"/>
         <DCCReference Include="Units\Support\CorrectAction.pas"/>
         <DCCReference Include="Units\Forms\GetСaseСonditions.pas">
             <Form>WriteСaseСonditions</Form>

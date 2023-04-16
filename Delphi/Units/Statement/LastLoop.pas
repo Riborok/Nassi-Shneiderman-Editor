@@ -23,11 +23,8 @@ implementation
   end;
 
   procedure TLastLoop.InitializeBlock;
-  var
-    NewStatement: TStatement;
   begin
-    NewStatement:= DefaultBlock.CreateUncertainty(FBlocks[0], FImage);
-    FBlocks[0].AddLast(NewStatement);
+    FBlocks[0].AddLast(DefaultBlock.CreateUncertainty(FBlocks[0], FImage));
   end;
 
   procedure TLastLoop.Draw;

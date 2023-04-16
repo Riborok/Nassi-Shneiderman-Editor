@@ -9,6 +9,8 @@ procedure ColorizeRectangle(const ACanvas: TCanvas; const AXStart, AXLast, AYSta
 
 procedure DrawText(const ACanvas: TCanvas; const AX, AY: Integer; const AText: string);
 
+procedure DrawLine(const AXStart, AXLast, AYStart, AYLast : Integer; const ACanvas: TCanvas);
+
 procedure Clear(const ACanvas: TCanvas);
 
 procedure Erase(const AXStart, AXLast, AYStart, AYLast: Integer; const ACanvas: TCanvas);
@@ -28,6 +30,12 @@ implementation
     ACanvas.LineTo(AXLast, AYLast);
 
     ACanvas.Pen.Color := SavedPenColor;
+  end;
+
+  procedure DrawLine(const AXStart, AXLast, AYStart, AYLast : Integer; const ACanvas: TCanvas);
+  begin
+    ACanvas.MoveTo(AXStart, AYStart);
+    ACanvas.LineTo(AXLast, AYLast);
   end;
 
   procedure DrawRectangle(const AXStart, AXLast, AYStart, AYLast : Integer; const AImage: TImage);

@@ -22,7 +22,6 @@ uses
   DrawShapes in 'Units\Image\DrawShapes.pas',
   AdjustBorders in 'Units\Image\AdjustBorders.pas',
   Loop in 'Units\Statement\Loop.pas',
-  ConditionalOperator in 'Units\Statement\ConditionalOperator.pas',
   CorrectAction in 'Units\Support\CorrectAction.pas',
   Get—ase—onditions in 'Units\Forms\Get—ase—onditions.pas' {Write—ase—onditions},
   Types in 'Units\Support\Types.pas',

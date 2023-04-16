@@ -21,11 +21,8 @@ implementation
   end;
 
   procedure TFirstLoop.InitializeBlock;
-  var
-    NewStatement: TStatement;
   begin
-    NewStatement:= DefaultBlock.CreateUncertainty(FBlocks[0], FImage);
-    FBlocks[0].AddLast(NewStatement);
+    FBlocks[0].AddLast(DefaultBlock.CreateUncertainty(FBlocks[0], FImage));
   end;
 
   function TFirstLoop.GetOptimalYLast: Integer;

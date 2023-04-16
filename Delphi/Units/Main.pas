@@ -95,8 +95,10 @@ implementation
 
     MainBlock:= TBlock.Create(SchemeInitialIndent, 0, nil);
 
-    MainBlock.AddFirstInBaseBlock(TProcessStatement.CreateUncertainty(
+    MainBlock.AddFirstStatement(TProcessStatement.CreateUncertainty(
                            MainBlock, Image), SchemeInitialIndent);
+
+    MainBlock.RedefineSizes;
 
     // Пока так
     Image.Picture.Bitmap.Width := Screen.Width;
