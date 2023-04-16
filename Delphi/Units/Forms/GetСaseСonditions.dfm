@@ -2,7 +2,7 @@
   Left = 0
   Top = 0
   Caption = 'Write'#1057'ase'#1057'onditions'
-  ClientHeight = 361
+  ClientHeight = 661
   ClientWidth = 534
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -18,13 +18,12 @@
     Left = 0
     Top = 0
     Width = 534
-    Height = 361
+    Height = 661
     Align = alClient
     TabOrder = 0
-    ExplicitHeight = 342
     DesignSize = (
       534
-      361)
+      661)
     object AddCondition: TLabel
       Left = 16
       Top = 14
@@ -55,7 +54,7 @@
       Left = 0
       Top = 45
       Width = 533
-      Height = 265
+      Height = 565
       Anchors = [akLeft, akTop, akRight, akBottom]
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
@@ -98,7 +97,7 @@
     end
     object btnOK: TButton
       Left = 1
-      Top = 316
+      Top = 616
       Width = 532
       Height = 44
       Align = alBottom

@@ -4,14 +4,14 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls;
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls, CorrectAction;
 
 type
   TWriteAction = class(TForm)
     Panel: TPanel;
     MemoAction: TMemo;
     btnOK: TButton;
-    constructor Create(AOwner: TComponent; CurrAction: String);
+    constructor Create(AOwner: TComponent; ACurrAction: String);
     procedure btnOKClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
 
@@ -19,8 +19,10 @@ type
       Shift: TShiftState);
   private
     { Private declarations }
+    FInputAction: String;
   public
     { Public declarations }
+    function GetAction: String;
   end;
 
 var
@@ -28,9 +30,17 @@ var
 
 implementation
 
-{$R *.dfm}
+  {$R *.dfm}
 
-  constructor TWriteAction.Create(AOwner: TComponent; CurrAction: String);
+  function TWriteAction.GetAction: String;
+  begin
+    if ModalResult = mrOk then
+      Result:= GetCorrectAction(MemoAction.Lines.Text)
+    else
+      Result:= GetCorrectAction(FInputAction);
+  end;
+
+  constructor TWriteAction.Create(AOwner: TComponent; ACurrAction: String);
   var
     OwnerControl: TControl;
   begin
@@ -48,7 +58,8 @@ implementation
       Top := (Screen.Height - Height) div 2;
     end;
 
-    MemoAction.Text := CurrAction;
+    MemoAction.Text := ACurrAction;
+    FInputAction:= ACurrAction;
     MemoAction.SelStart := 0;
     MemoAction.SelLength := Length(MemoAction.Text);
   end;

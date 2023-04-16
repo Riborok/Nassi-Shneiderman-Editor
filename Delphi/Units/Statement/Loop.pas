@@ -27,7 +27,7 @@ implementation
 
   function TLoop.GetOptimaWidth: Integer;
   begin
-    Result := GetTextWidth(FImage.Canvas, FAction) + 2 * XMinIndentText;
+    Result := GetTextWidth(FCanvas, FAction) + 2 * XMinIndentText;
   end;
 
   function TLoop.GetXLastStrip: Integer;
@@ -37,7 +37,7 @@ implementation
 
   function TLoop.GetAmountOfPixelCorrection: Integer;
   begin
-    Result:= 2 * FImage.Canvas.Font.Size + 5;
+    Result:= 2 * FCanvas.Font.Size + 5;
   end;
 
   function TLoop.GetOptimalWidthForBlock(const ABlock: TBlock): Integer;

@@ -1,9 +1,10 @@
 unit DrawShapes;
 
 interface
-uses Vcl.graphics, System.StrUtils, System.Types, System.SysUtils, MinMaxInt, Vcl.ExtCtrls, AdjustBorders;
+uses Vcl.graphics, System.StrUtils, System.Types, System.SysUtils;
 
-procedure DrawRectangle(const AXStart, AXLast, AYStart, AYLast : Integer; const AImage: TImage);
+procedure DrawRectangle(const AXStart, AXLast, AYStart, AYLast : Integer; const ACanvas: TCanvas);
+
 procedure DrawInvertedTriangle(const AXStart, AXMiddle, AXLast, AYStart, AYLast : Integer; const ACanvas: TCanvas);
 procedure ColorizeRectangle(const ACanvas: TCanvas; const AXStart, AXLast, AYStart, AYLast: Integer; const AColor: TColor);
 
@@ -11,14 +12,15 @@ procedure DrawText(const ACanvas: TCanvas; const AX, AY: Integer; const AText: s
 
 procedure DrawLine(const AXStart, AXLast, AYStart, AYLast : Integer; const ACanvas: TCanvas);
 
+procedure EraseLine(const AXStart, AXLast, AYStart, AYLast: Integer; const ACanvas: TCanvas);
+
 procedure Clear(const ACanvas: TCanvas);
 
-procedure Erase(const AXStart, AXLast, AYStart, AYLast: Integer; const ACanvas: TCanvas);
-
+// Потом убрать нада
 procedure DrawCoordinates(Canvas: TCanvas; Step: Integer);
 implementation
 
-  procedure Erase(const AXStart, AXLast, AYStart, AYLast: Integer; const ACanvas: TCanvas);
+  procedure EraseLine(const AXStart, AXLast, AYStart, AYLast: Integer; const ACanvas: TCanvas);
   var
     SavedPenColor: TColor;
   begin
@@ -38,16 +40,13 @@ implementation
     ACanvas.LineTo(AXLast, AYLast);
   end;
 
-  procedure DrawRectangle(const AXStart, AXLast, AYStart, AYLast : Integer; const AImage: TImage);
+  procedure DrawRectangle(const AXStart, AXLast, AYStart, AYLast : Integer; const ACanvas: TCanvas);
   begin
-    AdjustRightBorder(AXLast, AImage);
-    AdjustDownBorder(AYLast, AImage);
-
-    AImage.Canvas.MoveTo(AXStart, AYStart);
-    AImage.Canvas.LineTo(AXLast, AYStart);
-    AImage.Canvas.LineTo(AXLast, AYLast);
-    AImage.Canvas.LineTo(AXStart, AYLast);
-    AImage.Canvas.LineTo(AXStart, AYStart);
+    ACanvas.MoveTo(AXStart, AYStart);
+    ACanvas.LineTo(AXLast, AYStart);
+    ACanvas.LineTo(AXLast, AYLast);
+    ACanvas.LineTo(AXStart, AYLast);
+    ACanvas.LineTo(AXStart, AYStart);
   end;
 
   procedure DrawInvertedTriangle(const AXStart, AXMiddle, AXLast, AYStart, AYLast : Integer; const ACanvas: TCanvas);

@@ -4,7 +4,7 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Types, ArrayList, Constants,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Types, ArrayList, Constants, CorrectAction,
   Vcl.ExtCtrls;
 
 type
@@ -28,10 +28,11 @@ type
     { Private declarations }
     FMemoList: TArrayList<TMemo>;
     FLabelList: TArrayList<TLabel>;
+    FInputStringArr: TStringArr;
     procedure CreateMemo(const AText: string = '');
   public
     { Public declarations }
-    property MemoList: TArrayList<TMemo> read FMemoList;
+    function GetÑaseÑonditions: TStringArr;
   end;
 
 var
@@ -40,6 +41,28 @@ var
 implementation
 
 {$R *.dfm}
+
+  function TWriteÑaseÑonditions.GetÑaseÑonditions: TStringArr;
+  var
+    I: Integer;
+  begin
+    if ModalResult = mrOk then
+    begin
+
+      SetLength(Result, FMemoList.Count);
+
+      for I := 0 to FMemoList.Count - 1 do
+        Result[I]:= GetCorrectAction(FMemoList[I].Lines.Text);
+
+    end
+    else
+    begin
+      Result:= FInputStringArr;
+      for I := 0 to High(Result) do
+        Result[I]:= GetCorrectAction(Result[I]);
+    end;
+
+  end;
 
   constructor TWriteÑaseÑonditions.Create(AOwner: TComponent; const ACond: TStringArr);
   var
@@ -50,8 +73,8 @@ implementation
     begin
       inherited Create(AOwner);
 
-      FMemoList:= TArrayList<TMemo>.Create(4);
-      FLabelList:= TArrayList<TLabel>.Create(4);
+      FMemoList:= TArrayList<TMemo>.Create(7);
+      FLabelList:= TArrayList<TLabel>.Create(7);
 
       if OwnerControl is TControl then
       begin
@@ -67,6 +90,11 @@ implementation
 
       for I := 0 to Length(ACond) - 1 do
         CreateMemo(ACond[i]);
+
+      FMemoList[0].SelStart := 0;
+      FMemoList[0].SelLength := Length(FMemoList[0].Text);
+
+      FInputStringArr:= ACond;
     end;
   end;
 
@@ -123,11 +151,6 @@ implementation
     LabelCaption: TLabel;
     Panel: TPanel;
   begin
-    {Panel := TPanel.Create(ScrollBox);
-    Panel.Parent := ScrollBox;
-    Panel.Top := Memo.Top;
-    Panel.Height := 30;
-    Panel.Align := alTop;}
 
     Memo := TMemo.Create(ScrollBox);
     Memo.Parent := ScrollBox;
@@ -137,12 +160,11 @@ implementation
     Memo.Font.Size := FontSize;
     Memo.Font.Name := FontName;
 
-
     if FMemoList.Count > 0 then
       Memo.Top := TMemo(FMemoList[FMemoList.Count - 1]).Top +
                 TMemo(FMemoList[FMemoList.Count - 1]).Height
     else
-      Memo.Top := 50;
+      Memo.Top := 0;
 
     LabelCaption := TLabel.Create(ScrollBox);
     LabelCaption.Parent := ScrollBox;
@@ -150,6 +172,8 @@ implementation
     LabelCaption.Font.Name := FontName;
     LabelCaption.Caption := 'Condition ' + IntToStr(FMemoList.Count + 1);
     LabelCaption.Top := Memo.Top;
+    LabelCaption.AlignWithMargins := True;
+    LabelCaption.Margins.Top := 20;
     LabelCaption.Align := alTop;
 
     FMemoList.Add(Memo);
@@ -161,7 +185,7 @@ implementation
   procedure TWriteÑaseÑonditions.FormCreate(Sender: TObject);
   begin
     Constraints.MinWidth := 550;
-    Constraints.MinHeight := 400;
+    Constraints.MinHeight := 700;
   end;
 
   procedure TWriteÑaseÑonditions.ScrollBoxMouseWheel(Sender: TObject;

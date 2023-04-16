@@ -8,7 +8,7 @@ uses
   Base, FirstLoop, IfBranching, CaseBranching, LastLoop, StatementSearch, DrawShapes,
   Vcl.StdCtrls, Vcl.Menus, System.Actions, Vcl.ActnList, Vcl.ToolWin, GetСaseСonditions,
   Vcl.ComCtrls, Vcl.Buttons, System.ImageList, Vcl.ImgList, GetAction, ArrayList, Types,
-  CorrectAction;
+  CorrectAction, AdjustBorders;
 
 type
   TNassiShneiderman = class(TForm)
@@ -96,15 +96,27 @@ implementation
     MainBlock:= TBlock.Create(SchemeInitialIndent, 0, nil);
 
     MainBlock.AddFirstStatement(TProcessStatement.CreateUncertainty(
-                           MainBlock, Image), SchemeInitialIndent);
+                           MainBlock, Image.Canvas), SchemeInitialIndent);
 
     MainBlock.RedefineSizes;
 
-    // Пока так
+    // Пока так ( может и не пока, выглядит хайпово :) )
     Image.Picture.Bitmap.Width := Screen.Width;
     Image.Picture.Bitmap.Height := Screen.Height;
 
     ClearAndRedraw;
+  end;
+
+  procedure TNassiShneiderman.ClearAndRedraw;
+  begin
+    Clear(Image.Canvas);
+
+    if DedicatedStatement <> nil then
+      ColorizeRectangle(Image.Canvas, DedicatedStatement.BaseBlock.XStart, DedicatedStatement.BaseBlock.XLast,
+                      DedicatedStatement.YStart, DedicatedStatement.GetYBottom, HighlightColor);
+
+    MainBlock.DrawBlock;
+    //DrawCoordinates(Image.Canvas, 50);
   end;
 
   procedure TNassiShneiderman.FormKeyDown(Sender: TObject; var Key: Word;
@@ -121,18 +133,6 @@ implementation
 
       ClearAndRedraw;
     end;
-  end;
-
-  procedure TNassiShneiderman.ClearAndRedraw;
-  begin
-    Clear(Image.Canvas);
-
-    if DedicatedStatement <> nil then
-      ColorizeRectangle(Image.Canvas, DedicatedStatement.BaseBlock.XStart, DedicatedStatement.BaseBlock.XLast,
-                      DedicatedStatement.YStart, DedicatedStatement.GetYBottom, HighlightColor);
-
-    MainBlock.DrawBlock;
-    DrawCoordinates(Image.Canvas, 50);
   end;
 
   procedure TNassiShneiderman.ImageMouseDown(Sender: TObject;
@@ -165,6 +165,73 @@ implementation
     end;
   end;
 
+  procedure TNassiShneiderman.spStatementClick(Sender: TObject);
+  var
+    NewStatement: TStatement;
+    StatementClass: TStatementClass;
+    Action: String;
+  begin
+
+    if (DedicatedStatement <> nil) and (Sender is TSpeedButton) then
+    begin
+      StatementClass:= ConvertToBlockType(TSpeedButton(Sender).Tag);
+      Action := GetAction;
+
+      if StatementClass = TCaseBranching then
+         NewStatement:= TCaseBranching.Create(Action, GetCond,
+                            DedicatedStatement.BaseBlock, Image.Canvas)
+      else
+        NewStatement:= StatementClass.Create(Action,
+                            DedicatedStatement.BaseBlock, Image.Canvas);
+
+      DedicatedStatement.BaseBlock.AddAfter(DedicatedStatement, NewStatement);
+
+      DefineBorders(MainBlock.XLast, MainBlock.Statements.GetLast.GetYBottom, Image);
+    end;
+
+    ClearAndRedraw;
+  end;
+
+  procedure TNassiShneiderman.ImageDblClick(Sender: TObject);
+  var
+    MousePos: TPoint;
+    Statement: TStatement;
+    Action: String;
+    CaseBranching: TCaseBranching;
+  begin
+    MousePos := Image.ScreenToClient(Mouse.CursorPos);
+
+    Statement := BinarySearchStatement(MousePos.X, MousePos.Y, MainBlock);
+
+    if Statement <> nil then
+    begin
+      Action := GetAction(Statement.Action);
+
+      if Statement is TCaseBranching then
+      begin
+        CaseBranching:= TCaseBranching(Statement);
+        CaseBranching.ChangeActionWithCond(Action, GetCond(CaseBranching.Cond));
+      end
+      else
+        Statement.ChangeAction(Action);
+
+      DefineBorders(MainBlock.XLast, MainBlock.Statements.GetLast.GetYBottom, Image);
+    end;
+
+    ClearAndRedraw;
+  end;
+
+  class function TNassiShneiderman.ConvertToBlockType(AIndex: Integer): TStatementClass;
+  begin
+    case AIndex of
+      0 : Result:= TProcessStatement;
+      1 : Result:= TIfBranching;
+      2 : Result:= TCaseBranching;
+      3 : Result:= TFirstLoop;
+      4 : Result:= TLastLoop;
+    end;
+  end;
+
   function TNassiShneiderman.GetCond(AInitialStr: TStringArr = nil): TStringArr;
   var
     WriteСaseСonditions: TWriteСaseСonditions;
@@ -180,10 +247,7 @@ implementation
     WriteСaseСonditions := TWriteСaseСonditions.Create(Self, AInitialStr);
     WriteСaseСonditions.ShowModal;
 
-    SetLength(Result, WriteСaseСonditions.MemoList.Count);
-
-    for I := 0 to WriteСaseСonditions.MemoList.Count - 1 do
-      Result[I]:= GetCorrectAction(WriteСaseСonditions.MemoList[I].Lines.Text);
+    Result:= WriteСaseСonditions.GetСaseСonditions;
 
     WriteСaseСonditions.Destroy;
   end;
@@ -195,60 +259,9 @@ implementation
     WriteActionForm := TWriteAction.Create(Self, AInitialStr);
     WriteActionForm.ShowModal;
 
-    Result:= GetCorrectAction(WriteActionForm.MemoAction.Lines.Text);
+    Result:= WriteActionForm.GetAction;
 
     WriteActionForm.Destroy;
-  end;
-
-  class function TNassiShneiderman.ConvertToBlockType(AIndex: Integer): TStatementClass;
-  begin
-    case AIndex of
-      0 : Result:= TProcessStatement;
-      1 : Result:= TIfBranching;
-      2 : Result:= TCaseBranching;
-      3 : Result:= TFirstLoop;
-      4 : Result:= TLastLoop;
-    end;
-  end;
-
-  procedure TNassiShneiderman.spStatementClick(Sender: TObject);
-  var
-    NewStatement: TStatement;
-    StatementClass: TStatementClass;
-    Action: String;
-  begin
-
-    if (DedicatedStatement <> nil) and (Sender is TSpeedButton) then
-    begin
-      StatementClass:= ConvertToBlockType(TSpeedButton(Sender).Tag);
-      Action := GetAction;
-
-      if StatementClass = TCaseBranching then
-         NewStatement:= TCaseBranching.Create(Action, GetCond,
-                            DedicatedStatement.BaseBlock, Image)
-      else
-        NewStatement:= StatementClass.Create(Action,
-                            DedicatedStatement.BaseBlock, Image);
-
-      DedicatedStatement.BaseBlock.AddAfter(DedicatedStatement, NewStatement);
-    end;
-
-    ClearAndRedraw;
-  end;
-
-  procedure TNassiShneiderman.ImageDblClick(Sender: TObject);
-  var
-    MousePos: TPoint;
-    Statement: TStatement;
-  begin
-    MousePos := Image.ScreenToClient(Mouse.CursorPos);
-
-    Statement := BinarySearchStatement(MousePos.X, MousePos.Y, MainBlock);
-
-    if Statement <> nil then
-      Statement.ChangeAction(GetAction(Statement.Action));
-
-    ClearAndRedraw;
   end;
 
 end.

@@ -16,20 +16,20 @@ implementation
 
   function TProcessStatement.GetOptimaWidth: Integer;
   begin
-    result:= GetTextWidth(FImage.Canvas, FAction) + 2 * XMinIndentText;
+    result:= GetTextWidth(FCanvas, FAction) + 2 * XMinIndentText;
   end;
 
   procedure TProcessStatement.Draw;
   begin
-    DrawRectangle(BaseBlock.XStart, BaseBlock.XLast, FYStart, FYLast, FImage);
+    DrawRectangle(BaseBlock.XStart, BaseBlock.XLast, FYStart, FYLast, FCanvas);
 
-    DrawText(FImage.Canvas, BaseBlock.XStart + ((BaseBlock.XLast - BaseBlock.XStart) div 2)
-      - (GetTextWidth(FImage.Canvas, Action) div 2), FYStart + YIndentText, Action);
+    DrawText(FCanvas, BaseBlock.XStart + ((BaseBlock.XLast - BaseBlock.XStart) div 2)
+      - (GetTextWidth(FCanvas, Action) div 2), FYStart + YIndentText, Action);
   end;
 
   function TProcessStatement.GetOptimalYLast: Integer;
   begin
-    Result := FYStart + GetTextHeight(FImage.Canvas, FAction) + 2 * YIndentText;
+    Result := FYStart + GetTextHeight(FCanvas, FAction) + 2 * YIndentText;
   end;
 
 end.
