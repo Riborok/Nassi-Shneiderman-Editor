@@ -153,6 +153,7 @@ type
     property BaseOperator: TOperator read FBaseOperator;
     property Statements: TArrayList<TStatement> read FStatements;
 
+    procedure AddBefore(const AStatement: TStatement; const AInsertedStatement: TStatement);
     procedure AddAfter(const AStatement: TStatement; const AInsertedStatement: TStatement);
     procedure AddLast(const AStatement: TStatement);
     procedure AddFirstStatement(const AStatement: TStatement; const AYStart: Integer);
@@ -352,6 +353,14 @@ implementation
     SetOptimalXLastBlock;
     for I := 0 to FStatements.Count - 1 do
       FStatements[I].RedefineSizes;
+  end;
+
+  procedure TBlock.AddBefore(const AStatement: TStatement;
+            const AInsertedStatement: TStatement);
+  begin
+    AInsertedStatement.FYStart:= AStatement.FYStart;
+    FStatements.Insert(AInsertedStatement, FindStatementIndex(AStatement.FYStart));
+    AInsertedStatement.InstallAfterAdding;
   end;
 
   procedure TBlock.AddAfter(const AStatement: TStatement;

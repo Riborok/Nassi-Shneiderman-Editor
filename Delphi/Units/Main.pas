@@ -26,12 +26,26 @@ type
     tbSelectFigType: TToolBar;
     ilBlocks: TImageList;
     spProcess: TSpeedButton;
-    SpeedButton2: TSpeedButton;
-    SpeedButton3: TSpeedButton;
-    SpeedButton4: TSpeedButton;
+    spLastLoop: TSpeedButton;
+    spFirstLoop: TSpeedButton;
+    spCaseBranch: TSpeedButton;
     spIfBranching: TSpeedButton;
     ScrollBox: TScrollBox;
     Image: TImage;
+    PopupMenu: TPopupMenu;
+    MIAdd: TMenuItem;
+    MIAfter: TMenuItem;
+    MIBefore: TMenuItem;
+    MIAftProcess: TMenuItem;
+    MIAftBranch: TMenuItem;
+    MIAftMultBranch: TMenuItem;
+    MIAftTestLoop: TMenuItem;
+    MIAftRevTestLoop: TMenuItem;
+    MIBefProcess: TMenuItem;
+    MIBefBranch: TMenuItem;
+    MIBefMultBranch: TMenuItem;
+    MIBefTestLoop: TMenuItem;
+    MIBefRevTestLoop: TMenuItem;
 
     procedure FormCreate(Sender: TObject);
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
@@ -42,7 +56,8 @@ type
       Shift: TShiftState; X, Y: Integer);
     procedure ImageDblClick(Sender: TObject);
 
-    procedure spStatementClick(Sender: TObject);
+    procedure AddBefore(Sender: TObject);
+    procedure AddAfter(Sender: TObject);
     procedure ScrollBoxMouseWheel(Sender: TObject; Shift: TShiftState;
       WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -138,14 +153,6 @@ implementation
     end;
   end;
 
-  procedure TNassiShneiderman.ImageMouseDown(Sender: TObject;
-  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
-  begin
-    DedicatedStatement := BinarySearchStatement(X, Y, MainBlock);
-
-    ClearAndRedraw;
-  end;
-
   procedure TNassiShneiderman.ScrollBoxMouseWheel(Sender: TObject;
   Shift: TShiftState; WheelDelta: Integer; MousePos: TPoint;
     var Handled: Boolean);
@@ -168,7 +175,39 @@ implementation
     end;
   end;
 
-  procedure TNassiShneiderman.spStatementClick(Sender: TObject);
+  procedure TNassiShneiderman.ImageMouseDown(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+  begin
+    DedicatedStatement := BinarySearchStatement(X, Y, MainBlock);
+
+    if (Button = mbRight) and (DedicatedStatement <> nil) then
+      PopupMenu.Popup(Mouse.CursorPos.X - Image.Left, Mouse.CursorPos.Y - Image.Top);
+
+    ClearAndRedraw;
+  end;
+
+  procedure TNassiShneiderman.AddBefore(Sender: TObject);
+  var
+    NewStatement: TStatement;
+  begin
+
+    if DedicatedStatement <> nil then
+    begin
+      NewStatement:= CreateStatement(ConvertToBlockType(TComponent(Sender).Tag));
+
+      if NewStatement <> nil then
+      begin
+        DedicatedStatement.BaseBlock.AddBefore(DedicatedStatement, NewStatement);
+        DefineBorders(MainBlock.XLast, MainBlock.Statements.GetLast.GetYBottom, Image);
+      end;
+
+      DedicatedStatement:= nil;
+    end;
+
+    ClearAndRedraw;
+  end;
+
+  procedure TNassiShneiderman.AddAfter(Sender: TObject);
   var
     NewStatement: TStatement;
   begin
@@ -182,6 +221,8 @@ implementation
         DedicatedStatement.BaseBlock.AddAfter(DedicatedStatement, NewStatement);
         DefineBorders(MainBlock.XLast, MainBlock.Statements.GetLast.GetYBottom, Image);
       end;
+
+      DedicatedStatement:= nil;
     end;
 
     ClearAndRedraw;
