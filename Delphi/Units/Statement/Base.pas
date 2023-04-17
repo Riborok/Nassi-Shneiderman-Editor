@@ -372,18 +372,19 @@ implementation
   end;
 
   procedure TBlock.AddLast(const AStatement: TStatement);
+  var
+    PrevStatement: TStatement;
   begin
     FStatements.Add(AStatement);
 
     if FStatements.Count = 1 then
       AStatement.FYStart:= BaseOperator.FYLast
     else
-      AStatement.FYStart:= FStatements[FStatements.Count - 2].GetYBottom;
-
-    if (BaseOperator <> nil) and (Length(BaseOperator.FBlocks) > 1) and
-                                           (FStatements.Count > 1) then
-      FStatements[FStatements.Count - 2].SetYBottom(
-                      FStatements[FStatements.Count - 2].GetMaxOptimalYBottom);
+    begin
+      PrevStatement:= FStatements[FStatements.Count - 2];
+      PrevStatement.SetYBottom(PrevStatement.GetMaxOptimalYBottom);
+      AStatement.FYStart:= PrevStatement.GetYBottom;
+    end;
 
     AStatement.InstallAfterAdding;
   end;
