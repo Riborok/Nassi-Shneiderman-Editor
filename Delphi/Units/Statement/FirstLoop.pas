@@ -22,7 +22,7 @@ implementation
 
   procedure TFirstLoop.InitializeBlock;
   begin
-    FBlocks[0].AddLast(DefaultBlock.CreateUncertainty(FBlocks[0], FCanvas));
+    FBlocks[0].AddLast(DefaultBlock.CreateUncertainty(FCanvas));
   end;
 
   function TFirstLoop.GetOptimalYLast: Integer;

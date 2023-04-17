@@ -112,7 +112,7 @@ implementation
     MainBlock:= TBlock.Create(SchemeInitialIndent, 0, nil);
 
     MainBlock.AddFirstStatement(TProcessStatement.CreateUncertainty(
-                           MainBlock, Image.Canvas), SchemeInitialIndent);
+                           Image.Canvas), SchemeInitialIndent);
 
     MainBlock.RedefineSizes;
 
@@ -326,12 +326,10 @@ implementation
       begin
         Cond:= nil;
         if TryGetCond(Cond) then
-          Result:= TCaseBranching.Create(Action, Cond,
-                            DedicatedStatement.BaseBlock, Image.Canvas);
+          Result:= TCaseBranching.Create(Action, Cond, Image.Canvas);
       end
       else
-        Result:= AStatementClass.Create(Action,
-                            DedicatedStatement.BaseBlock, Image.Canvas);
+        Result:= AStatementClass.Create(Action, Image.Canvas);
     end;
   end;
 

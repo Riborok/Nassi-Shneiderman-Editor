@@ -21,7 +21,7 @@ type
     function GetOptimalYLast: Integer; override;
   public
     constructor Create(const AAction : String;
-        const ACond: TStringArr; const ABaseBlock: TBlock; const ACanvas: TCanvas);
+        const ACond: TStringArr; const ACanvas: TCanvas);
     procedure Draw; override;
     function IsPreñOperator: Boolean; override;
 
@@ -33,11 +33,11 @@ type
 implementation
 
   constructor TCaseBranching.Create(const AAction : String;
-        const ACond: TStringArr; const ABaseBlock: TBlock; const ACanvas: TCanvas);
+        const ACond: TStringArr; const ACanvas: TCanvas);
   var
     I: Integer;
   begin
-    inherited Create(AAction, ABaseBlock, ACanvas);
+    inherited Create(AAction, ACanvas);
     if Length(ACond) > 1 then
       FCond:= ACond;
   end;
@@ -153,7 +153,7 @@ implementation
     I: Integer;
   begin
     for I := AStartIndex to High(FBlocks) do
-      FBlocks[I].AddFirstStatement(DefaultBlock.CreateUncertainty(FBlocks[I], FCanvas), FYLast);
+      FBlocks[I].AddFirstStatement(DefaultBlock.CreateUncertainty(FCanvas), FYLast);
   end;
 
   function TCaseBranching.IsPreñOperator: Boolean;

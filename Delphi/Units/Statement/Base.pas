@@ -61,10 +61,10 @@ type
 
   public
     // This constructor creates an uncertainty statement
-    constructor CreateUncertainty(const ABaseBlock: TBlock; const ACanvas: TCanvas);
+    constructor CreateUncertainty(const ACanvas: TCanvas);
 
     // Create
-    constructor Create(const AAction : String; const ABaseBlock: TBlock; const ACanvas: TCanvas);
+    constructor Create(const AAction : String; const ACanvas: TCanvas);
 
     // These properties return the text of the statement and base block
     property Action: String read FAction;
@@ -175,16 +175,13 @@ implementation
 
   { TStatement }
 
-  constructor TStatement.CreateUncertainty(const ABaseBlock: TBlock; const ACanvas: TCanvas);
+  constructor TStatement.CreateUncertainty(const ACanvas: TCanvas);
   begin
-    Create(UncertaintySymbol, ABaseBlock, ACanvas);
+    Create(UncertaintySymbol, ACanvas);
   end;
 
-  constructor TStatement.Create(const AAction : String; const ABaseBlock: TBlock;
-                                const ACanvas: TCanvas);
+  constructor TStatement.Create(const AAction : String; const ACanvas: TCanvas);
   begin
-    FBaseBlock := ABaseBlock;
-
     FCanvas := ACanvas;
 
     FAction := AAction;
@@ -359,6 +356,7 @@ implementation
             const AInsertedStatement: TStatement);
   begin
     AInsertedStatement.FYStart:= AStatement.FYStart;
+    AInsertedStatement.FBaseBlock:= Self;
     FStatements.Insert(AInsertedStatement, FindStatementIndex(AStatement.FYStart));
     AInsertedStatement.InstallAfterAdding;
   end;
@@ -373,6 +371,7 @@ implementation
     if Index <> FStatements.Count then
     begin
       AInsertedStatement.FYStart:= AStatement.GetYBottom;
+      AInsertedStatement.FBaseBlock:= Self;
       FStatements.Insert(AInsertedStatement, Index);
       AInsertedStatement.InstallAfterAdding;
     end
@@ -395,6 +394,8 @@ implementation
       AStatement.FYStart:= PrevStatement.GetYBottom;
     end;
 
+    AStatement.FBaseBlock:= Self;
+
     AStatement.InstallAfterAdding;
   end;
 
@@ -402,6 +403,7 @@ implementation
   begin
     FStatements.Add(AStatement);
     AStatement.FYStart:= AYStart;
+    AStatement.FBaseBlock:= Self;
     AStatement.SetOptimalYLast;
   end;
 
@@ -415,7 +417,7 @@ implementation
 
     if FStatements.Count = 0 then
     begin
-      AddFirstStatement(DefaultBlock.CreateUncertainty(Self, AStatement.FCanvas),
+      AddFirstStatement(DefaultBlock.CreateUncertainty(AStatement.FCanvas),
                                                              AStatement.FYStart);
       FStatements[0].FixYStatementsPosition;
     end
