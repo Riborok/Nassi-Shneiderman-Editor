@@ -24,9 +24,6 @@ type
     // FBaseBlock is a reference to the block that the statement belongs to
     FBaseBlock: TBlock;
 
-    // FCanvas is a reference to the canvas used for drawing
-    FCanvas: TCanvas;
-
     // These functions are used to get the Y and X indentation of the statement
     function YIndentText : Integer;
     function XMinIndentText : Integer;
@@ -61,10 +58,10 @@ type
 
   public
     // This constructor creates an uncertainty statement
-    constructor CreateUncertainty(const ACanvas: TCanvas);
+    constructor CreateUncertainty;
 
     // Create
-    constructor Create(const AAction : String; const ACanvas: TCanvas);
+    constructor Create(const AAction : String);
 
     // These properties return the text of the statement and base block
     property Action: String read FAction;
@@ -129,6 +126,9 @@ type
   { TBlock }
   TBlock = class
   private
+    // FCanvas is a reference to the canvas used for drawing
+    FCanvas: TCanvas;
+
     FXStart, FXLast: Integer;
     FStatements: TArrayList<TStatement>;
     FBaseOperator: TOperator;
@@ -145,11 +145,13 @@ type
     function FindStatementIndex(const FYStart: Integer): Integer;
 
   public
-    constructor Create(const AXStart, AXLast: Integer; const ABaseOperator: TOperator);
+    constructor Create(const AXStart, AXLast: Integer; const ABaseOperator: TOperator;
+                       const ACanvas: TCanvas);
     destructor Destroy; override;
 
     property XStart: Integer read FXStart;
     property XLast: Integer read FXLast;
+    property Canvas: TCanvas read FCanvas;
     property BaseOperator: TOperator read FBaseOperator;
     property Statements: TArrayList<TStatement> read FStatements;
 
@@ -175,15 +177,13 @@ implementation
 
   { TStatement }
 
-  constructor TStatement.CreateUncertainty(const ACanvas: TCanvas);
+  constructor TStatement.CreateUncertainty;
   begin
-    Create(UncertaintySymbol, ACanvas);
+    Create(UncertaintySymbol);
   end;
 
-  constructor TStatement.Create(const AAction : String; const ACanvas: TCanvas);
+  constructor TStatement.Create(const AAction : String);
   begin
-    FCanvas := ACanvas;
-
     FAction := AAction;
   end;
 
@@ -203,12 +203,12 @@ implementation
 
   function TStatement.YIndentText : Integer;
   begin
-    Result:= FCanvas.Font.Size + 3;
+    Result:= BaseBlock.FCanvas.Font.Size + 3;
   end;
 
   function TStatement.XMinIndentText : Integer;
   begin
-    Result:= FCanvas.Font.Size + 5;
+    Result:= BaseBlock.FCanvas.Font.Size + 5;
   end;
 
   function TStatement.HasOptimalYLast : Boolean;
@@ -333,12 +333,13 @@ implementation
   end;
 
   constructor TBlock.Create(const AXStart, AXLast: Integer;
-                                              const ABaseOperator: TOperator);
+                       const ABaseOperator: TOperator; const ACanvas: TCanvas);
   begin
-    FStatements := TArrayList<TStatement>.Create(4);
+    FStatements := TArrayList<TStatement>.Create(7);
 
     FXStart := AXStart;
     FXLast := AXLast;
+    FCanvas := ACanvas;
 
     FBaseOperator := ABaseOperator;
   end;
@@ -417,8 +418,7 @@ implementation
 
     if FStatements.Count = 0 then
     begin
-      AddFirstStatement(DefaultBlock.CreateUncertainty(AStatement.FCanvas),
-                                                             AStatement.FYStart);
+      AddFirstStatement(DefaultBlock.CreateUncertainty, AStatement.FYStart);
       FStatements[0].FixYStatementsPosition;
     end
     else if Index = 0 then

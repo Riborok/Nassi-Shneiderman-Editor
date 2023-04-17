@@ -22,12 +22,12 @@ implementation
   procedure TLoop.CreateBlock;
   begin
     SetLength(FBlocks, FBlockCount);
-    FBlocks[0] := TBlock.Create(GetXLastStrip, FBaseBlock.XLast, Self);
+    FBlocks[0] := TBlock.Create(GetXLastStrip, FBaseBlock.XLast, Self, BaseBlock.Canvas);
   end;
 
   function TLoop.GetOptimaWidth: Integer;
   begin
-    Result := GetTextWidth(FCanvas, FAction) + 2 * XMinIndentText;
+    Result := GetTextWidth(BaseBlock.Canvas, FAction) + 2 * XMinIndentText;
   end;
 
   function TLoop.GetXLastStrip: Integer;
@@ -37,7 +37,7 @@ implementation
 
   function TLoop.GetAmountOfPixelCorrection: Integer;
   begin
-    Result:= 2 * FCanvas.Font.Size + 5;
+    Result:= 2 * BaseBlock.Canvas.Font.Size + 5;
   end;
 
   function TLoop.GetOptimalWidthForBlock(const ABlock: TBlock): Integer;

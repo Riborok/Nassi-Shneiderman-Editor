@@ -109,10 +109,9 @@ implementation
 
     HighlightColor:= clYellow;
 
-    MainBlock:= TBlock.Create(SchemeInitialIndent, 0, nil);
+    MainBlock:= TBlock.Create(SchemeInitialIndent, 0, nil, Image.Canvas);
 
-    MainBlock.AddFirstStatement(TProcessStatement.CreateUncertainty(
-                           Image.Canvas), SchemeInitialIndent);
+    MainBlock.AddFirstStatement(TProcessStatement.CreateUncertainty, SchemeInitialIndent);
 
     MainBlock.RedefineSizes;
 
@@ -329,7 +328,7 @@ implementation
           Result:= TCaseBranching.Create(Action, Cond, Image.Canvas);
       end
       else
-        Result:= AStatementClass.Create(Action, Image.Canvas);
+        Result:= AStatementClass.Create(Action);
     end;
   end;
 

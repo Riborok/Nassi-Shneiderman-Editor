@@ -37,7 +37,7 @@ implementation
   var
     I: Integer;
   begin
-    inherited Create(AAction, ACanvas);
+    inherited Create(AAction);
     if Length(ACond) > 1 then
       FCond:= ACond;
   end;
@@ -94,10 +94,10 @@ implementation
     I: Integer;
     CurrConditionHeight: Integer;
   begin
-    Result:= GetTextHeight(FCanvas, FCond[0]);
+    Result:= GetTextHeight(BaseBlock.Canvas, FCond[0]);
     for I := 1 to High(FCond) do
     begin
-      CurrConditionHeight:= GetTextHeight(FCanvas, FCond[I]);
+      CurrConditionHeight:= GetTextHeight(BaseBlock.Canvas, FCond[I]);
       if CurrConditionHeight > Result then
         Result:= CurrConditionHeight;
     end;
@@ -105,18 +105,18 @@ implementation
 
   function TCaseBranching.GetOptimalYLast: Integer;
   begin
-    Result:= FYStart + GetMaxHeightOfCond + GetTextHeight(FCanvas, FAction) + 4 * YIndentText;
+    Result:= FYStart + GetMaxHeightOfCond + GetTextHeight(BaseBlock.Canvas, FAction) + 4 * YIndentText;
   end;
 
   function TCaseBranching.GetOptimaWidth: Integer;
   begin
-    Result:= (GetTextWidth(FCanvas, FAction) + 2 * XMinIndentText) *
-             (GetTextHeight(FCanvas, FAction) + 2 * YIndentText) div YIndentText;
+    Result:= (GetTextWidth(BaseBlock.Canvas, FAction) + 2 * XMinIndentText) *
+             (GetTextHeight(BaseBlock.Canvas, FAction) + 2 * YIndentText) div YIndentText;
   end;
 
   function TCaseBranching.GetOptimalWidthForBlock(const ABlock: TBlock): Integer;
   begin
-    Result:= GetTextWidth(FCanvas, FCond[FindBlockIndex(ABlock.XStart)]) + 2 * XMinIndentText;
+    Result:= GetTextWidth(BaseBlock.Canvas, FCond[FindBlockIndex(ABlock.XStart)]) + 2 * XMinIndentText;
   end;
 
   procedure TCaseBranching.CreateBlock;
@@ -131,16 +131,16 @@ implementation
   begin
     if AStartIndex = 0 then
     begin
-      FBlocks[0]:= TBlock.Create(FBaseBlock.XStart, FBaseBlock.XStart + ABlockWidth, Self);
+      FBlocks[0]:= TBlock.Create(FBaseBlock.XStart, FBaseBlock.XStart + ABlockWidth, Self, BaseBlock.Canvas);
       Inc(AStartIndex);
     end;
 
     for I := AStartIndex to High(FBlocks) - 1 do
       FBlocks[I]:= TBlock.Create(FBlocks[I-1].XLast,
-                        FBlocks[I-1].XLast + ABlockWidth, Self);
+                        FBlocks[I-1].XLast + ABlockWidth, Self, BaseBlock.Canvas);
 
     FBlocks[High(FBlocks)]:= TBlock.Create(FBlocks[High(FBlocks) - 1].XLast,
-                        FBaseBlock.XLast, Self);
+                        FBaseBlock.XLast, Self, BaseBlock.Canvas);
   end;
 
   procedure TCaseBranching.InitializeBlock;
@@ -153,7 +153,7 @@ implementation
     I: Integer;
   begin
     for I := AStartIndex to High(FBlocks) do
-      FBlocks[I].AddFirstStatement(DefaultBlock.CreateUncertainty(FCanvas), FYLast);
+      FBlocks[I].AddFirstStatement(DefaultBlock.CreateUncertainty, FYLast);
   end;
 
   function TCaseBranching.IsPreñOperator: Boolean;
@@ -170,19 +170,19 @@ implementation
   begin
 
     // Calculate the height of a triangle
-    YTriangleHeight:= FYStart + GetTextHeight(FCanvas, FAction) + 2 * YIndentText;
+    YTriangleHeight:= FYStart + GetTextHeight(BaseBlock.Canvas, FAction) + 2 * YIndentText;
 
     // Drawing the main block
-    DrawRectangle(BaseBlock.XStart, BaseBlock.XLast, FYStart, FYLast, FCanvas);
+    DrawRectangle(BaseBlock.XStart, BaseBlock.XLast, FYStart, FYLast, BaseBlock.Canvas);
 
     // Drawing a triangle
     DrawInvertedTriangle(BaseBlock.XStart, FBlocks[High(FBlocks)].XStart,
-          BaseBlock.XLast, FYStart, YTriangleHeight, FCanvas);
+          BaseBlock.XLast, FYStart, YTriangleHeight, BaseBlock.Canvas);
 
     // Draw a line that connects the vertex of the triangle and
     // the lower base of the operator
     DrawLine(FBlocks[High(FBlocks)].XStart, FBlocks[High(FBlocks)].XStart,
-             YTriangleHeight, FYLast, FCanvas);
+             YTriangleHeight, FYLast, BaseBlock.Canvas);
 
     { Draw the lines that connect the side of the triangle to the side of the block }
 
@@ -199,29 +199,29 @@ implementation
 
       DrawLine(FBlocks[I].XLast, FBlocks[I].XLast,
           YTriangleHeight - (YTriangleHeight - FYStart) * PartLeftTriangleWidth div LeftTriangleWidth,
-          FYLast, FCanvas);
+          FYLast, BaseBlock.Canvas);
     end;
 
     { End }
 
     // Drawing the action
-    DrawText(FCanvas,
+    DrawText(BaseBlock.Canvas,
       BaseBlock.XStart
       +
-      LeftTriangleWidth * (GetTextHeight(FCanvas, FAction) +  YIndentText) div (YTriangleHeight - FYStart)
+      LeftTriangleWidth * (GetTextHeight(BaseBlock.Canvas, FAction) +  YIndentText) div (YTriangleHeight - FYStart)
       +
       (BaseBlock.XLast - BaseBlock.XStart) * YIndentText div (YTriangleHeight - FYStart) div 2
       -
-      GetTextWidth(FCanvas, FAction) div 2
+      GetTextWidth(BaseBlock.Canvas, FAction) div 2
       ,
       FYStart + YIndentText, Action);
 
     // Drawing the conditions
     Inc(YTriangleHeight, YIndentText);
     for I := 0 to High(FCond) do
-      DrawText(FCanvas,
+      DrawText(BaseBlock.Canvas,
         Blocks[I].XStart + ((Blocks[I].XLast - Blocks[I].XStart) div 2)
-        - (GetTextWidth(FCanvas, FCond[I]) div 2),
+        - (GetTextWidth(BaseBlock.Canvas, FCond[I]) div 2),
         YTriangleHeight, FCond[I]);
 
     // Drawing child blocks

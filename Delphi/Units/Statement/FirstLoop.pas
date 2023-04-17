@@ -22,24 +22,24 @@ implementation
 
   procedure TFirstLoop.InitializeBlock;
   begin
-    FBlocks[0].AddLast(DefaultBlock.CreateUncertainty(FCanvas));
+    FBlocks[0].AddLast(DefaultBlock.CreateUncertainty);
   end;
 
   function TFirstLoop.GetOptimalYLast: Integer;
   begin
-    Result := FYStart + GetTextHeight(FCanvas, FAction) + 2 * YIndentText;
+    Result := FYStart + GetTextHeight(BaseBlock.Canvas, FAction) + 2 * YIndentText;
   end;
 
   procedure TFirstLoop.Draw;
   begin
-    DrawRectangle(BaseBlock.XStart, BaseBlock.XLast, FYStart, FYLast, FCanvas);
+    DrawRectangle(BaseBlock.XStart, BaseBlock.XLast, FYStart, FYLast, BaseBlock.Canvas);
 
-    DrawRectangle(BaseBlock.XStart, GetXLastStrip, FYLast, GetYBottom, FCanvas);
+    DrawRectangle(BaseBlock.XStart, GetXLastStrip, FYLast, GetYBottom, BaseBlock.Canvas);
 
-    EraseLine(BaseBlock.XStart +  1, GetXLastStrip, FYLast, FYLast, FCanvas);
+    EraseLine(BaseBlock.XStart +  1, GetXLastStrip, FYLast, FYLast, BaseBlock.Canvas);
 
-    DrawText(FCanvas, BaseBlock.XStart + ((BaseBlock.XLast - BaseBlock.XStart) div 2)
-      - (GetTextWidth(FCanvas, Action) div 2), FYStart + YIndentText, Action);
+    DrawText(BaseBlock.Canvas, BaseBlock.XStart + ((BaseBlock.XLast - BaseBlock.XStart) div 2)
+      - (GetTextWidth(BaseBlock.Canvas, Action) div 2), FYStart + YIndentText, Action);
 
     FBlocks[0].DrawBlock;
   end;

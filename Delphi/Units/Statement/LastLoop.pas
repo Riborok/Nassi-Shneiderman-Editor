@@ -24,27 +24,27 @@ implementation
 
   procedure TLastLoop.InitializeBlock;
   begin
-    FBlocks[0].AddLast(DefaultBlock.CreateUncertainty(FCanvas));
+    FBlocks[0].AddLast(DefaultBlock.CreateUncertainty);
   end;
 
   procedure TLastLoop.Draw;
   begin
-    DrawRectangle(BaseBlock.XStart, BaseBlock.XLast, GetBlockYBottom, FYLast, FCanvas);
+    DrawRectangle(BaseBlock.XStart, BaseBlock.XLast, GetBlockYBottom, FYLast, BaseBlock.Canvas);
 
     DrawRectangle(BaseBlock.XStart, GetXLastStrip, FBlocks[0].Statements[0].YStart,
-                                                              GetBlockYBottom, FCanvas);
+                                                              GetBlockYBottom, BaseBlock.Canvas);
 
-    EraseLine(BaseBlock.XStart +  1, GetXLastStrip, GetBlockYBottom, GetBlockYBottom, FCanvas);
+    EraseLine(BaseBlock.XStart +  1, GetXLastStrip, GetBlockYBottom, GetBlockYBottom, BaseBlock.Canvas);
 
-    DrawText(FCanvas, BaseBlock.XStart + ((BaseBlock.XLast - BaseBlock.XStart) div 2)
-      - (GetTextWidth(FCanvas, Action) div 2), GetBlockYBottom + YIndentText, Action);
+    DrawText(BaseBlock.Canvas, BaseBlock.XStart + ((BaseBlock.XLast - BaseBlock.XStart) div 2)
+      - (GetTextWidth(BaseBlock.Canvas, Action) div 2), GetBlockYBottom + YIndentText, Action);
 
     FBlocks[0].DrawBlock;
   end;
 
   function TLastLoop.GetOptimalYLast: Integer;
   begin
-    Result := GetBlockYBottom + GetTextHeight(FCanvas, FAction) + 2 * XMinIndentText;
+    Result := GetBlockYBottom + GetTextHeight(BaseBlock.Canvas, FAction) + 2 * XMinIndentText;
   end;
 
   function TLastLoop.GetBlockYBottom: Integer;

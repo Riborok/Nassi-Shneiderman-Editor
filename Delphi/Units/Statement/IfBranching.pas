@@ -27,9 +27,9 @@ implementation
 
   function TIfBranching.GetOptimalYLast: Integer;
   begin
-    Result := FYStart + Max(GetTextHeight(FCanvas, TrueCond),
-                          GetTextHeight(FCanvas, FalseCond)) +
-                          GetTextHeight(FCanvas, FAction) + 3 * YIndentText;
+    Result := FYStart + Max(GetTextHeight(BaseBlock.Canvas, TrueCond),
+                          GetTextHeight(BaseBlock.Canvas, FalseCond)) +
+                          GetTextHeight(BaseBlock.Canvas, FAction) + 3 * YIndentText;
   end;
 
   function TIfBranching.IsPreсOperator: Boolean;
@@ -42,15 +42,15 @@ implementation
     SetLength(FBlocks, FBlockCount);
 
     FBlocks[0]:= TBlock.Create(FBaseBlock.XStart,
-                       (FBaseBlock.XStart + FBaseBlock.XLast) div 2, Self);
+                       (FBaseBlock.XStart + FBaseBlock.XLast) div 2, Self, BaseBlock.Canvas);
 
-    FBlocks[1]:= TBlock.Create(FBlocks[0].XLast, FBaseBlock.XLast, Self);
+    FBlocks[1]:= TBlock.Create(FBlocks[0].XLast, FBaseBlock.XLast, Self, BaseBlock.Canvas);
   end;
 
   procedure TIfBranching.InitializeBlock;
   begin
-    FBlocks[0].AddFirstStatement(DefaultBlock.CreateUncertainty(FCanvas), FYLast);
-    FBlocks[1].AddFirstStatement(DefaultBlock.CreateUncertainty(FCanvas), FYLast);
+    FBlocks[0].AddFirstStatement(DefaultBlock.CreateUncertainty, FYLast);
+    FBlocks[1].AddFirstStatement(DefaultBlock.CreateUncertainty, FYLast);
   end;
 
   function TIfBranching.GetAvailablePartWidth(const APartWidth, ATextHeight: Integer): Integer;
@@ -68,8 +68,8 @@ implementation
 
   function TIfBranching.GetOptimaWidth: Integer;
   begin
-    Result:= GetMinValidPartWidth(GetTextHeight(FCanvas, FAction),
-                                              GetTextWidth(FCanvas, FAction));
+    Result:= GetMinValidPartWidth(GetTextHeight(BaseBlock.Canvas, FAction),
+                                              GetTextWidth(BaseBlock.Canvas, FAction));
   end;
 
   function TIfBranching.GetOptimalWidthForBlock(const ABlock: TBlock): Integer;
@@ -77,11 +77,11 @@ implementation
     I: Integer;
   begin
     if ABlock = FBlocks[0] then
-    Result:= GetMinValidPartWidth(GetTextHeight(FCanvas, TrueCond),
-                                  GetTextWidth(FCanvas, TrueCond))
+    Result:= GetMinValidPartWidth(GetTextHeight(BaseBlock.Canvas, TrueCond),
+                                  GetTextWidth(BaseBlock.Canvas, TrueCond))
     else if ABlock = FBlocks[1] then
-    Result:= GetMinValidPartWidth(GetTextHeight(FCanvas, FalseCond),
-                                  GetTextWidth(FCanvas, FalseCond))
+    Result:= GetMinValidPartWidth(GetTextHeight(BaseBlock.Canvas, FalseCond),
+                                  GetTextWidth(BaseBlock.Canvas, FalseCond))
   end;
 
   procedure TIfBranching.Draw;
@@ -91,37 +91,37 @@ implementation
   begin
 
     // Drawing the main block
-    DrawRectangle(BaseBlock.XStart, BaseBlock.XLast, FYStart, FYLast, FCanvas);
+    DrawRectangle(BaseBlock.XStart, BaseBlock.XLast, FYStart, FYLast, BaseBlock.Canvas);
 
     // Drawing a triangle
     DrawInvertedTriangle(BaseBlock.XStart, FBlocks[1].XStart, BaseBlock.XLast,
-                                                FYStart, FYLast, FCanvas);
+                                                FYStart, FYLast, BaseBlock.Canvas);
 
     // Calculate the heights of texts
-    ActionHeight := GetTextHeight(FCanvas, FAction);
-    CondHeight := GetTextHeight(FCanvas, TrueCond);
+    ActionHeight := GetTextHeight(BaseBlock.Canvas, FAction);
+    CondHeight := GetTextHeight(BaseBlock.Canvas, TrueCond);
 
     // Drawing the action
-    DrawText(FCanvas,
+    DrawText(BaseBlock.Canvas,
       FBlocks[0].XStart +
       GetAvailablePartWidth(FBlocks[0].XLast - FBlocks[0].XStart, CondHeight + YIndentText) +
       GetAvailablePartWidth(BaseBlock.XLast - BaseBlock.XStart, ActionHeight) div 2 -
-      GetTextWidth(FCanvas, FAction) div 2,
+      GetTextWidth(BaseBlock.Canvas, FAction) div 2,
       FYStart + YIndentText, Action);
 
     // Drawing the True text
-    DrawText(FCanvas,
+    DrawText(BaseBlock.Canvas,
                     FBlocks[0].XStart + GetAvailablePartWidth(
                     FBlocks[0].XLast - FBlocks[0].XStart, CondHeight) div 2 -
-                    GetTextWidth(FCanvas, TrueCond) div 2,
+                    GetTextWidth(BaseBlock.Canvas, TrueCond) div 2,
                     FYStart + 2*YIndentText + ActionHeight, TrueCond);
 
     // Drawing the False text
-    CondHeight := GetTextHeight(FCanvas, FalseCond);
-    DrawText(FCanvas,
+    CondHeight := GetTextHeight(BaseBlock.Canvas, FalseCond);
+    DrawText(BaseBlock.Canvas,
                     FBlocks[1].XLast - GetAvailablePartWidth(
                     FBlocks[1].XLast - FBlocks[1].XStart, CondHeight) div 2 -
-                    GetTextWidth(FCanvas, FalseCond) div 2,
+                    GetTextWidth(BaseBlock.Canvas, FalseCond) div 2,
                     FYStart + 2*YIndentText + ActionHeight, FalseCond);
 
     // Drawing child blocks
