@@ -48,20 +48,21 @@ type
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     { Private declarations }
   private
-    function TryGetAction(var AAction: String): Boolean;
-    function TryGetCond(var AInitialStr: TStringArr): Boolean;
-  private class
-    function ConvertToBlockType(AIndex: Integer): TStatementClass;
-  private const
-    SchemeInitialIndent = 10;
-    SchemeInitialFontSize = 24;
-    SchemeInitialFont = 'Times New Roman';
-  private
-    { Public declarations }
     MainBlock : TBlock;
     DedicatedStatement: TStatement;
 
     HighlightColor: TColor;
+
+    function TryGetAction(var AAction: String): Boolean;
+    function TryGetCond(var AInitialStr: TStringArr): Boolean;
+    function CreateStatement(const AStatementClass: TStatementClass): TStatement;
+    class function ConvertToBlockType(const AIndex: Integer): TStatementClass;
+  private const
+    SchemeInitialIndent = 10;
+    SchemeInitialFontSize = 24;
+    SchemeInitialFont = 'Times New Roman';
+  public
+    { Public declarations }
   end;
 
 var
@@ -170,37 +171,15 @@ implementation
   procedure TNassiShneiderman.spStatementClick(Sender: TObject);
   var
     NewStatement: TStatement;
-    StatementClass: TStatementClass;
-    Action: String;
-    Cond: TStringArr;
   begin
 
-    if (DedicatedStatement <> nil) and (Sender is TSpeedButton) then
+    if DedicatedStatement <> nil then
     begin
-      StatementClass:= ConvertToBlockType(TSpeedButton(Sender).Tag);
-      Action := '';
+      NewStatement:= CreateStatement(ConvertToBlockType(TComponent(Sender).Tag));
 
-      if TryGetAction(Action) then
+      if NewStatement <> nil then
       begin
-
-        if StatementClass = TCaseBranching then
-        begin
-          Cond:= nil;
-          if TryGetCond(Cond) then
-          begin
-            NewStatement:= TCaseBranching.Create(Action, Cond,
-                              DedicatedStatement.BaseBlock, Image.Canvas);
-
-            DedicatedStatement.BaseBlock.AddAfter(DedicatedStatement, NewStatement);
-          end;
-        end
-        else
-        begin
-          NewStatement:= StatementClass.Create(Action,
-                              DedicatedStatement.BaseBlock, Image.Canvas);
-          DedicatedStatement.BaseBlock.AddAfter(DedicatedStatement, NewStatement);
-        end;
-
+        DedicatedStatement.BaseBlock.AddAfter(DedicatedStatement, NewStatement);
         DefineBorders(MainBlock.XLast, MainBlock.Statements.GetLast.GetYBottom, Image);
       end;
     end;
@@ -243,7 +222,7 @@ implementation
     ClearAndRedraw;
   end;
 
-  class function TNassiShneiderman.ConvertToBlockType(AIndex: Integer): TStatementClass;
+  class function TNassiShneiderman.ConvertToBlockType(const AIndex: Integer): TStatementClass;
   begin
     case AIndex of
       0 : Result:= TProcessStatement;
@@ -289,6 +268,30 @@ implementation
       Result:= False;
 
     WriteActionForm.Destroy;
+  end;
+
+  function TNassiShneiderman.CreateStatement(const AStatementClass: TStatementClass): TStatement;
+  var
+    Action: String;
+    Cond: TStringArr;
+  begin
+    Result:= nil;
+    Action := '';
+
+    if TryGetAction(Action) then
+    begin
+
+      if AStatementClass = TCaseBranching then
+      begin
+        Cond:= nil;
+        if TryGetCond(Cond) then
+          Result:= TCaseBranching.Create(Action, Cond,
+                            DedicatedStatement.BaseBlock, Image.Canvas);
+      end
+      else
+        Result:= AStatementClass.Create(Action,
+                            DedicatedStatement.BaseBlock, Image.Canvas);
+    end;
   end;
 
 end.
