@@ -406,7 +406,8 @@ implementation
 
     if FStatements.Count = 0 then
     begin
-      AddLast(DefaultBlock.CreateUncertainty(Self, AStatement.FCanvas));
+      AddFirstStatement(DefaultBlock.CreateUncertainty(Self, AStatement.FCanvas),
+                                                             AStatement.FYStart);
       FStatements[0].FixYStatementsPosition;
     end
     else if Index = 0 then

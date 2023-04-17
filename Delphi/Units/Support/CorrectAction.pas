@@ -2,15 +2,24 @@ unit CorrectAction;
 
 interface
 
-  function GetCorrectAction(const Astring: String): String;
+  function GetActionForStatement(const Astring: String): String;
+  function GetActionForOutput(const Astring: String): String;
 implementation
 
-  function GetCorrectAction(const Astring: String): String;
+  function GetActionForStatement(const Astring: String): String;
   begin
     if Astring <> '' then
       Result := Astring
     else
       Result := ' ';
+  end;
+
+  function GetActionForOutput(const Astring: String): String;
+  begin
+    if Astring = ' ' then
+      Result := ''
+    else
+      Result := Astring;
   end;
 
 end.

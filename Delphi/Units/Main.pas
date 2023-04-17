@@ -8,7 +8,7 @@ uses
   Base, FirstLoop, IfBranching, CaseBranching, LastLoop, StatementSearch, DrawShapes,
   Vcl.StdCtrls, Vcl.Menus, System.Actions, Vcl.ActnList, Vcl.ToolWin, GetСaseСonditions,
   Vcl.ComCtrls, Vcl.Buttons, System.ImageList, Vcl.ImgList, GetAction, ArrayList, Types,
-  CorrectAction, AdjustBorders;
+  AdjustBorders;
 
 type
   TNassiShneiderman = class(TForm)
@@ -48,15 +48,15 @@ type
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     { Private declarations }
   private
-    function GetAction(AInitialStr: String = ''): String;
-    function GetCond(AInitialStr: TStringArr = nil): TStringArr;
+    function TryGetAction(var AAction: String): Boolean;
+    function TryGetCond(var AInitialStr: TStringArr): Boolean;
   private class
     function ConvertToBlockType(AIndex: Integer): TStatementClass;
   private const
     SchemeInitialIndent = 10;
     SchemeInitialFontSize = 24;
     SchemeInitialFont = 'Times New Roman';
-  public
+  private
     { Public declarations }
     MainBlock : TBlock;
     DedicatedStatement: TStatement;
@@ -129,6 +129,8 @@ implementation
       begin
         DedicatedStatement.BaseBlock.DeleteStatement(DedicatedStatement);
         DedicatedStatement:= nil;
+
+        DefineBorders(MainBlock.XLast, MainBlock.Statements.GetLast.GetYBottom, Image);
       end;
 
       ClearAndRedraw;
@@ -170,23 +172,37 @@ implementation
     NewStatement: TStatement;
     StatementClass: TStatementClass;
     Action: String;
+    Cond: TStringArr;
   begin
 
     if (DedicatedStatement <> nil) and (Sender is TSpeedButton) then
     begin
       StatementClass:= ConvertToBlockType(TSpeedButton(Sender).Tag);
-      Action := GetAction;
+      Action := '';
 
-      if StatementClass = TCaseBranching then
-         NewStatement:= TCaseBranching.Create(Action, GetCond,
-                            DedicatedStatement.BaseBlock, Image.Canvas)
-      else
-        NewStatement:= StatementClass.Create(Action,
-                            DedicatedStatement.BaseBlock, Image.Canvas);
+      if TryGetAction(Action) then
+      begin
 
-      DedicatedStatement.BaseBlock.AddAfter(DedicatedStatement, NewStatement);
+        if StatementClass = TCaseBranching then
+        begin
+          Cond:= nil;
+          if TryGetCond(Cond) then
+          begin
+            NewStatement:= TCaseBranching.Create(Action, Cond,
+                              DedicatedStatement.BaseBlock, Image.Canvas);
 
-      DefineBorders(MainBlock.XLast, MainBlock.Statements.GetLast.GetYBottom, Image);
+            DedicatedStatement.BaseBlock.AddAfter(DedicatedStatement, NewStatement);
+          end;
+        end
+        else
+        begin
+          NewStatement:= StatementClass.Create(Action,
+                              DedicatedStatement.BaseBlock, Image.Canvas);
+          DedicatedStatement.BaseBlock.AddAfter(DedicatedStatement, NewStatement);
+        end;
+
+        DefineBorders(MainBlock.XLast, MainBlock.Statements.GetLast.GetYBottom, Image);
+      end;
     end;
 
     ClearAndRedraw;
@@ -197,6 +213,7 @@ implementation
     MousePos: TPoint;
     Statement: TStatement;
     Action: String;
+    Cond: TStringArr;
     CaseBranching: TCaseBranching;
   begin
     MousePos := Image.ScreenToClient(Mouse.CursorPos);
@@ -205,17 +222,22 @@ implementation
 
     if Statement <> nil then
     begin
-      Action := GetAction(Statement.Action);
+      Action := Statement.Action;
 
-      if Statement is TCaseBranching then
+      if TryGetAction(Action) then
       begin
-        CaseBranching:= TCaseBranching(Statement);
-        CaseBranching.ChangeActionWithCond(Action, GetCond(CaseBranching.Cond));
-      end
-      else
-        Statement.ChangeAction(Action);
+        if Statement is TCaseBranching then
+        begin
+          CaseBranching:= TCaseBranching(Statement);
+          Cond:= CaseBranching.Cond;
+          if TryGetCond(Cond) then
+            CaseBranching.ChangeActionWithCond(Action, Cond);
+        end
+        else
+          Statement.ChangeAction(Action);
 
-      DefineBorders(MainBlock.XLast, MainBlock.Statements.GetLast.GetYBottom, Image);
+        DefineBorders(MainBlock.XLast, MainBlock.Statements.GetLast.GetYBottom, Image);
+      end;
     end;
 
     ClearAndRedraw;
@@ -232,34 +254,39 @@ implementation
     end;
   end;
 
-  function TNassiShneiderman.GetCond(AInitialStr: TStringArr = nil): TStringArr;
+  function TNassiShneiderman.TryGetCond(var AInitialStr: TStringArr): Boolean;
   var
     WriteСaseСonditions: TWriteСaseСonditions;
     I : Integer;
   begin
-    if AInitialStr = nil then
-    begin
-      SetLength(AInitialStr, 2);
-      AInitialStr[0]:= '';
-      AInitialStr[1]:= '';
-    end;
-
     WriteСaseСonditions := TWriteСaseСonditions.Create(Self, AInitialStr);
     WriteСaseСonditions.ShowModal;
 
-    Result:= WriteСaseСonditions.GetСaseСonditions;
+    if WriteСaseСonditions.ModalResult = mrOk then
+    begin
+      Result:= True;
+      AInitialStr:= WriteСaseСonditions.GetСaseСonditions;
+    end
+    else
+      Result:= False;
 
     WriteСaseСonditions.Destroy;
   end;
 
-  function TNassiShneiderman.GetAction(AInitialStr: String = ''): String;
+  function TNassiShneiderman.TryGetAction(var AAction: String): Boolean;
   var
     WriteActionForm: TWriteAction;
   begin
-    WriteActionForm := TWriteAction.Create(Self, AInitialStr);
+    WriteActionForm := TWriteAction.Create(Self, AAction);
     WriteActionForm.ShowModal;
 
-    Result:= WriteActionForm.GetAction;
+    if WriteActionForm.ModalResult = mrOk then
+    begin
+      Result:= True;
+      AAction:= WriteActionForm.GetAction;
+    end
+    else
+      Result:= False;
 
     WriteActionForm.Destroy;
   end;

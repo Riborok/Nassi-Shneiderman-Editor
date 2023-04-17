@@ -4,7 +4,7 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Types, ArrayList, Constants, CorrectAction,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Types, Stack, Constants, CorrectAction,
   Vcl.ExtCtrls;
 
 type
@@ -24,11 +24,11 @@ type
       WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
     procedure btnDeleteClick(Sender: TObject);
     destructor Destroy;
+    procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
   private
     { Private declarations }
-    FMemoList: TArrayList<TMemo>;
-    FLabelList: TArrayList<TLabel>;
-    FInputStringArr: TStringArr;
+    FMemoList: TStack<TMemo>;
+    FLabelList: TStack<TLabel>;
     procedure CreateMemo(const AText: string = '');
   public
     { Public declarations }
@@ -45,23 +45,16 @@ implementation
   function TWriteÑaseÑonditions.GetÑaseÑonditions: TStringArr;
   var
     I: Integer;
+    Memo: TMemo;
   begin
-    if ModalResult = mrOk then
+    SetLength(Result, FMemoList.Count);
+
+    for I := FMemoList.Count - 1 downto 0 do
     begin
-
-      SetLength(Result, FMemoList.Count);
-
-      for I := 0 to FMemoList.Count - 1 do
-        Result[I]:= GetCorrectAction(FMemoList[I].Lines.Text);
-
-    end
-    else
-    begin
-      Result:= FInputStringArr;
-      for I := 0 to High(Result) do
-        Result[I]:= GetCorrectAction(Result[I]);
+      Memo:= FMemoList.Pop;
+      Result[I]:= GetActionForStatement(Memo.Lines.Text);
+      Memo.Destroy;
     end;
-
   end;
 
   constructor TWriteÑaseÑonditions.Create(AOwner: TComponent; const ACond: TStringArr);
@@ -69,44 +62,54 @@ implementation
     OwnerControl: TControl;
     I: Integer;
   begin
-    if Length(ACond) > 1 then
+
+    inherited Create(AOwner);
+
+    FMemoList:= TStack<TMemo>.Create;
+    FLabelList:= TStack<TLabel>.Create;
+
+    if OwnerControl is TControl then
     begin
-      inherited Create(AOwner);
-
-      FMemoList:= TArrayList<TMemo>.Create(7);
-      FLabelList:= TArrayList<TLabel>.Create(7);
-
-      if OwnerControl is TControl then
-      begin
-        OwnerControl := TControl(AOwner);
-        Left := OwnerControl.Left + (OwnerControl.Width - Width) div 2;
-        Top := OwnerControl.Top + (OwnerControl.Height - Height) div 2;
-      end
-      else
-      begin
-        Left := (Screen.Width - Width) div 2;
-        Top := (Screen.Height - Height) div 2;
-      end;
-
-      for I := 0 to Length(ACond) - 1 do
-        CreateMemo(ACond[i]);
-
-      FMemoList[0].SelStart := 0;
-      FMemoList[0].SelLength := Length(FMemoList[0].Text);
-
-      FInputStringArr:= ACond;
+      OwnerControl := TControl(AOwner);
+      Left := OwnerControl.Left + (OwnerControl.Width - Width) div 2;
+      Top := OwnerControl.Top + (OwnerControl.Height - Height) div 2;
+    end
+    else
+    begin
+      Left := (Screen.Width - Width) div 2;
+      Top := (Screen.Height - Height) div 2;
     end;
+
+    for I := 0 to High(ACond) do
+      CreateMemo(GetActionForOutput(ACond[i]));
+
+    if Length(ACond) = 0 then
+    begin
+      CreateMemo;
+      CreateMemo;
+    end;
+
+    FMemoList.Peek.SelStart := 0;
+    FMemoList.Peek.SelLength := Length(FMemoList.Peek.Text);
   end;
 
   destructor TWriteÑaseÑonditions.Destroy;
   var
     I: Integer;
+    Memo: TMemo;
+    LabelCaption: TLabel;
   begin
-    for I:= 0 to FMemoList.Count - 1 do
-      FMemoList[I].Destroy;
+    for I:= FMemoList.Count - 1 downto 0 do
+    begin
+      Memo:= FMemoList.Pop;
+      Memo.Destroy;
+    end;
 
-    for I:= 0 to FLabelList.Count - 1 do
-      FLabelList[I].Destroy;
+    for I:= FLabelList.Count - 1 downto 0 do
+    begin
+      LabelCaption:= FLabelList.Pop;
+      LabelCaption.Destroy;
+    end;
 
     FMemoList.Destroy;
     FLabelList.Destroy;
@@ -126,11 +129,8 @@ implementation
   begin
     if FMemoList.Count > 2 then
     begin
-      Memo:= FMemoList.GetLast;
-      LabelCaption:= FLabelList.GetLast;
-
-      FMemoList.Delete(FMemoList.Count - 1);
-      FLabelList.Delete(FLabelList.Count - 1);
+      Memo:= FMemoList.Pop;
+      LabelCaption:= FLabelList.Pop;
 
       if Panel.Height - Memo.Height - LabelCaption.Height >= Self.Height - ScrollBox.Top then
         Panel.Height := Panel.Height - Memo.Height - LabelCaption.Height;
@@ -161,8 +161,7 @@ implementation
     Memo.Font.Name := FontName;
 
     if FMemoList.Count > 0 then
-      Memo.Top := TMemo(FMemoList[FMemoList.Count - 1]).Top +
-                TMemo(FMemoList[FMemoList.Count - 1]).Height
+      Memo.Top := FMemoList.Peek.Top + FMemoList.Peek.Height
     else
       Memo.Top := 0;
 
@@ -176,8 +175,8 @@ implementation
     LabelCaption.Margins.Top := 20;
     LabelCaption.Align := alTop;
 
-    FMemoList.Add(Memo);
-    FLabelList.Add(LabelCaption);
+    FMemoList.Push(Memo);
+    FLabelList.Push(LabelCaption);
 
     ScrollBox.VertScrollBar.Position := ScrollBox.VertScrollBar.Range;
   end;
@@ -186,6 +185,13 @@ implementation
   begin
     Constraints.MinWidth := 550;
     Constraints.MinHeight := 700;
+  end;
+
+  procedure TWriteÑaseÑonditions.FormKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+  begin
+    if (Key = VK_RETURN) and not (ssShift in Shift) then
+      ModalResult := mrOk;
   end;
 
   procedure TWriteÑaseÑonditions.ScrollBoxMouseWheel(Sender: TObject;

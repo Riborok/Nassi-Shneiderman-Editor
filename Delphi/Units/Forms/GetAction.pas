@@ -19,7 +19,6 @@ type
       Shift: TShiftState);
   private
     { Private declarations }
-    FInputAction: String;
   public
     { Public declarations }
     function GetAction: String;
@@ -34,10 +33,7 @@ implementation
 
   function TWriteAction.GetAction: String;
   begin
-    if ModalResult = mrOk then
-      Result:= GetCorrectAction(MemoAction.Lines.Text)
-    else
-      Result:= GetCorrectAction(FInputAction);
+    Result:= GetActionForStatement(MemoAction.Lines.Text)
   end;
 
   constructor TWriteAction.Create(AOwner: TComponent; ACurrAction: String);
@@ -58,8 +54,7 @@ implementation
       Top := (Screen.Height - Height) div 2;
     end;
 
-    MemoAction.Text := ACurrAction;
-    FInputAction:= ACurrAction;
+    MemoAction.Text := GetActionForOutput(ACurrAction);
     MemoAction.SelStart := 0;
     MemoAction.SelLength := Length(MemoAction.Text);
   end;
