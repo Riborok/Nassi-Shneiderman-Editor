@@ -79,7 +79,7 @@ implementation
 
       // Set dimensions after adding
       for I := Length(PrevCond) to High(FCond) do
-        Blocks[I].Statements.GetLast.InstallAfterAdding;
+        Blocks[I].Statements.GetLast.InstalAfterAdding;
     end;
 
     // Changing the action

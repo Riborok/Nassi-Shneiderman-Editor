@@ -1,7 +1,7 @@
 ﻿unit Base;
 
 interface
-uses Vcl.graphics, System.Generics.Collections, ArrayList, MinMaxInt, Vcl.ExtCtrls;
+uses Vcl.graphics, System.Generics.Collections, ArrayList, MinMaxInt;
 type
   TBlock = class;
 
@@ -24,8 +24,8 @@ type
     // FBaseBlock is a reference to the block that the statement belongs to
     FBaseBlock: TBlock;
 
-    // FImage is a reference to the image used for drawing
-    FImage: TImage;
+    // FCanvas is a reference to the canvas used for drawing
+    FCanvas: TCanvas;
 
     // These functions are used to get the Y and X indentation of the statement
     function YIndentText : Integer;
@@ -57,18 +57,14 @@ type
     // the size of the statement
     procedure SetInitiaXLast; virtual;
 
-    // Set the dimensions after adding and if this statement is the last one,
-    // it asks the previous to set the optimal height
-    procedure InstalAfterAdding; virtual;
-
     procedure RedefineSizes;
 
   public
     // This constructor creates an uncertainty statement
-    constructor CreateUncertainty(const ABaseBlock: TBlock; const AImage: TImage);
+    constructor CreateUncertainty(const ABaseBlock: TBlock; const ACanvas: TCanvas);
 
     // Create
-    constructor Create(const AAction : String; const ABaseBlock: TBlock; const AImage: TImage);
+    constructor Create(const AAction : String; const ABaseBlock: TBlock; const ACanvas: TCanvas);
 
     // These properties return the text of the statement and base block
     property Action: String read FAction;
@@ -88,6 +84,10 @@ type
 
     // Set the optimal Y last
     procedure SetOptimalYLast;
+
+    // Set the dimensions after adding and if this statement is the last one,
+    // it asks the previous to set the optimal height
+    procedure InstallAfterAdding; virtual;
   end;
 
   { TStatementClass }
@@ -111,7 +111,7 @@ type
 
     procedure SetInitiaXLast; override;
 
-    procedure InstalAfterAdding; override;
+    procedure InstallAfterAdding; override;
 
     function FindBlockIndex(const FXStart: Integer): Integer;
   public
@@ -135,15 +135,15 @@ type
 
     procedure ChangeYStatement(AIndex: Integer = 0);
 
-    function FindOptimalXLast: Integer;
-
     procedure MoveRightExceptXLast(const AOffset: Integer);
     procedure MoveRight(const AOffset: Integer);
-    procedure ChangeXLastBlock(const ANewXLast: Integer);
+
+    function FindOptimalXLast: Integer;
 
     function GetLastStatement: TStatement;
 
     function FindStatementIndex(const FYStart: Integer): Integer;
+
   public
     constructor Create(const AXStart, AXLast: Integer; const ABaseOperator: TOperator);
     destructor Destroy; override;
@@ -160,6 +160,8 @@ type
     procedure DeleteStatement(const AStatement: TStatement);
     procedure SetOptimalXLastBlock;
 
+    procedure ChangeXLastBlock(const ANewXLast: Integer);
+
     procedure DrawBlock;
 
     procedure RedefineSizes;
@@ -172,17 +174,17 @@ implementation
 
   { TStatement }
 
-  constructor TStatement.CreateUncertainty(const ABaseBlock: TBlock; const AImage: TImage);
+  constructor TStatement.CreateUncertainty(const ABaseBlock: TBlock; const ACanvas: TCanvas);
   begin
-    Create(UncertaintySymbol, ABaseBlock, AImage);
+    Create(UncertaintySymbol, ABaseBlock, ACanvas);
   end;
 
   constructor TStatement.Create(const AAction : String; const ABaseBlock: TBlock;
-                                const AImage: TImage);
+                                const ACanvas: TCanvas);
   begin
     FBaseBlock := ABaseBlock;
 
-    FImage := AImage;
+    FCanvas := ACanvas;
 
     FAction := AAction;
   end;
@@ -203,12 +205,12 @@ implementation
 
   function TStatement.YIndentText : Integer;
   begin
-    Result:= FImage.Canvas.Font.Size + 3;
+    Result:= FCanvas.Font.Size + 3;
   end;
 
   function TStatement.XMinIndentText : Integer;
   begin
-    Result:= FImage.Canvas.Font.Size + 5;
+    Result:= FCanvas.Font.Size + 5;
   end;
 
   function TStatement.HasOptimalYLast : Boolean;
@@ -311,7 +313,7 @@ implementation
     Inc(FYLast, Offset);
   end;
 
-  procedure TStatement.InstalAfterAdding;
+  procedure TStatement.InstallAfterAdding;
   begin
     SetOptimalYLast;
     FixYStatementsPosition;
@@ -363,7 +365,7 @@ implementation
     begin
       AInsertedStatement.FYStart:= AStatement.GetYBottom;
       FStatements.Insert(AInsertedStatement, Index);
-      AInsertedStatement.InstalAfterAdding;
+      AInsertedStatement.InstallAfterAdding;
     end
     else
       AddLast(AInsertedStatement);
@@ -382,7 +384,7 @@ implementation
                                            (FStatements.Count > 1) then
       FStatements[FStatements.Count - 2].SetOptimalYLast;
 
-    AStatement.InstalAfterAdding;
+    AStatement.InstallAfterAdding;
   end;
 
   procedure TBlock.AddFirstStatement(const AStatement: TStatement; const AYStart: Integer);
@@ -401,7 +403,7 @@ implementation
 
     if FStatements.Count = 0 then
     begin
-      AddLast(DefaultBlock.CreateUncertainty(Self, AStatement.FImage));
+      AddLast(DefaultBlock.CreateUncertainty(Self, AStatement.FCanvas));
       FStatements[0].FixYStatementsPosition;
     end
     else if Index = 0 then
@@ -689,11 +691,8 @@ implementation
   var
     I: Integer;
   begin
-    Result := 0;
     case IsPreсOperator of
-      True:
-        for I := 0 to High(FBlocks) do
-          Result := Max(Result, FBlocks[I].FStatements.GetLast.GetYBottom);
+      True: Result:= FBlocks[0].FStatements.GetLast.GetYBottom;
       False: Result := FYLast;
     end;
   end;
@@ -714,7 +713,7 @@ implementation
   var
     I: Integer;
   begin
-    Result := 0;
+    Result := -1;
     case IsPreсOperator of
       True:
         for I := 0 to High(FBlocks) do
@@ -723,7 +722,7 @@ implementation
     end;
   end;
 
-  procedure TOperator.InstalAfterAdding;
+  procedure TOperator.InstallAfterAdding;
   begin
     CreateBlock;
     InitializeBlock;

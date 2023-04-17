@@ -57,18 +57,14 @@ type
     // the size of the statement
     procedure SetInitiaXLast; virtual;
 
-    // Set the dimensions after adding and if this statement is the last one,
-    // it asks the previous to set the optimal height
-    procedure InstalAfterAdding; virtual;
-
     procedure RedefineSizes;
 
   public
     // This constructor creates an uncertainty statement
-    constructor CreateUncertainty(const ABaseBlock: TBlock; const AImage: TCanvas);
+    constructor CreateUncertainty(const ABaseBlock: TBlock; const ACanvas: TCanvas);
 
     // Create
-    constructor Create(const AAction : String; const ABaseBlock: TBlock; const AImage: TCanvas);
+    constructor Create(const AAction : String; const ABaseBlock: TBlock; const ACanvas: TCanvas);
 
     // These properties return the text of the statement and base block
     property Action: String read FAction;
@@ -88,6 +84,10 @@ type
 
     // Set the optimal Y last
     procedure SetOptimalYLast;
+
+    // Set the dimensions after adding and if this statement is the last one,
+    // it asks the previous to set the optimal height
+    procedure InstalAfterAdding; virtual;
   end;
 
   { TStatementClass }
@@ -135,15 +135,15 @@ type
 
     procedure ChangeYStatement(AIndex: Integer = 0);
 
-    function FindOptimalXLast: Integer;
-
     procedure MoveRightExceptXLast(const AOffset: Integer);
     procedure MoveRight(const AOffset: Integer);
-    procedure ChangeXLastBlock(const ANewXLast: Integer);
+
+    function FindOptimalXLast: Integer;
 
     function GetLastStatement: TStatement;
 
     function FindStatementIndex(const FYStart: Integer): Integer;
+
   public
     constructor Create(const AXStart, AXLast: Integer; const ABaseOperator: TOperator);
     destructor Destroy; override;
@@ -160,6 +160,8 @@ type
     procedure DeleteStatement(const AStatement: TStatement);
     procedure SetOptimalXLastBlock;
 
+    procedure ChangeXLastBlock(const ANewXLast: Integer);
+
     procedure DrawBlock;
 
     procedure RedefineSizes;
@@ -172,17 +174,17 @@ implementation
 
   { TStatement }
 
-  constructor TStatement.CreateUncertainty(const ABaseBlock: TBlock; const AImage: TCanvas);
+  constructor TStatement.CreateUncertainty(const ABaseBlock: TBlock; const ACanvas: TCanvas);
   begin
-    Create(UncertaintySymbol, ABaseBlock, AImage);
+    Create(UncertaintySymbol, ABaseBlock, ACanvas);
   end;
 
   constructor TStatement.Create(const AAction : String; const ABaseBlock: TBlock;
-                                const AImage: TCanvas);
+                                const ACanvas: TCanvas);
   begin
     FBaseBlock := ABaseBlock;
 
-    FCanvas := AImage;
+    FCanvas := ACanvas;
 
     FAction := AAction;
   end;
@@ -689,11 +691,8 @@ implementation
   var
     I: Integer;
   begin
-    Result := 0;
     case IsPreсOperator of
-      True:
-        for I := 0 to High(FBlocks) do
-          Result := Max(Result, FBlocks[I].FStatements.GetLast.GetYBottom);
+      True: Result:= FBlocks[0].FStatements.GetLast.GetYBottom;
       False: Result := FYLast;
     end;
   end;
@@ -714,7 +713,7 @@ implementation
   var
     I: Integer;
   begin
-    Result := 0;
+    Result := -1;
     case IsPreсOperator of
       True:
         for I := 0 to High(FBlocks) do

@@ -35,7 +35,7 @@ type
     procedure SetYBottom(const AYBottom: Integer); virtual;
 
     // Get the optimal lower part
-    function GetOptimalYBottom: Integer; virtual;
+    function GetMaxOptimalYBottom: Integer; virtual;
 
     // After changing the Y coordinate, need to call the procedure in order to
     // change the Y coordinates of others
@@ -56,10 +56,6 @@ type
     // This method is abstract and will be implemented by subclasses to determine
     // the size of the statement
     procedure SetInitiaXLast; virtual;
-
-    // Set the dimensions after adding and if this statement is the last one,
-    // it asks the previous to set the optimal height
-    procedure InstalAfterAdding; virtual;
 
     procedure RedefineSizes;
 
@@ -88,6 +84,10 @@ type
 
     // Set the optimal Y last
     procedure SetOptimalYLast;
+
+    // Set the dimensions after adding and if this statement is the last one,
+    // it asks the previous to set the optimal height
+    procedure InstallAfterAdding; virtual;
   end;
 
   { TStatementClass }
@@ -105,13 +105,13 @@ type
     procedure InitializeBlock; virtual; abstract;
 
     procedure SetYBottom(const AYBottom: Integer); override;
-    function GetOptimalYBottom: Integer; override;
+    function GetMaxOptimalYBottom: Integer; override;
 
     function GetOptimalWidthForBlock(const Block: TBlock): Integer; virtual; abstract;
 
     procedure SetInitiaXLast; override;
 
-    procedure InstalAfterAdding; override;
+    procedure InstallAfterAdding; override;
 
     function FindBlockIndex(const FXStart: Integer): Integer;
   public
@@ -135,15 +135,15 @@ type
 
     procedure ChangeYStatement(AIndex: Integer = 0);
 
-    function FindOptimalXLast: Integer;
-
     procedure MoveRightExceptXLast(const AOffset: Integer);
     procedure MoveRight(const AOffset: Integer);
-    procedure ChangeXLastBlock(const ANewXLast: Integer);
+
+    function FindOptimalXLast: Integer;
 
     function GetLastStatement: TStatement;
 
     function FindStatementIndex(const FYStart: Integer): Integer;
+
   public
     constructor Create(const AXStart, AXLast: Integer; const ABaseOperator: TOperator);
     destructor Destroy; override;
@@ -159,6 +159,8 @@ type
 
     procedure DeleteStatement(const AStatement: TStatement);
     procedure SetOptimalXLastBlock;
+
+    procedure ChangeXLastBlock(const ANewXLast: Integer);
 
     procedure DrawBlock;
 
@@ -243,7 +245,7 @@ implementation
     FYLast:= AYBottom;
   end;
 
-  function TStatement.GetOptimalYBottom: Integer;
+  function TStatement.GetMaxOptimalYBottom: Integer;
   begin
     Result:= GetOptimalYLast;
   end;
@@ -258,10 +260,10 @@ implementation
       I, MaxYLast, CurrYLast: Integer;
     begin
 
-      MaxYLast := ABlockArr[0].GetLastStatement.GetOptimalYBottom;
+      MaxYLast := ABlockArr[0].GetLastStatement.GetMaxOptimalYBottom;
       for I := 1 to High(ABlockArr) do
       begin
-        CurrYLast := ABlockArr[I].GetLastStatement.GetOptimalYBottom;;
+        CurrYLast := ABlockArr[I].GetLastStatement.GetMaxOptimalYBottom;;
         if MaxYLast < CurrYLast then
           MaxYLast := CurrYLast;
       end;
@@ -292,11 +294,11 @@ implementation
       CurrOperator:= CurrBlock.BaseOperator;
       CurrBlock:= CurrBlock.BaseOperator.BaseBlock;
 
-      Index := CurrBlock.FindStatementIndex(CurrOperator.FYStart);
-      CurrBlock.ChangeYStatement(Index + 1);
-
       if Length(CurrOperator.FBlocks) > 1 then
         AlignBlocks(CurrOperator.FBlocks);
+
+      Index := CurrBlock.FindStatementIndex(CurrOperator.FYStart);
+      CurrBlock.ChangeYStatement(Index + 1);
     end;
   end;
 
@@ -311,11 +313,11 @@ implementation
     Inc(FYLast, Offset);
   end;
 
-  procedure TStatement.InstalAfterAdding;
+  procedure TStatement.InstallAfterAdding;
   begin
     SetOptimalYLast;
-    FixYStatementsPosition;
     SetInitiaXLast;
+    FixYStatementsPosition;
   end;
 
   { TBlock }
@@ -363,7 +365,7 @@ implementation
     begin
       AInsertedStatement.FYStart:= AStatement.GetYBottom;
       FStatements.Insert(AInsertedStatement, Index);
-      AInsertedStatement.InstalAfterAdding;
+      AInsertedStatement.InstallAfterAdding;
     end
     else
       AddLast(AInsertedStatement);
@@ -382,13 +384,14 @@ implementation
                                            (FStatements.Count > 1) then
       FStatements[FStatements.Count - 2].SetOptimalYLast;
 
-    AStatement.InstalAfterAdding;
+    AStatement.InstallAfterAdding;
   end;
 
   procedure TBlock.AddFirstStatement(const AStatement: TStatement; const AYStart: Integer);
   begin
     FStatements.Add(AStatement);
     AStatement.FYStart:= AYStart;
+    AStatement.SetOptimalYLast;
   end;
 
   procedure TBlock.DeleteStatement(const AStatement: TStatement);
@@ -707,7 +710,7 @@ implementation
     end;
   end;
 
-  function TOperator.GetOptimalYBottom: Integer;
+  function TOperator.GetMaxOptimalYBottom: Integer;
   var
     I: Integer;
   begin
@@ -715,17 +718,34 @@ implementation
     case IsPreсOperator of
       True:
         for I := 0 to High(FBlocks) do
-          Result := Max(Result, FBlocks[I].Statements.GetLast.GetOptimalYBottom);
+          Result := Max(Result, FBlocks[I].Statements.GetLast.GetMaxOptimalYBottom);
       False: Result := GetOptimalYLast;
     end;
   end;
 
-  procedure TOperator.InstalAfterAdding;
+  procedure TOperator.InstallAfterAdding;
   begin
-    CreateBlock;
-    InitializeBlock;
+    case IsPreсOperator of
+      True:
+        begin
+          SetOptimalYLast;
 
-    inherited;
+          CreateBlock;
+          InitializeBlock;
+        end;
+
+      False:
+        begin
+          CreateBlock;
+          InitializeBlock;
+
+          SetOptimalYLast;
+        end;
+    end;
+
+    SetInitiaXLast;
+
+    FixYStatementsPosition;
   end;
 
 end.
