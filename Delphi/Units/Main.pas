@@ -24,7 +24,7 @@ type
     OpenDialog: TOpenDialog;
     SaveDialog: TSaveDialog;
     tbSelectFigType: TToolBar;
-    ilBlocks: TImageList;
+    ILIcons: TImageList;
     spProcess: TSpeedButton;
     spLastLoop: TSpeedButton;
     spFirstLoop: TSpeedButton;
@@ -46,6 +46,9 @@ type
     MIBefMultBranch: TMenuItem;
     MIBefTestLoop: TMenuItem;
     MIBefRevTestLoop: TMenuItem;
+    MICut: TMenuItem;
+    MICopy: TMenuItem;
+    MIInset: TMenuItem;
 
     procedure FormCreate(Sender: TObject);
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
@@ -61,6 +64,9 @@ type
     procedure ScrollBoxMouseWheel(Sender: TObject; Shift: TShiftState;
       WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure MICopyClick(Sender: TObject);
+    procedure MICutClick(Sender: TObject);
+    procedure MIInsetClick(Sender: TObject);
     { Private declarations }
   private
     MainBlock : TBlock;
@@ -82,6 +88,7 @@ type
 
 var
   NassiShneiderman: TNassiShneiderman;
+  BuferStatement: TStatement;
 
 implementation
 
@@ -95,6 +102,9 @@ implementation
 
   procedure TNassiShneiderman.FormCreate(Sender: TObject);
   begin
+
+    DedicatedStatement:= nil;
+    BuferStatement:= nil;
 
     Constraints.MinWidth := 600;
     Constraints.MinHeight := 400;
@@ -149,7 +159,14 @@ implementation
       end;
 
       ClearAndRedraw;
-    end;
+    end
+    else if ssCtrl in Shift then
+      case Key of
+        Ord('C'): MICopyClick(Self);
+        Ord('V'): MIInsetClick(Self);
+        Ord('X'): MICutClick(Self);
+      end;
+
   end;
 
   procedure TNassiShneiderman.ScrollBoxMouseWheel(Sender: TObject;
@@ -179,10 +196,45 @@ implementation
   begin
     DedicatedStatement := BinarySearchStatement(X, Y, MainBlock);
 
-    if (Button = mbRight) and (DedicatedStatement <> nil) then
-      PopupMenu.Popup(Mouse.CursorPos.X - Image.Left, Mouse.CursorPos.Y - Image.Top);
-
     ClearAndRedraw;
+
+    if (Button = mbRight) and (DedicatedStatement <> nil) then
+      PopupMenu.Popup(Image.Left + X + ScrollBox.Left, Image.Top + Y
+                      + ScrollBox.Top);
+  end;
+
+  procedure TNassiShneiderman.MICopyClick(Sender: TObject);
+  begin
+    if DedicatedStatement <> nil then
+    begin
+      if BuferStatement <> nil then
+        BuferStatement.Destroy;
+      BuferStatement:= DedicatedStatement.Clone;
+    end;
+  end;
+
+  procedure TNassiShneiderman.MICutClick(Sender: TObject);
+  begin
+    if DedicatedStatement <> nil then
+    begin
+      if BuferStatement <> nil then
+        BuferStatement.Destroy;
+      BuferStatement:= DedicatedStatement.Clone;
+      DedicatedStatement.BaseBlock.DeleteStatement(DedicatedStatement);
+      DedicatedStatement:= nil;
+      ClearAndRedraw;
+    end;
+  end;
+
+  procedure TNassiShneiderman.MIInsetClick(Sender: TObject);
+  begin
+    if (BuferStatement <> nil) and (DedicatedStatement <> nil) then
+    begin
+      DedicatedStatement.BaseBlock.AddAfter(DedicatedStatement, BuferStatement);
+      BuferStatement:= BuferStatement.Clone;
+      DefineBorders(MainBlock.XLast, MainBlock.Statements.GetLast.GetYBottom, Image);
+      ClearAndRedraw;
+    end;
   end;
 
   procedure TNassiShneiderman.AddBefore(Sender: TObject);

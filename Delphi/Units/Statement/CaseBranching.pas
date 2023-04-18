@@ -34,12 +34,10 @@ implementation
 
   constructor TCaseBranching.Create(const AAction : String;
         const ACond: TStringArr; const ACanvas: TCanvas);
-  var
-    I: Integer;
   begin
     inherited Create(AAction);
-    if Length(ACond) > 1 then
-      FCond:= ACond;
+
+    FCond:= ACond;
   end;
 
   procedure TCaseBranching.ChangeActionWithCond(const AAction: String; const ACond: TStringArr);
@@ -47,42 +45,40 @@ implementation
     I: Integer;
     PrevCond: TStringArr;
   begin
-    if Length(ACond) > 1 then
+
+    PrevCond:= FCond;
+    FCond:= ACond;
+
+    // Check what conditions have changed
+    for I := 0 to Min(High(PrevCond), High(FCond)) do
+      if FCond[I] <> PrevCond[I] then
+        Blocks[I].SetOptimalXLastBlock;
+
+    // Remove blocks if the amount of conditions has decreased
+    for I := Length(FCond) to High(Blocks) do
+      Blocks[I].Destroy;
+
+    // Setting a new amount for blocks
+    SetLength(FBlocks, Length(FCond));
+
+    // Add new blocks if the amount of conditions has increased
+    if Length(PrevCond) <= High(FCond) then
     begin
-      PrevCond:= FCond;
-      FCond:= ACond;
+      // Set the width to zero, to untie the X of the last block. In the future
+      // will set the optimal width
+      Blocks[High(PrevCond)].ChangeXLastBlock(Blocks[High(PrevCond)].XStart);
 
-      // Check what conditions have changed
-      for I := 0 to Min(High(PrevCond), High(FCond)) do
-        if FCond[I] <> PrevCond[I] then
-          Blocks[I].SetOptimalXLastBlock;
+      // Ñreate and initialize new blocks. Set the width to zero, in the future
+      // will set the optimal width
+      CreateBlockStarting(Length(PrevCond), 0);
+      InitializeBlockStarting(Length(PrevCond));
 
-      // Remove blocks if the amount of conditions has decreased
-      for I := Length(FCond) to High(Blocks) do
-        Blocks[I].Destroy;
+      // Set the optimal width of the last block, as promised :)
+      Blocks[High(PrevCond)].SetOptimalXLastBlock;
 
-      // Setting a new amount for blocks
-      SetLength(FBlocks, Length(FCond));
-
-      // Add new blocks if the amount of conditions has increased
-      if Length(PrevCond) <= High(FCond) then
-      begin
-        // Set the width to zero, to untie the X of the last block. In the future
-        // will set the optimal width
-        Blocks[High(PrevCond)].ChangeXLastBlock(Blocks[High(PrevCond)].XStart);
-
-        // Ñreate and initialize new blocks. Set the width to zero, in the future
-        // will set the optimal width
-        CreateBlockStarting(Length(PrevCond), 0);
-        InitializeBlockStarting(Length(PrevCond));
-
-        // Set the optimal width of the last block, as promised :)
-        Blocks[High(PrevCond)].SetOptimalXLastBlock;
-
-        // Set dimensions after adding
-        for I := Length(PrevCond) to High(FCond) do
-          Blocks[I].Statements.GetLast.InstallAfterAdding;
-      end;
+      // Set dimensions after adding
+      for I := Length(PrevCond) to High(FCond) do
+        Blocks[I].Statements.GetLast.InstallAfterAdding;
     end;
 
     // Changing the action

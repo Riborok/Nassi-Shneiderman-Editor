@@ -39,7 +39,7 @@ type
     procedure FixYStatementsPosition;
 
     // Lowers the statement on Offset
-    procedure Lower(const Offset: Integer);
+    procedure Lower(const AOffset: Integer);
 
     // Returns whether the current Y last is optimal
     function HasOptimalYLast: boolean;
@@ -85,6 +85,8 @@ type
     // Set the dimensions after adding and if this statement is the last one,
     // it asks the previous to set the optimal height
     procedure InstallAfterAdding; virtual;
+
+    function Clone: TStatement; virtual;
   end;
 
   { TStatementClass }
@@ -104,13 +106,13 @@ type
     procedure SetYBottom(const AYBottom: Integer); override;
     function GetMaxOptimalYBottom: Integer; override;
 
-    function GetOptimalWidthForBlock(const Block: TBlock): Integer; virtual; abstract;
+    function GetOptimalWidthForBlock(const ABlock: TBlock): Integer; virtual; abstract;
 
     procedure SetInitiaXLast; override;
 
     procedure InstallAfterAdding; override;
 
-    function FindBlockIndex(const FXStart: Integer): Integer;
+    function FindBlockIndex(const AXStart: Integer): Integer;
   public
     destructor Destroy; override;
 
@@ -121,6 +123,8 @@ type
 
     property YLast: Integer read FYLast;
     property Blocks: TBlockArr read FBlocks;
+
+    function Clone: TStatement; override;
   end;
 
   { TBlock }
@@ -142,7 +146,7 @@ type
 
     function GetLastStatement: TStatement;
 
-    function FindStatementIndex(const FYStart: Integer): Integer;
+    function FindStatementIndex(const AFYStart: Integer): Integer;
 
   public
     constructor Create(const AXStart, AXLast: Integer; const ABaseOperator: TOperator;
@@ -168,6 +172,8 @@ type
     procedure DrawBlock;
 
     procedure RedefineSizes;
+
+    function Clone: TBlock;
   end;
 
   var
@@ -305,10 +311,10 @@ implementation
     FYLast := GetOptimalYLast;
   end;
 
-  procedure TStatement.Lower(const Offset: Integer);
+  procedure TStatement.Lower(const AOffset: Integer);
   begin
-    Inc(FYStart, Offset);
-    Inc(FYLast, Offset);
+    Inc(FYStart, AOffset);
+    Inc(FYLast, AOffset);
   end;
 
   procedure TStatement.InstallAfterAdding;
@@ -316,6 +322,12 @@ implementation
     SetOptimalYLast;
     SetInitiaXLast;
     FixYStatementsPosition;
+  end;
+
+  function TStatement.Clone: TStatement;
+  begin
+    Result:= TStatementClass(Self.ClassType).Create(Self.FAction);
+    Result.FBaseBlock:= nil;
   end;
 
   { TBlock }
@@ -608,7 +620,7 @@ implementation
 
   end;
 
-  function TBlock.FindStatementIndex(const FYStart: Integer): Integer;
+  function TBlock.FindStatementIndex(const AFYStart: Integer): Integer;
   var
     L, R, M: Integer;
   begin
@@ -622,10 +634,10 @@ implementation
 
       M := (L + R) div 2;
 
-      if FStatements[M].FYStart = FYStart then
+      if FStatements[M].FYStart = AFYStart then
         Exit(M)
 
-      else if FStatements[M].FYStart < FYStart then
+      else if FStatements[M].FYStart < AFYStart then
         L := M + 1
       else
         R := M - 1;
@@ -649,6 +661,19 @@ implementation
       Result:= BaseOperator;
   end;
 
+  function TBlock.Clone: TBlock;
+  var
+    I: Integer;
+  begin
+    Result:= TBlock.Create(Self.FXStart, Self.FXLast,
+                   Self.FBaseOperator, Self.FCanvas);
+
+    Result.FStatements:= TArrayList<TStatement>.Create(Self.FStatements.Count);
+
+    for I := 0 to Self.FStatements.Count - 1 do
+      Result.FStatements.Add(Self.FStatements[I].Clone);
+  end;
+
   { TOperator }
   destructor TOperator.Destroy;
   var
@@ -661,7 +686,7 @@ implementation
     inherited;
   end;
 
-  function TOperator.FindBlockIndex(const FXStart: Integer): Integer;
+  function TOperator.FindBlockIndex(const AXStart: Integer): Integer;
   var
     L, R, M: Integer;
   begin
@@ -675,10 +700,10 @@ implementation
 
       M := (L + R) div 2;
 
-      if FBlocks[M].FXStart = FXStart then
+      if FBlocks[M].FXStart = AXStart then
         Exit(M)
 
-      else if FBlocks[M].FXStart < FXStart then
+      else if FBlocks[M].FXStart < AXStart then
         L := M + 1
       else
         R := M - 1;
@@ -760,6 +785,19 @@ implementation
     SetInitiaXLast;
 
     FixYStatementsPosition;
+  end;
+
+  function TOperator.Clone: TStatement;
+  var
+    I: Integer;
+    ResultOperator: TOperator;
+  begin
+    Result:= inherited;
+    ResultOperator:= TOperator(Result);
+    SetLength(ResultOperator.FBlocks, Length(Self.Blocks));
+
+    for I := 0 to High(Self.Blocks) do
+      ResultOperator.FBlocks[I]:= Self.FBlocks[I].Clone;
   end;
 
 end.

@@ -10,11 +10,11 @@ implementation
   var
     L, R, M: Integer;
     CurrOperator: TOperator;
-    Statement: TStatement;
+    CurrStatement: TStatement;
 
     function BinarySearchBlockArray(const Blocks: TBlockArr; const AX: Integer): TBlock;
     var
-      L, R, Mid: Integer;
+      L, R, M: Integer;
     begin
 
       Result := nil;
@@ -22,15 +22,15 @@ implementation
       R := High(Blocks);
       while L <= R do
       begin
-        Mid := (L + R) div 2;
+        M := (L + R) div 2;
 
-        if (AX >= Blocks[Mid].XStart) and (AX <= Blocks[Mid].XLast) then
-          Exit(Blocks[Mid])
+        if (AX >= Blocks[M].XStart) and (AX <= Blocks[M].XLast) then
+          Exit(Blocks[M])
 
-        else if AX < Blocks[Mid].XStart then
-          R := Mid - 1
+        else if AX < Blocks[M].XStart then
+          R := M - 1
         else
-          L := Mid + 1;
+          L := M + 1;
       end;
     end;
   begin
@@ -46,36 +46,36 @@ implementation
       begin
 
         M := (L + R) div 2;
-        Statement := ABlock.Statements[M];
+        CurrStatement := ABlock.Statements[M];
 
-        if (AY >= Statement.YStart) and (AY <= Statement.GetYBottom) then
+        if (AY >= CurrStatement.YStart) and (AY <= CurrStatement.GetYBottom) then
         begin
 
-          if Statement is TOperator then
+          if CurrStatement is TOperator then
           begin
 
-            CurrOperator:= TOperator(Statement);
+            CurrOperator:= TOperator(CurrStatement);
 
             case CurrOperator.IsPreñOperator of
               True:
                 if AY <= CurrOperator.GetBlockYStart then
-                  Exit(Statement);
+                  Exit(CurrStatement);
               False:
                 if AY >= CurrOperator.Blocks[0].Statements.GetLast.GetYBottom then
-                  Exit(Statement);
+                  Exit(CurrStatement);
             end;
 
             if CurrOperator is TLoop and
                           (AX <= TLoop(CurrOperator).GetXLastStrip) then
-              Exit(Statement);
+              Exit(CurrStatement);
 
             Exit(BinarySearchStatement(AX, AY, BinarySearchBlockArray(CurrOperator.Blocks, AX)));
 
           end
           else
-            Exit(Statement);
+            Exit(CurrStatement);
         end
-        else if AY < Statement.YStart then
+        else if AY < CurrStatement.YStart then
           R := M - 1
         else
           L := M + 1;
