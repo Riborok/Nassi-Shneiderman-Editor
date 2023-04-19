@@ -217,31 +217,17 @@ implementation
       if BufferStatement <> nil then
         BufferStatement.Destroy;
       BufferStatement:= DedicatedStatement.Clone;
-      DedicatedStatement.BaseBlock.RemoveStatement(DedicatedStatement);
+      DedicatedStatement.BaseBlock.Remove(DedicatedStatement);
       DedicatedStatement:= nil;
       ClearAndRedraw;
     end;
   end;
 
   procedure TNassiShneiderman.MIInsetClick(Sender: TObject);
-  var
-    Blocks: TBlockArr;
-    I, Offset: Integer;
   begin
     if (BufferStatement <> nil) and (DedicatedStatement <> nil) then
     begin
-      Offset:= BufferStatement.BaseBlock.XStart;
-
-      DedicatedStatement.BaseBlock.AddStatementAfter(DedicatedStatement, BufferStatement);
-
-      if BufferStatement is TOperator then
-      begin
-        Blocks:= TOperator(BufferStatement).Blocks;
-        Offset:= BufferStatement.BaseBlock.XStart - Offset;
-        for I := 0 to High(Blocks) do
-          Blocks[I].MoveRight(Offset);
-        Blocks[High(Blocks)].ChangeXLastBlock(BufferStatement.BaseBlock.XLast);
-      end;
+      DedicatedStatement.BaseBlock.AddBlockPartAfter(DedicatedStatement, BufferStatement);
 
       BufferStatement.Install;
 
@@ -294,10 +280,14 @@ implementation
   end;
 
   procedure TNassiShneiderman.DeleteStatement(Sender: TObject);
+  var
+    Block: TBlock;
   begin
     if DedicatedStatement <> nil then
     begin
-      DedicatedStatement.BaseBlock.RemoveStatement(DedicatedStatement);
+      Block:= DedicatedStatement.BaseBlock;
+      Block.Statements[Block.Remove(DedicatedStatement)].Install;
+
       DedicatedStatement:= nil;
 
       DefineBorders(MainBlock.XLast, MainBlock.Statements.GetLast.GetYBottom, Image);

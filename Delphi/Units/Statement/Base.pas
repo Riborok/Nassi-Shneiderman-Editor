@@ -147,6 +147,8 @@ type
 
     function FindStatementIndex(const AFYStart: Integer): Integer;
 
+    procedure RemoveStatementAt(const Index: Integer);
+
     function Clone(const ABaseOperator: TOperator): TBlock;
   public
     constructor Create(const AXStart, AXLast: Integer; const ABaseOperator: TOperator;
@@ -164,7 +166,10 @@ type
     procedure AddStatementLast(const AStatement: TStatement);
     procedure AddFirstStatement(const AStatement: TStatement; const AYStart: Integer);
 
-    procedure RemoveStatement(const AStatement: TStatement);
+    procedure AddBlockPartAfter(const AStatement: TStatement; const AComplexStatement: TStatement);
+
+    function Remove(const AStatement: TStatement): Integer;
+
     procedure SetOptimalXLastBlock;
 
     procedure ChangeXLastBlock(const ANewXLast: Integer);
@@ -369,10 +374,17 @@ implementation
 
   procedure TBlock.AddStatementBefore(const AStatement: TStatement;
             const AInsertedStatement: TStatement);
+  var
+    Index: Integer;
   begin
+    Index:= FindStatementIndex(AStatement.FYStart);
+
     AInsertedStatement.FYStart:= AStatement.FYStart;
     AInsertedStatement.FBaseBlock:= Self;
-    FStatements.Insert(AInsertedStatement, FindStatementIndex(AStatement.FYStart));
+    FStatements.Insert(AInsertedStatement, Index);
+
+    if AStatement.FAction = TStatement.UncertaintySymbol then
+      Self.RemoveStatementAt(Index + 1);
   end;
 
   procedure TBlock.AddStatementAfter(const AStatement: TStatement;
@@ -387,6 +399,9 @@ implementation
       AInsertedStatement.FYStart:= AStatement.GetYBottom;
       AInsertedStatement.FBaseBlock:= Self;
       FStatements.Insert(AInsertedStatement, Index);
+
+      if AStatement.FAction = TStatement.UncertaintySymbol then
+        Self.RemoveStatementAt(Index + 1);
     end
     else
       AddStatementLast(AInsertedStatement);
@@ -405,6 +420,12 @@ implementation
       PrevStatement:= FStatements[FStatements.Count - 2];
       PrevStatement.SetYBottom(PrevStatement.GetMaxOptimalYBottom);
       AStatement.FYStart:= PrevStatement.GetYBottom;
+
+      if PrevStatement.FAction = TStatement.UncertaintySymbol then
+      begin
+        AStatement.FYStart:= PrevStatement.FYStart;
+        Self.RemoveStatementAt(FStatements.Count - 2);
+      end;
     end;
 
     AStatement.FBaseBlock:= Self;
@@ -417,34 +438,45 @@ implementation
     AStatement.FBaseBlock:= Self;
   end;
 
-  procedure TBlock.RemoveStatement(const AStatement: TStatement);
+  procedure TBlock.AddBlockPartAfter(const AStatement: TStatement; const AComplexStatement: TStatement);
   var
-    Index: Integer;
+    Offset, I: Integer;
+    Blocks: TBlockArr;
   begin
+    Offset:= Self.XStart - AComplexStatement.BaseBlock.XStart;
 
-    Index:= FindStatementIndex(AStatement.FYStart);
+    Self.AddStatementAfter(AStatement, AComplexStatement);
+
+    if AComplexStatement is TOperator then
+    begin
+      Blocks:= TOperator(AComplexStatement).Blocks;
+      for I := 0 to High(Blocks) do
+        Blocks[I].MoveRight(Offset);
+      Blocks[High(Blocks)].ChangeXLastBlock(XLast);
+    end;
+  end;
+
+  function TBlock.Remove(const AStatement: TStatement): Integer;
+  begin
+    Result:= FindStatementIndex(AStatement.FYStart);
+    RemoveStatementAt(Result);
+
+    if Result = FStatements.Count then
+      Dec(Result);
+  end;
+
+  procedure TBlock.RemoveStatementAt(const Index: Integer);
+  var
+    Statement: TStatement;
+  begin
+    Statement:= FStatements[Index];
     FStatements.Delete(Index);
-
     if FStatements.Count = 0 then
     begin
       FStatements.Add(DefaultBlock.CreateUncertainty(Self));
-      FStatements[0].FYStart:= AStatement.FYStart;
-      FStatements[0].Install;
-    end
-    else if Index = 0 then
-      if BaseOperator = nil then
-      begin
-        FStatements[Index].Lower(AStatement.FYStart - FStatements[Index].FYStart);
-        FStatements[Index].FixYStatementsPosition;
-      end
-      else
-        BaseOperator.FixYStatementsPosition
-    else
-      FStatements[Index - 1].FixYStatementsPosition;
-
-    SetOptimalXLastBlock;
-
-    AStatement.Destroy;
+      FStatements[0].FYStart:= Statement.FYStart;
+    end;
+    Statement.Destroy;
   end;
 
   procedure TBlock.ChangeYStatement(AIndex: Integer = 0);

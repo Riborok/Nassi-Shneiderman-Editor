@@ -85,7 +85,7 @@ type
     procedure MICopyClick(Sender: TObject);
     procedure MICutClick(Sender: TObject);
     procedure MIInsetClick(Sender: TObject);
-    procedure actDeleteExecute(Sender: TObject);
+    procedure DeleteStatement(Sender: TObject);
     { Private declarations }
   private
     MainBlock : TBlock;
@@ -128,8 +128,8 @@ implementation
     DedicatedStatement:= nil;
     BufferStatement:= nil;
 
-    Constraints.MinWidth := 600;
-    Constraints.MinHeight := 400;
+    Constraints.MinWidth := 960;
+    Constraints.MinHeight := 540;
 
     Base.DefaultBlock:= TProcessStatement;
 
@@ -217,7 +217,7 @@ implementation
       if BufferStatement <> nil then
         BufferStatement.Destroy;
       BufferStatement:= DedicatedStatement.Clone;
-      DedicatedStatement.BaseBlock.DeleteStatement(DedicatedStatement);
+      DedicatedStatement.BaseBlock.RemoveStatement(DedicatedStatement);
       DedicatedStatement:= nil;
       ClearAndRedraw;
     end;
@@ -232,7 +232,7 @@ implementation
     begin
       Offset:= BufferStatement.BaseBlock.XStart;
 
-      DedicatedStatement.BaseBlock.AddAfter(DedicatedStatement, BufferStatement);
+      DedicatedStatement.BaseBlock.AddStatementAfter(DedicatedStatement, BufferStatement);
 
       if BufferStatement is TOperator then
       begin
@@ -262,30 +262,17 @@ implementation
 
       if NewStatement <> nil then
       begin
-        DedicatedStatement.BaseBlock.AddBefore(DedicatedStatement, NewStatement);
+        DedicatedStatement.BaseBlock.AddStatementBefore(DedicatedStatement, NewStatement);
         NewStatement.Install;
         DefineBorders(MainBlock.XLast, MainBlock.Statements.GetLast.GetYBottom, Image);
       end;
 
       DedicatedStatement:= nil;
-    end;
-
-    ClearAndRedraw;
-  end;
-
-  procedure TNassiShneiderman.actDeleteExecute(Sender: TObject);
-  begin
-    if DedicatedStatement <> nil then
-    begin
-      DedicatedStatement.BaseBlock.DeleteStatement(DedicatedStatement);
-      DedicatedStatement:= nil;
-
-      DefineBorders(MainBlock.XLast, MainBlock.Statements.GetLast.GetYBottom, Image);
       ClearAndRedraw;
     end;
   end;
 
-procedure TNassiShneiderman.AddAfter(Sender: TObject);
+  procedure TNassiShneiderman.AddAfter(Sender: TObject);
   var
     NewStatement: TStatement;
   begin
@@ -296,15 +283,30 @@ procedure TNassiShneiderman.AddAfter(Sender: TObject);
 
       if NewStatement <> nil then
       begin
-        DedicatedStatement.BaseBlock.AddAfter(DedicatedStatement, NewStatement);
+        DedicatedStatement.BaseBlock.AddStatementAfter(DedicatedStatement, NewStatement);
         NewStatement.Install;
         DefineBorders(MainBlock.XLast, MainBlock.Statements.GetLast.GetYBottom, Image);
       end;
 
       DedicatedStatement:= nil;
+      ClearAndRedraw;
     end;
+  end;
 
-    ClearAndRedraw;
+  procedure TNassiShneiderman.DeleteStatement(Sender: TObject);
+  var
+    Block: TBlock;
+  begin
+    if DedicatedStatement <> nil then
+    begin
+      Block:= DedicatedStatement.BaseBlock;
+      Block.Statements[Block.RemoveStatement(DedicatedStatement)].Install;
+
+      DedicatedStatement:= nil;
+
+      DefineBorders(MainBlock.XLast, MainBlock.Statements.GetLast.GetYBottom, Image);
+      ClearAndRedraw;
+    end;
   end;
 
   procedure TNassiShneiderman.ImageDblClick(Sender: TObject);
@@ -340,6 +342,29 @@ procedure TNassiShneiderman.AddAfter(Sender: TObject);
     end;
 
     ClearAndRedraw;
+  end;
+
+  function TNassiShneiderman.CreateStatement(const AStatementClass: TStatementClass;
+                                             const ABaseBlock: TBlock): TStatement;
+  var
+    Action: String;
+    Cond: TStringArr;
+  begin
+    Result:= nil;
+    Action := '';
+
+    if TryGetAction(Action) then
+    begin
+
+      if AStatementClass = TCaseBranching then
+      begin
+        Cond:= nil;
+        if TryGetCond(Cond) then
+          Result:= TCaseBranching.Create(Action, Cond, ABaseBlock);
+      end
+      else
+        Result:= AStatementClass.Create(Action, ABaseBlock);
+    end;
   end;
 
   class function TNassiShneiderman.ConvertToBlockType(const AIndex: Integer): TStatementClass;
@@ -387,29 +412,6 @@ procedure TNassiShneiderman.AddAfter(Sender: TObject);
       Result:= False;
 
     WriteActionForm.Destroy;
-  end;
-
-  function TNassiShneiderman.CreateStatement(const AStatementClass: TStatementClass;
-                                             const ABaseBlock: TBlock): TStatement;
-  var
-    Action: String;
-    Cond: TStringArr;
-  begin
-    Result:= nil;
-    Action := '';
-
-    if TryGetAction(Action) then
-    begin
-
-      if AStatementClass = TCaseBranching then
-      begin
-        Cond:= nil;
-        if TryGetCond(Cond) then
-          Result:= TCaseBranching.Create(Action, Cond, ABaseBlock);
-      end
-      else
-        Result:= AStatementClass.Create(Action, ABaseBlock);
-    end;
   end;
 
 end.

@@ -159,12 +159,12 @@ type
     property BaseOperator: TOperator read FBaseOperator;
     property Statements: TArrayList<TStatement> read FStatements;
 
-    procedure AddBefore(const AStatement: TStatement; const AInsertedStatement: TStatement);
+    procedure AddStatementBefore(const AStatement: TStatement; const AInsertedStatement: TStatement);
     procedure AddStatementAfter(const AStatement: TStatement; const AInsertedStatement: TStatement);
-    procedure AddLast(const AStatement: TStatement);
+    procedure AddStatementLast(const AStatement: TStatement);
     procedure AddFirstStatement(const AStatement: TStatement; const AYStart: Integer);
 
-    procedure DeleteStatement(const AStatement: TStatement);
+    procedure RemoveStatement(const AStatement: TStatement);
     procedure SetOptimalXLastBlock;
 
     procedure ChangeXLastBlock(const ANewXLast: Integer);
@@ -367,7 +367,7 @@ implementation
     FStatements[0].FixYStatementsPosition;
   end;
 
-  procedure TBlock.AddBefore(const AStatement: TStatement;
+  procedure TBlock.AddStatementBefore(const AStatement: TStatement;
             const AInsertedStatement: TStatement);
   begin
     AInsertedStatement.FYStart:= AStatement.FYStart;
@@ -389,10 +389,10 @@ implementation
       FStatements.Insert(AInsertedStatement, Index);
     end
     else
-      AddLast(AInsertedStatement);
+      AddStatementLast(AInsertedStatement);
   end;
 
-  procedure TBlock.AddLast(const AStatement: TStatement);
+  procedure TBlock.AddStatementLast(const AStatement: TStatement);
   var
     PrevStatement: TStatement;
   begin
@@ -417,7 +417,7 @@ implementation
     AStatement.FBaseBlock:= Self;
   end;
 
-  procedure TBlock.DeleteStatement(const AStatement: TStatement);
+  procedure TBlock.RemoveStatement(const AStatement: TStatement);
   var
     Index: Integer;
   begin

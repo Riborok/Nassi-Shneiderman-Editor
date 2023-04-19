@@ -52,6 +52,10 @@ type
     // the size of the statement
     procedure SetInitiaXLast; virtual;
 
+    // After changing the Y coordinate, need to call the procedure in order to
+    // change the Y coordinates of others
+    procedure FixYStatementsPosition;
+
   public
     // This constructor creates an uncertainty statement
     constructor CreateUncertainty(const ABaseBlock: TBlock);
@@ -77,10 +81,6 @@ type
 
     // Set the optimal Y last
     procedure SetOptimalYLast;
-
-    // After changing the Y coordinate, need to call the procedure in order to
-    // change the Y coordinates of others
-    procedure FixYStatementsPosition;
 
     // Set the dimensions after adding and if this statement is the last one,
     // it asks the previous to set the optimal height
@@ -159,12 +159,14 @@ type
     property BaseOperator: TOperator read FBaseOperator;
     property Statements: TArrayList<TStatement> read FStatements;
 
-    procedure AddBefore(const AStatement: TStatement; const AInsertedStatement: TStatement);
-    procedure AddAfter(const AStatement: TStatement; const AInsertedStatement: TStatement);
-    procedure AddLast(const AStatement: TStatement);
+    procedure AddStatementBefore(const AStatement: TStatement; const AInsertedStatement: TStatement);
+    procedure AddStatementAfter(const AStatement: TStatement; const AInsertedStatement: TStatement);
+    procedure AddStatementLast(const AStatement: TStatement);
     procedure AddFirstStatement(const AStatement: TStatement; const AYStart: Integer);
 
-    procedure DeleteStatement(const AStatement: TStatement);
+    function RemoveStatement(const AStatement: TStatement): Integer;
+    procedure RemoveStatementByIndex(const Index: Integer);
+
     procedure SetOptimalXLastBlock;
 
     procedure ChangeXLastBlock(const ANewXLast: Integer);
@@ -367,15 +369,22 @@ implementation
     FStatements[0].FixYStatementsPosition;
   end;
 
-  procedure TBlock.AddBefore(const AStatement: TStatement;
+  procedure TBlock.AddStatementBefore(const AStatement: TStatement;
             const AInsertedStatement: TStatement);
+  var
+    Index: Integer;
   begin
+    Index:= FindStatementIndex(AStatement.FYStart);
+
     AInsertedStatement.FYStart:= AStatement.FYStart;
     AInsertedStatement.FBaseBlock:= Self;
-    FStatements.Insert(AInsertedStatement, FindStatementIndex(AStatement.FYStart));
+    FStatements.Insert(AInsertedStatement, Index);
+
+    if AStatement.FAction = TStatement.UncertaintySymbol then
+      Self.RemoveStatementByIndex(Index + 1);
   end;
 
-  procedure TBlock.AddAfter(const AStatement: TStatement;
+  procedure TBlock.AddStatementAfter(const AStatement: TStatement;
             const AInsertedStatement: TStatement);
   var
     Index: Integer;
@@ -387,12 +396,15 @@ implementation
       AInsertedStatement.FYStart:= AStatement.GetYBottom;
       AInsertedStatement.FBaseBlock:= Self;
       FStatements.Insert(AInsertedStatement, Index);
+
+      if AStatement.FAction = TStatement.UncertaintySymbol then
+        Self.RemoveStatementByIndex(Index + 1);
     end
     else
-      AddLast(AInsertedStatement);
+      AddStatementLast(AInsertedStatement);
   end;
 
-  procedure TBlock.AddLast(const AStatement: TStatement);
+  procedure TBlock.AddStatementLast(const AStatement: TStatement);
   var
     PrevStatement: TStatement;
   begin
@@ -405,6 +417,9 @@ implementation
       PrevStatement:= FStatements[FStatements.Count - 2];
       PrevStatement.SetYBottom(PrevStatement.GetMaxOptimalYBottom);
       AStatement.FYStart:= PrevStatement.GetYBottom;
+
+      if FStatements[FStatements.Count - 2].FAction = TStatement.UncertaintySymbol then
+        Self.RemoveStatementByIndex(FStatements.Count - 2);
     end;
 
     AStatement.FBaseBlock:= Self;
@@ -417,33 +432,33 @@ implementation
     AStatement.FBaseBlock:= Self;
   end;
 
-  procedure TBlock.DeleteStatement(const AStatement: TStatement);
-  var
-    Index: Integer;
+  function TBlock.RemoveStatement(const AStatement: TStatement): Integer;
   begin
 
-    Index:= FindStatementIndex(AStatement.FYStart);
-    FStatements.Delete(Index);
+    Result:= FindStatementIndex(AStatement.FYStart);
+    FStatements.Delete(Result);
 
     if FStatements.Count = 0 then
     begin
       FStatements.Add(DefaultBlock.CreateUncertainty(Self));
-      FStatements[0].FixYStatementsPosition;
-    end
-    else if Index = 0 then
-      if BaseOperator = nil then
-      begin
-        FStatements[Index].Lower(AStatement.FYStart - FStatements[Index].FYStart);
-        FStatements[Index].FixYStatementsPosition;
-      end
-      else
-        BaseOperator.FixYStatementsPosition
-    else
-      FStatements[Index - 1].FixYStatementsPosition;
+      FStatements[0].FYStart:= AStatement.FYStart;
+    end;
 
-    SetOptimalXLastBlock;
+    if Result = FStatements.Count then
+      Dec(Result);
 
     AStatement.Destroy;
+  end;
+
+  procedure TBlock.RemoveStatementByIndex(const Index: Integer);
+  begin
+    if FStatements.Count = 0 then
+    begin
+      FStatements.Add(DefaultBlock.CreateUncertainty(Self));
+      FStatements[0].FYStart:= FStatements[Index].FYStart;
+    end;
+    FStatements[Index].Destroy;
+    FStatements.Delete(Index);
   end;
 
   procedure TBlock.ChangeYStatement(AIndex: Integer = 0);

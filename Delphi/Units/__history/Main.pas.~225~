@@ -128,8 +128,8 @@ implementation
     DedicatedStatement:= nil;
     BufferStatement:= nil;
 
-    Constraints.MinWidth := 600;
-    Constraints.MinHeight := 400;
+    Constraints.MinWidth := 960;
+    Constraints.MinHeight := 540;
 
     Base.DefaultBlock:= TProcessStatement;
 
@@ -217,7 +217,7 @@ implementation
       if BufferStatement <> nil then
         BufferStatement.Destroy;
       BufferStatement:= DedicatedStatement.Clone;
-      DedicatedStatement.BaseBlock.DeleteStatement(DedicatedStatement);
+      DedicatedStatement.BaseBlock.RemoveStatement(DedicatedStatement);
       DedicatedStatement:= nil;
       ClearAndRedraw;
     end;
@@ -232,7 +232,7 @@ implementation
     begin
       Offset:= BufferStatement.BaseBlock.XStart;
 
-      DedicatedStatement.BaseBlock.AddAfter(DedicatedStatement, BufferStatement);
+      DedicatedStatement.BaseBlock.AddStatementAfter(DedicatedStatement, BufferStatement);
 
       if BufferStatement is TOperator then
       begin
@@ -262,24 +262,12 @@ implementation
 
       if NewStatement <> nil then
       begin
-        DedicatedStatement.BaseBlock.AddBefore(DedicatedStatement, NewStatement);
+        DedicatedStatement.BaseBlock.AddStatementBefore(DedicatedStatement, NewStatement);
         NewStatement.Install;
         DefineBorders(MainBlock.XLast, MainBlock.Statements.GetLast.GetYBottom, Image);
       end;
 
       DedicatedStatement:= nil;
-      ClearAndRedraw;
-    end;
-  end;
-
-  procedure TNassiShneiderman.DeleteStatement(Sender: TObject);
-  begin
-    if DedicatedStatement <> nil then
-    begin
-      DedicatedStatement.BaseBlock.DeleteStatement(DedicatedStatement);
-      DedicatedStatement:= nil;
-
-      DefineBorders(MainBlock.XLast, MainBlock.Statements.GetLast.GetYBottom, Image);
       ClearAndRedraw;
     end;
   end;
@@ -295,12 +283,28 @@ implementation
 
       if NewStatement <> nil then
       begin
-        DedicatedStatement.BaseBlock.AddAfter(DedicatedStatement, NewStatement);
+        DedicatedStatement.BaseBlock.AddStatementAfter(DedicatedStatement, NewStatement);
         NewStatement.Install;
         DefineBorders(MainBlock.XLast, MainBlock.Statements.GetLast.GetYBottom, Image);
       end;
 
       DedicatedStatement:= nil;
+      ClearAndRedraw;
+    end;
+  end;
+
+  procedure TNassiShneiderman.DeleteStatement(Sender: TObject);
+  var
+    BaseBlock: TBlock;
+  begin
+    if DedicatedStatement <> nil then
+    begin
+      BaseBlock:= DedicatedStatement.BaseBlock;
+      BaseBlock.Statements[BaseBlock.RemoveStatement(DedicatedStatement)].Install;
+
+      DedicatedStatement:= nil;
+
+      DefineBorders(MainBlock.XLast, MainBlock.Statements.GetLast.GetYBottom, Image);
       ClearAndRedraw;
     end;
   end;
