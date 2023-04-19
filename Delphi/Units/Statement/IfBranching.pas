@@ -48,9 +48,16 @@ implementation
   end;
 
   procedure TIfBranching.InitializeBlock;
+  var
+    NewStatement: TStatement;
   begin
-    FBlocks[0].AddFirstStatement(DefaultBlock.CreateUncertainty, FYLast);
-    FBlocks[1].AddFirstStatement(DefaultBlock.CreateUncertainty, FYLast);
+    NewStatement:= DefaultBlock.CreateUncertainty(FBlocks[0]);
+    FBlocks[0].Statements.Add(NewStatement);
+    NewStatement.SetOptimalYLast;
+
+    NewStatement:= DefaultBlock.CreateUncertainty(FBlocks[1]);
+    FBlocks[1].Statements.Add(NewStatement);
+    NewStatement.SetOptimalYLast;
   end;
 
   function TIfBranching.GetAvailablePartWidth(const APartWidth, ATextHeight: Integer): Integer;

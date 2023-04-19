@@ -6,7 +6,6 @@ type
 
   TFirstLoop = class(TLoop)
   protected
-    procedure InitializeBlock; override;
     function GetOptimalYLast: Integer; override;
   public
     procedure Draw; override;
@@ -18,11 +17,6 @@ implementation
   function TFirstLoop.IsPreñOperator: Boolean;
   begin
     Result:= True;
-  end;
-
-  procedure TFirstLoop.InitializeBlock;
-  begin
-    FBlocks[0].AddLast(DefaultBlock.CreateUncertainty);
   end;
 
   function TFirstLoop.GetOptimalYLast: Integer;

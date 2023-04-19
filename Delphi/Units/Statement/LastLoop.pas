@@ -8,7 +8,6 @@ type
   private
     function GetBlockYBottom: Integer;
   protected
-    procedure InitializeBlock; override;
     function GetOptimalYLast: Integer; override;
   public
     procedure Draw; override;
@@ -20,11 +19,6 @@ implementation
   function TLastLoop.IsPreñOperator: Boolean;
   begin
     Result:= False;
-  end;
-
-  procedure TLastLoop.InitializeBlock;
-  begin
-    FBlocks[0].AddLast(DefaultBlock.CreateUncertainty);
   end;
 
   procedure TLastLoop.Draw;

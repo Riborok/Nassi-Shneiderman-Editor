@@ -42,7 +42,7 @@ implementation
   begin
     inherited Create(AOwner);
 
-    if OwnerControl is TControl then
+    if AOwner is TControl then
     begin
       OwnerControl := TControl(AOwner);
       Left := OwnerControl.Left + (OwnerControl.Width - Width) div 2;
@@ -61,8 +61,8 @@ implementation
 
   procedure TWriteAction.FormCreate(Sender: TObject);
   begin
-    Constraints.MinWidth := 300;
-    Constraints.MinHeight := 200;
+    Constraints.MinWidth := 350;
+    Constraints.MinHeight := 250;
   end;
 
   procedure TWriteAction.MemoActionKeyDown(Sender: TObject; var Key: Word;

@@ -1,20 +1,16 @@
 unit ArrayList;
 
 interface
-uses System.SysUtils;
 
 type
   TArrayList<T> = class
-  private type
-    TArray = array of T;
   private
-    FArray: TArray;
+    FArray: array of T;
     FCount: Integer;
     procedure CapacityInc;
     function GetItem(const AIndex: Integer): T;
     procedure SetItem(const AIndex: Integer; const AValue: T);
   public
-    property GetArray: TArray read FArray;
     constructor Create(const AInitialCapacity: Integer = 0);
     destructor Destroy; override;
     procedure Delete(const AIndex: Integer);
@@ -43,7 +39,6 @@ implementation
 
   procedure TArrayList<T>.Add(const Item: T);
   begin
-
     if FCount = Length(FArray) then
       CapacityInc;
 
@@ -55,24 +50,16 @@ implementation
   var
     I: Integer;
   begin
-
-    if (AIndex < 0) or (AIndex >= FCount) then
-      raise Exception.Create('Index out of bounds');
-
     for I := AIndex to FCount - 2 do
       FArray[I] := FArray[I + 1];
 
     Dec(FCount);
-
   end;
 
   procedure TArrayList<T>.Insert(const AItem: T; const AIndex: Integer);
   var
     I: Integer;
   begin
-
-    if (AIndex < 0) or (AIndex > FCount) then
-      raise Exception.Create('Index out of bounds');
 
     if FCount = Length(FArray) then
       CapacityInc;
@@ -86,37 +73,22 @@ implementation
 
   procedure TArrayList<T>.Clear;
   begin
-
     SetLength(FArray, 0);
-
     FCount := 0;
   end;
 
   function TArrayList<T>.GetItem(const AIndex: Integer): T;
   begin
-
-    if (AIndex < 0) or (AIndex >= FCount) then
-      raise Exception.Create('Index out of bounds');
-
     Result := FArray[AIndex];
   end;
 
   procedure TArrayList<T>.SetItem(const AIndex: Integer; const AValue: T);
   begin
-
-    if (AIndex < 0) or (AIndex >= FCount) then
-      raise Exception.Create('Index out of bounds');
-
-
     FArray[AIndex] := AValue;
   end;
 
   function TArrayList<T>.GetLast: T;
   begin
-
-    if FCount < 1 then
-      raise Exception.Create('Index out of bounds');
-
     Result:= FArray[FCount - 1];
   end;
 

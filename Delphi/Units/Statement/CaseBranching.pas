@@ -21,23 +21,24 @@ type
     function GetOptimalYLast: Integer; override;
   public
     constructor Create(const AAction : String;
-        const ACond: TStringArr; const ACanvas: TCanvas);
+        const ACond: TStringArr; ABaseBlock: TBlock);
     procedure Draw; override;
     function IsPreñOperator: Boolean; override;
 
     procedure ChangeActionWithCond(const AAction: String; const ACond: TStringArr);
 
     property Cond: TStringArr read Fcond;
+
+    function Clone: TStatement; override;
   end;
 
 implementation
 
-  constructor TCaseBranching.Create(const AAction : String;
-        const ACond: TStringArr; const ACanvas: TCanvas);
+  constructor TCaseBranching.Create(const AAction : String; const ACond: TStringArr;
+                                    ABaseBlock: TBlock);
   begin
-    inherited Create(AAction);
-
     FCond:= ACond;
+    inherited Create(AAction, ABaseBlock);
   end;
 
   procedure TCaseBranching.ChangeActionWithCond(const AAction: String; const ACond: TStringArr);
@@ -78,11 +79,20 @@ implementation
 
       // Set dimensions after adding
       for I := Length(PrevCond) to High(FCond) do
-        Blocks[I].Statements.GetLast.InstallAfterAdding;
+        Blocks[I].Statements.GetLast.Install;
     end;
 
     // Changing the action
     ChangeAction(AAction);
+  end;
+
+  function TCaseBranching.Clone: TStatement;
+  var
+    I: Integer;
+    ResultOperator: TOperator;
+  begin
+    Result:= inherited;
+    TCaseBranching(Result).FCond:= Self.FCond;
   end;
 
   function TCaseBranching.GetMaxHeightOfCond: Integer;
@@ -147,9 +157,14 @@ implementation
   procedure TCaseBranching.InitializeBlockStarting(const AStartIndex: Integer);
   var
     I: Integer;
+    NewStatement: TStatement;
   begin
     for I := AStartIndex to High(FBlocks) do
-      FBlocks[I].AddFirstStatement(DefaultBlock.CreateUncertainty, FYLast);
+    begin
+      NewStatement:= DefaultBlock.CreateUncertainty(FBlocks[I]);
+      FBlocks[I].Statements.Add(NewStatement);
+      NewStatement.SetOptimalYLast;
+    end;
   end;
 
   function TCaseBranching.IsPreñOperator: Boolean;

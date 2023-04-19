@@ -16,7 +16,6 @@ implementation
     var
       L, R, M: Integer;
     begin
-
       Result := nil;
       L := 0;
       R := High(Blocks);
@@ -58,7 +57,7 @@ implementation
 
             case CurrOperator.IsPreñOperator of
               True:
-                if AY <= CurrOperator.GetBlockYStart then
+                if AY <= CurrOperator.YLast then
                   Exit(CurrStatement);
               False:
                 if AY >= CurrOperator.Blocks[0].Statements.GetLast.GetYBottom then
@@ -70,7 +69,6 @@ implementation
               Exit(CurrStatement);
 
             Exit(BinarySearchStatement(AX, AY, BinarySearchBlockArray(CurrOperator.Blocks, AX)));
-
           end
           else
             Exit(CurrStatement);
@@ -81,7 +79,6 @@ implementation
           L := M + 1;
       end;
     end
-
   end;
 
 end.

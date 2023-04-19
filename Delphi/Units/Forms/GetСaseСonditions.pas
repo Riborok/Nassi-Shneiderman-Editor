@@ -27,12 +27,15 @@ type
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
   private
     { Private declarations }
-    FMemoList: TStack<TMemo>;
-    FLabelList: TStack<TLabel>;
+    FMemoStack: TStack<TMemo>;
+    FLabelStack: TStack<TLabel>;
     procedure CreateMemo(const AText: string = '');
   public
     { Public declarations }
     function GetÑaseÑonditions: TStringArr;
+  private const
+    MinCond = 2;
+    MaxCond = 100;
   end;
 
 var
@@ -47,11 +50,11 @@ implementation
     I: Integer;
     Memo: TMemo;
   begin
-    SetLength(Result, FMemoList.Count);
+    SetLength(Result, FMemoStack.Count);
 
-    for I := FMemoList.Count - 1 downto 0 do
+    for I := FMemoStack.Count - 1 downto 0 do
     begin
-      Memo:= FMemoList.Pop;
+      Memo:= FMemoStack.Pop;
       Result[I]:= GetActionForStatement(Memo.Lines.Text);
       Memo.Destroy;
     end;
@@ -65,10 +68,10 @@ implementation
 
     inherited Create(AOwner);
 
-    FMemoList:= TStack<TMemo>.Create;
-    FLabelList:= TStack<TLabel>.Create;
+    FMemoStack:= TStack<TMemo>.Create;
+    FLabelStack:= TStack<TLabel>.Create;
 
-    if OwnerControl is TControl then
+    if AOwner is TControl then
     begin
       OwnerControl := TControl(AOwner);
       Left := OwnerControl.Left + (OwnerControl.Width - Width) div 2;
@@ -83,14 +86,11 @@ implementation
     for I := 0 to High(ACond) do
       CreateMemo(GetActionForOutput(ACond[i]));
 
-    if Length(ACond) = 0 then
-    begin
+    for I := Length(ACond) + 1 to MinCond do
       CreateMemo;
-      CreateMemo;
-    end;
 
-    FMemoList.Peek.SelStart := 0;
-    FMemoList.Peek.SelLength := Length(FMemoList.Peek.Text);
+    FMemoStack.Peek.SelStart := 0;
+    FMemoStack.Peek.SelLength := Length(FMemoStack.Peek.Text);
   end;
 
   destructor TWriteÑaseÑonditions.Destroy;
@@ -99,27 +99,28 @@ implementation
     Memo: TMemo;
     LabelCaption: TLabel;
   begin
-    for I:= FMemoList.Count - 1 downto 0 do
+    for I:= FMemoStack.Count - 1 downto 0 do
     begin
-      Memo:= FMemoList.Pop;
+      Memo:= FMemoStack.Pop;
       Memo.Destroy;
     end;
 
-    for I:= FLabelList.Count - 1 downto 0 do
+    for I:= FLabelStack.Count - 1 downto 0 do
     begin
-      LabelCaption:= FLabelList.Pop;
+      LabelCaption:= FLabelStack.Pop;
       LabelCaption.Destroy;
     end;
 
-    FMemoList.Destroy;
-    FLabelList.Destroy;
+    FMemoStack.Destroy;
+    FLabelStack.Destroy;
 
     inherited;
   end;
 
   procedure TWriteÑaseÑonditions.btnAddClick(Sender: TObject);
   begin
-    CreateMemo;
+    if FMemoStack.Count < MaxCond then
+      CreateMemo;
   end;
 
   procedure TWriteÑaseÑonditions.btnDeleteClick(Sender: TObject);
@@ -127,10 +128,10 @@ implementation
     Memo: TMemo;
     LabelCaption: TLabel;
   begin
-    if FMemoList.Count > 2 then
+    if FMemoStack.Count > MinCond then
     begin
-      Memo:= FMemoList.Pop;
-      LabelCaption:= FLabelList.Pop;
+      Memo:= FMemoStack.Pop;
+      LabelCaption:= FLabelStack.Pop;
 
       if Panel.Height - Memo.Height - LabelCaption.Height >= Self.Height - ScrollBox.Top then
         Panel.Height := Panel.Height - Memo.Height - LabelCaption.Height;
@@ -149,7 +150,6 @@ implementation
   var
     Memo: TMemo;
     LabelCaption: TLabel;
-    Panel: TPanel;
   begin
 
     Memo := TMemo.Create(ScrollBox);
@@ -160,8 +160,8 @@ implementation
     Memo.Font.Size := FontSize;
     Memo.Font.Name := FontName;
 
-    if FMemoList.Count > 0 then
-      Memo.Top := FMemoList.Peek.Top + FMemoList.Peek.Height
+    if FMemoStack.Count > 0 then
+      Memo.Top := FMemoStack.Peek.Top + FMemoStack.Peek.Height
     else
       Memo.Top := 0;
 
@@ -169,14 +169,14 @@ implementation
     LabelCaption.Parent := ScrollBox;
     LabelCaption.Font.Size := FontSize;
     LabelCaption.Font.Name := FontName;
-    LabelCaption.Caption := 'Condition ' + IntToStr(FMemoList.Count + 1);
+    LabelCaption.Caption := 'Condition ' + IntToStr(FMemoStack.Count + 1);
     LabelCaption.Top := Memo.Top;
     LabelCaption.AlignWithMargins := True;
     LabelCaption.Margins.Top := 20;
     LabelCaption.Align := alTop;
 
-    FMemoList.Push(Memo);
-    FLabelList.Push(LabelCaption);
+    FMemoStack.Push(Memo);
+    FLabelStack.Push(LabelCaption);
 
     ScrollBox.VertScrollBar.Position := ScrollBox.VertScrollBar.Range;
   end;

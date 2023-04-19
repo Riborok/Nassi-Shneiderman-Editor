@@ -1,7 +1,6 @@
 unit CorrectAction;
 
 interface
-
   function GetActionForStatement(const Astring: String): String;
   function GetActionForOutput(const Astring: String): String;
 implementation

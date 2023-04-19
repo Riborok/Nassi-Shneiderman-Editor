@@ -12,6 +12,7 @@ type
     function GetAmountOfPixelCorrection: Integer;
     function GetOptimalWidthForBlock(const ABlock: TBlock): Integer; override;
     function GetOptimaWidth: Integer; override;
+    procedure InitializeBlock; override;
   public
     function GetXLastStrip: Integer;
   end;
@@ -23,6 +24,15 @@ implementation
   begin
     SetLength(FBlocks, FBlockCount);
     FBlocks[0] := TBlock.Create(GetXLastStrip, FBaseBlock.XLast, Self, BaseBlock.Canvas);
+  end;
+
+  procedure TLoop.InitializeBlock;
+  var
+    NewStatement: TStatement;
+  begin
+    NewStatement:= DefaultBlock.CreateUncertainty(FBlocks[0]);
+    FBlocks[0].Statements.Add(NewStatement);
+    NewStatement.SetOptimalYLast;
   end;
 
   function TLoop.GetOptimaWidth: Integer;

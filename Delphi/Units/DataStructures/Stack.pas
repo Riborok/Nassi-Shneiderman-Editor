@@ -1,15 +1,14 @@
 unit Stack;
 
 interface
-uses System.SysUtils;
 
 type
   TStack<T> = class
   private type
     PItem = ^TItem;
     TItem = record
-      Data: T;
-      Next: PItem;
+      FData: T;
+      FNext: PItem;
     end;
   private
     FTop: PItem;
@@ -33,7 +32,6 @@ implementation
 
   destructor TStack<T>.Destroy;
   begin
-
     while FTop <> nil do
       Pop;
 
@@ -44,11 +42,10 @@ implementation
   var
     NewItem: PItem;
   begin
-
     New(NewItem);
 
-    NewItem^.Data := AItem;
-    NewItem^.Next := FTop;
+    NewItem^.FData := AItem;
+    NewItem^.FNext := FTop;
     FTop := NewItem;
 
     Inc(FCount);
@@ -58,13 +55,9 @@ implementation
   var
     Item: PItem;
   begin
-
-    if FTop = nil then
-      raise Exception.Create('Stack is empty');
-
     Item := FTop;
-    FTop := FTop^.Next;
-    Result := Item^.Data;
+    FTop := FTop^.FNext;
+    Result := Item^.FData;
 
     Dispose(Item);
 
@@ -73,11 +66,7 @@ implementation
 
   function TStack<T>.Peek: T;
   begin
-
-    if FTop = nil then
-      raise Exception.Create('Stack is empty');
-
-    Result := FTop^.Data;
+    Result := FTop^.FData;
   end;
 
 end.
