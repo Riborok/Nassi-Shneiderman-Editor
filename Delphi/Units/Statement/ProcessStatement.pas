@@ -1,14 +1,13 @@
 ﻿unit ProcessStatement;
 
 interface
-uses Base, vcl.graphics, DrawShapes, Vcl.ExtCtrls, DetermineDimensions;
+uses Base, DrawShapes;
 type
 
   TProcessStatement = class(TStatement)
   protected
     function GetOptimaWidth: Integer; override;
     function GetOptimalYLast: Integer; override;
-  public
     procedure Draw; override;
   end;
 
@@ -16,7 +15,7 @@ implementation
 
   function TProcessStatement.GetOptimaWidth: Integer;
   begin
-    result:= GetTextWidth(BaseBlock.Canvas, FAction) + 2 * XMinIndentText;
+    result:= FActWidth + 2 * FXMinIndentText;
   end;
 
   procedure TProcessStatement.Draw;
@@ -24,12 +23,12 @@ implementation
     DrawRectangle(BaseBlock.XStart, BaseBlock.XLast, FYStart, FYLast, BaseBlock.Canvas);
 
     DrawText(BaseBlock.Canvas, BaseBlock.XStart + ((BaseBlock.XLast - BaseBlock.XStart) div 2)
-      - (GetTextWidth(BaseBlock.Canvas, Action) div 2), FYStart + YIndentText, Action);
+      - (FActWidth div 2), FYStart + FYIndentText, Action);
   end;
 
   function TProcessStatement.GetOptimalYLast: Integer;
   begin
-    Result := FYStart + GetTextHeight(BaseBlock.Canvas, FAction) + 2 * YIndentText;
+    Result := FYStart + FActHeight + 2 * FYIndentText;
   end;
 
 end.

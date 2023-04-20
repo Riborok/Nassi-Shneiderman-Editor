@@ -1,20 +1,23 @@
 unit Loop;
 
 interface
-uses Base, Vcl.ExtCtrls, DetermineDimensions;
+uses Base;
 
 type
   TLoop = class abstract(TOperator)
   private const
     FBlockCount = 1;
   protected
+    FCountPixelCorrection: Integer;
     procedure CreateBlock; override;
-    function GetAmountOfPixelCorrection: Integer;
     function GetOptimalWidthForBlock(const ABlock: TBlock): Integer; override;
     function GetOptimaWidth: Integer; override;
     procedure InitializeBlock; override;
+    procedure SetTextSize; override;
   public
     function GetXLastStrip: Integer;
+    property CountPixelCorrection: Integer read FCountPixelCorrection;
+    function Clone: TStatement; override;
   end;
 
 
@@ -24,6 +27,12 @@ implementation
   begin
     SetLength(FBlocks, FBlockCount);
     FBlocks[0] := TBlock.Create(GetXLastStrip, FBaseBlock.XLast, Self, BaseBlock.Canvas);
+  end;
+
+  procedure TLoop.SetTextSize;
+  begin
+    inherited;
+    FCountPixelCorrection:= 2 * BaseBlock.Canvas.Font.Size + 5;
   end;
 
   procedure TLoop.InitializeBlock;
@@ -37,17 +46,18 @@ implementation
 
   function TLoop.GetOptimaWidth: Integer;
   begin
-    Result := GetTextWidth(BaseBlock.Canvas, FAction) + 2 * XMinIndentText;
+    Result := FActWidth + 2 * FXMinIndentText;
   end;
 
   function TLoop.GetXLastStrip: Integer;
   begin
-    Result:= FBaseBlock.XStart + GetAmountOfPixelCorrection;
+    Result:= FBaseBlock.XStart + FCountPixelCorrection;
   end;
 
-  function TLoop.GetAmountOfPixelCorrection: Integer;
+  function TLoop.Clone: TStatement;
   begin
-    Result:= 2 * BaseBlock.Canvas.Font.Size + 5;
+    Result:= inherited;
+    TLoop(Result).FCountPixelCorrection := Self.FCountPixelCorrection;
   end;
 
   function TLoop.GetOptimalWidthForBlock(const ABlock: TBlock): Integer;

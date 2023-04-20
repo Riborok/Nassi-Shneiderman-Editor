@@ -232,6 +232,7 @@ implementation
       BufferStatement.Install;
 
       BufferStatement:= BufferStatement.Clone;
+      DedicatedStatement:= nil;
       DefineBorders(MainBlock.XLast, MainBlock.Statements.GetLast.GetYBottom, Image);
       ClearAndRedraw;
     end;

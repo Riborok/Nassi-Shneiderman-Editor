@@ -1,7 +1,7 @@
-unit LastLoop;
+Ôªøunit LastLoop;
 
 interface
-uses Base, vcl.graphics, Vcl.ExtCtrls, DrawShapes, DetermineDimensions, Loop;
+uses DrawShapes, Loop;
 type
 
   TLastLoop = class(TLoop)
@@ -9,14 +9,14 @@ type
     function GetBlockYBottom: Integer;
   protected
     function GetOptimalYLast: Integer; override;
-  public
     procedure Draw; override;
-    function IsPreÒOperator: Boolean; override;
+  public
+    function IsPre—ÅOperator: Boolean; override;
   end;
 
 implementation
 
-  function TLastLoop.IsPreÒOperator: Boolean;
+  function TLastLoop.IsPre—ÅOperator: Boolean;
   begin
     Result:= False;
   end;
@@ -31,14 +31,14 @@ implementation
     EraseLine(BaseBlock.XStart +  1, GetXLastStrip, GetBlockYBottom, GetBlockYBottom, BaseBlock.Canvas);
 
     DrawText(BaseBlock.Canvas, BaseBlock.XStart + ((BaseBlock.XLast - BaseBlock.XStart) div 2)
-      - (GetTextWidth(BaseBlock.Canvas, Action) div 2), GetBlockYBottom + YIndentText, Action);
+      - (FActWidth div 2), GetBlockYBottom + FYIndentText, Action);
 
     FBlocks[0].DrawBlock;
   end;
 
   function TLastLoop.GetOptimalYLast: Integer;
   begin
-    Result := GetBlockYBottom + GetTextHeight(BaseBlock.Canvas, FAction) + 2 * XMinIndentText;
+    Result := GetBlockYBottom + FActHeight + 2 * FXMinIndentText;
   end;
 
   function TLastLoop.GetBlockYBottom: Integer;

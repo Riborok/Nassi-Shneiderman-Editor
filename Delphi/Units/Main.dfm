@@ -46,15 +46,15 @@ object NassiShneiderman: TNassiShneiderman
       Top = 0
       Action = actAfterIfBranch
     end
-    object tbRevLoop: TToolButton
+    object tbMultBranch: TToolButton
       Left = 74
       Top = 0
-      Action = actAfterRevLoop
+      Action = actAfterMultBranch
     end
-    object tbMultBranch: TToolButton
+    object tbRevLoop: TToolButton
       Left = 111
       Top = 0
-      Action = actAfterMultBranch
+      Action = actAfterRevLoop
     end
     object tbLoop: TToolButton
       Left = 148

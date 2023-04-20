@@ -1,7 +1,7 @@
 ﻿unit Base;
 
 interface
-uses Vcl.graphics, System.Generics.Collections, ArrayList, MinMaxInt;
+uses Vcl.graphics, ArrayList, MinMaxInt, DetermineDimensions;
 type
   TBlock = class;
 
@@ -21,12 +21,12 @@ type
     // FAction stores the text of the statement
     FAction: String;
 
+    FActWidth, FActHeight: Integer;
+
+    FYIndentText, FXMinIndentText: Integer;
+
     // FBaseBlock is a reference to the block that the statement belongs to
     FBaseBlock: TBlock;
-
-    // These functions are used to get the Y and X indentation of the statement
-    function YIndentText : Integer;
-    function XMinIndentText : Integer;
 
     // Set the bottommost part
     procedure SetYBottom(const AYBottom: Integer); virtual;
@@ -46,7 +46,7 @@ type
     // Returns the optimal block width
     function GetOptimaWidth: Integer; virtual; abstract;
 
-    procedure RedefineSizes;
+    procedure RedefineStatement;
 
     // This method is abstract and will be implemented by subclasses to determine
     // the size of the statement
@@ -55,6 +55,12 @@ type
     // After changing the Y coordinate, need to call the procedure in order to
     // change the Y coordinates of others
     procedure FixYStatementsPosition;
+
+    procedure SetTextSize; virtual;
+    procedure SetActionSizes;
+
+    // These methods are abstract and will be implemented by subclasses to draw
+    procedure Draw; virtual; abstract;
 
   public
     // This constructor creates an uncertainty statement
@@ -72,9 +78,6 @@ type
 
     // Returns the Y coordinate of the bottommost part
     function GetYBottom: Integer; virtual;
-
-    // These methods are abstract and will be implemented by subclasses to draw
-    procedure Draw; virtual; abstract;
 
     // Change action
     procedure ChangeAction(const AAction: String);
@@ -191,19 +194,35 @@ implementation
   begin
     FAction := UncertaintySymbol;
     FBaseBlock:= ABaseBlock;
+    SetTextSize;
   end;
 
   constructor TStatement.Create(const AAction : String; const ABaseBlock: TBlock);
   begin
     FAction := AAction;
     FBaseBlock:= ABaseBlock;
+    SetTextSize;
   end;
 
-  procedure TStatement.RedefineSizes;
+  procedure TStatement.SetTextSize;
+  begin
+    SetActionSizes;
+    FYIndentText:= BaseBlock.FCanvas.Font.Size + 3;
+    FXMinIndentText:= BaseBlock.FCanvas.Font.Size + 5;
+  end;
+
+  procedure TStatement.SetActionSizes;
+  begin
+    FActWidth:= GetTextWidth(BaseBlock.Canvas, FAction);
+    FActHeight:= GetTextHeight(BaseBlock.Canvas, FAction);
+  end;
+
+  procedure TStatement.RedefineStatement;
   var
     I: Integer;
     Blocks: TBlockArr;
   begin
+    SetTextSize;
     SetOptimalYLast;
     if Self is TOperator then
     begin
@@ -211,16 +230,6 @@ implementation
       for I := 0 to High(Blocks) do
         Blocks[I].RedefineSizes;
     end;
-  end;
-
-  function TStatement.YIndentText : Integer;
-  begin
-    Result:= BaseBlock.FCanvas.Font.Size + 3;
-  end;
-
-  function TStatement.XMinIndentText : Integer;
-  begin
-    Result:= BaseBlock.FCanvas.Font.Size + 5;
   end;
 
   function TStatement.HasOptimalYLast : Boolean;
@@ -232,6 +241,7 @@ implementation
   begin
 
     FAction := AAction;
+    SetActionSizes;
 
     BaseBlock.SetOptimalXLastBlock;
     SetOptimalYLast;
@@ -332,6 +342,13 @@ implementation
   begin
     Result:= TStatementClass(Self.ClassType).CreateUncertainty(Self.BaseBlock);
     Result.FAction:= Self.FAction;
+
+    Result.FActWidth:= Self.FActWidth;
+    Result.FActHeight:= Self.FActHeight;
+
+    Result.FYIndentText := Self.FYIndentText;
+    Result.FXMinIndentText := Self.FXMinIndentText;
+
     Result.FYStart:= Self.FYStart;
     Result.FYLast:= Self.FYLast;
   end;
@@ -366,10 +383,9 @@ implementation
   var
     I: Integer;
   begin
-    SetOptimalXLastBlock;
     for I := 0 to FStatements.Count - 1 do
-      FStatements[I].RedefineSizes;
-    FStatements[0].FixYStatementsPosition;
+      FStatements[I].RedefineStatement;
+    SetOptimalXLastBlock;
   end;
 
   procedure TBlock.AddStatementBefore(const AStatement: TStatement;

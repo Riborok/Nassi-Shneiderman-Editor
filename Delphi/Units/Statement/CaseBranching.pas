@@ -1,16 +1,17 @@
-unit CaseBranching;
+Ôªøunit CaseBranching;
 
 interface
-uses Base, vcl.graphics, Vcl.ExtCtrls, Types, CorrectAction,
-     DrawShapes, DetermineDimensions, MinMaxInt;
+uses Base, Types, DrawShapes, DetermineDimensions, MinMaxInt;
 type
 
   TCaseBranching = class(TOperator)
   private
     FCond: TStringArr;
-  private
+    FCondHeight, FCondWidth: array of Integer;
     function GetMaxHeightOfCond: Integer;
+    procedure SetCondSizes;
   protected
+    procedure SetTextSize; override;
     procedure CreateBlock; override;
     procedure CreateBlockStarting(AStartIndex: Integer; const ABlockWidth: Integer);
     procedure InitializeBlock; override;
@@ -19,11 +20,12 @@ type
     function GetOptimaWidth: Integer; override;
     function GetOptimalWidthForBlock(const ABlock: TBlock): Integer; override;
     function GetOptimalYLast: Integer; override;
+
+    procedure Draw; override;
   public
     constructor Create(const AAction : String;
-        const ACond: TStringArr; ABaseBlock: TBlock);
-    procedure Draw; override;
-    function IsPreÒOperator: Boolean; override;
+        const ACond: TStringArr; const ABaseBlock: TBlock);
+    function IsPre—ÅOperator: Boolean; override;
 
     procedure ChangeActionWithCond(const AAction: String; const ACond: TStringArr);
 
@@ -35,10 +37,29 @@ type
 implementation
 
   constructor TCaseBranching.Create(const AAction : String; const ACond: TStringArr;
-                                    ABaseBlock: TBlock);
+                                    const ABaseBlock: TBlock);
   begin
     FCond:= ACond;
+    SetLength(FCondHeight, Length(ACond));
+    SetLength(FCondWidth, Length(ACond));
     inherited Create(AAction, ABaseBlock);
+  end;
+
+  procedure TCaseBranching.SetCondSizes;
+  var
+    I: Integer;
+  begin
+    for I := 0 to High(FCond) do
+    begin
+      FCondHeight[I]:= GetTextHeight(BaseBlock.Canvas, FCond[I]);
+      FCondWidth[I]:= GetTextWidth(BaseBlock.Canvas, FCond[I]);
+    end;
+  end;
+
+  procedure TCaseBranching.SetTextSize;
+  begin
+    inherited;
+    SetCondSizes;
   end;
 
   procedure TCaseBranching.ChangeActionWithCond(const AAction: String; const ACond: TStringArr);
@@ -69,7 +90,7 @@ implementation
       // will set the optimal width
       Blocks[High(PrevCond)].ChangeXLastBlock(Blocks[High(PrevCond)].XStart);
 
-      // —reate and initialize new blocks. Set the width to zero, in the future
+      // –°reate and initialize new blocks. Set the width to zero, in the future
       // will set the optimal width
       CreateBlockStarting(Length(PrevCond), 0);
       InitializeBlockStarting(Length(PrevCond));
@@ -82,47 +103,52 @@ implementation
         Blocks[I].Statements.GetLast.Install;
     end;
 
+    SetLength(FCondHeight, Length(ACond));
+    SetLength(FCondWidth, Length(ACond));
+    SetCondSizes;
+
     // Changing the action
     ChangeAction(AAction);
   end;
 
   function TCaseBranching.Clone: TStatement;
   var
-    I: Integer;
-    ResultOperator: TOperator;
+    ResultCase: TCaseBranching;
   begin
     Result:= inherited;
-    TCaseBranching(Result).FCond:= Self.FCond;
+
+    ResultCase:= TCaseBranching(Result);
+
+    ResultCase.FCond:= Self.FCond;
+
+    ResultCase.FCondHeight:= Self.FCondHeight;
+    ResultCase.FCondWidth:= Self.FCondWidth;
   end;
 
   function TCaseBranching.GetMaxHeightOfCond: Integer;
   var
     I: Integer;
-    CurrConditionHeight: Integer;
   begin
-    Result:= GetTextHeight(BaseBlock.Canvas, FCond[0]);
+    Result:= FCondHeight[0];
     for I := 1 to High(FCond) do
-    begin
-      CurrConditionHeight:= GetTextHeight(BaseBlock.Canvas, FCond[I]);
-      if CurrConditionHeight > Result then
-        Result:= CurrConditionHeight;
-    end;
+      if FCondHeight[I] > Result then
+        Result:= FCondHeight[I];
   end;
 
   function TCaseBranching.GetOptimalYLast: Integer;
   begin
-    Result:= FYStart + GetMaxHeightOfCond + GetTextHeight(BaseBlock.Canvas, FAction) + 4 * YIndentText;
+    Result:= FYStart + GetMaxHeightOfCond + FActHeight + 4 * FYIndentText;
   end;
 
   function TCaseBranching.GetOptimaWidth: Integer;
   begin
-    Result:= (GetTextWidth(BaseBlock.Canvas, FAction) + 2 * XMinIndentText) *
-             (GetTextHeight(BaseBlock.Canvas, FAction) + 2 * YIndentText) div YIndentText;
+    Result:= (FActWidth + 2 * FXMinIndentText) *
+             (FActHeight + 2 * FYIndentText) div FYIndentText;
   end;
 
   function TCaseBranching.GetOptimalWidthForBlock(const ABlock: TBlock): Integer;
   begin
-    Result:= GetTextWidth(BaseBlock.Canvas, FCond[FindBlockIndex(ABlock.XStart)]) + 2 * XMinIndentText;
+    Result:= FCondWidth[FindBlockIndex(ABlock.XStart)] + 2 * FXMinIndentText;
   end;
 
   procedure TCaseBranching.CreateBlock;
@@ -167,7 +193,7 @@ implementation
     end;
   end;
 
-  function TCaseBranching.IsPreÒOperator: Boolean;
+  function TCaseBranching.IsPre—ÅOperator: Boolean;
   begin
     Result:= True;
   end;
@@ -181,7 +207,7 @@ implementation
   begin
 
     // Calculate the height of a triangle
-    YTriangleHeight:= FYStart + GetTextHeight(BaseBlock.Canvas, FAction) + 2 * YIndentText;
+    YTriangleHeight:= FYStart + FActHeight + 2 * FYIndentText;
 
     // Drawing the main block
     DrawRectangle(BaseBlock.XStart, BaseBlock.XLast, FYStart, FYLast, BaseBlock.Canvas);
@@ -219,20 +245,20 @@ implementation
     DrawText(BaseBlock.Canvas,
       BaseBlock.XStart
       +
-      LeftTriangleWidth * (GetTextHeight(BaseBlock.Canvas, FAction) +  YIndentText) div (YTriangleHeight - FYStart)
+      LeftTriangleWidth * (FActHeight +  FYIndentText) div (YTriangleHeight - FYStart)
       +
-      (BaseBlock.XLast - BaseBlock.XStart) * YIndentText div (YTriangleHeight - FYStart) div 2
+      (BaseBlock.XLast - BaseBlock.XStart) * FYIndentText div (YTriangleHeight - FYStart) div 2
       -
-      GetTextWidth(BaseBlock.Canvas, FAction) div 2
+      FActWidth div 2
       ,
-      FYStart + YIndentText, Action);
+      FYStart + FYIndentText, Action);
 
     // Drawing the conditions
-    Inc(YTriangleHeight, YIndentText);
+    Inc(YTriangleHeight, FYIndentText);
     for I := 0 to High(FCond) do
       DrawText(BaseBlock.Canvas,
         Blocks[I].XStart + ((Blocks[I].XLast - Blocks[I].XStart) div 2)
-        - (GetTextWidth(BaseBlock.Canvas, FCond[I]) div 2),
+        - (FCondWidth[I] div 2),
         YTriangleHeight, FCond[I]);
 
     // Drawing child blocks

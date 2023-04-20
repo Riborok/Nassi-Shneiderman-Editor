@@ -1,27 +1,27 @@
-unit FirstLoop;
+Ôªøunit FirstLoop;
 
 interface
-uses Base, Vcl.graphics, Vcl.ExtCtrls, DrawShapes, DetermineDimensions, Loop;
+uses DrawShapes, Loop;
 type
 
   TFirstLoop = class(TLoop)
   protected
     function GetOptimalYLast: Integer; override;
-  public
     procedure Draw; override;
-    function IsPreÒOperator: Boolean; override;
+  public
+    function IsPre—ÅOperator: Boolean; override;
   end;
 
 implementation
 
-  function TFirstLoop.IsPreÒOperator: Boolean;
+  function TFirstLoop.IsPre—ÅOperator: Boolean;
   begin
     Result:= True;
   end;
 
   function TFirstLoop.GetOptimalYLast: Integer;
   begin
-    Result := FYStart + GetTextHeight(BaseBlock.Canvas, FAction) + 2 * YIndentText;
+    Result := FYStart + FActHeight + 2 * FYIndentText;
   end;
 
   procedure TFirstLoop.Draw;
@@ -33,7 +33,7 @@ implementation
     EraseLine(BaseBlock.XStart +  1, GetXLastStrip, FYLast, FYLast, BaseBlock.Canvas);
 
     DrawText(BaseBlock.Canvas, BaseBlock.XStart + ((BaseBlock.XLast - BaseBlock.XStart) div 2)
-      - (GetTextWidth(BaseBlock.Canvas, Action) div 2), FYStart + YIndentText, Action);
+      - (FActWidth div 2), FYStart + FYIndentText, Action);
 
     FBlocks[0].DrawBlock;
   end;
