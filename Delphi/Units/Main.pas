@@ -217,9 +217,7 @@ implementation
       if BufferStatement <> nil then
         BufferStatement.Destroy;
       BufferStatement:= DedicatedStatement.Clone;
-      DedicatedStatement.BaseBlock.Remove(DedicatedStatement);
-      DedicatedStatement:= nil;
-      ClearAndRedraw;
+      DeleteStatement(Sender);
     end;
   end;
 
