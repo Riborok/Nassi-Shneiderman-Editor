@@ -4,7 +4,7 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls, CorrectAction;
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls;
 
 type
   TWriteAction = class(TForm)
@@ -33,7 +33,7 @@ implementation
 
   function TWriteAction.GetAction: String;
   begin
-    Result:= GetActionForStatement(MemoAction.Lines.Text)
+    Result:= MemoAction.Lines.Text
   end;
 
   constructor TWriteAction.Create(AOwner: TComponent; ACurrAction: String);
@@ -54,7 +54,7 @@ implementation
       Top := (Screen.Height - Height) div 2;
     end;
 
-    MemoAction.Text := GetActionForOutput(ACurrAction);
+    MemoAction.Text := ACurrAction;
     MemoAction.SelStart := 0;
     MemoAction.SelLength := Length(MemoAction.Text);
   end;

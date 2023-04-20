@@ -23,8 +23,6 @@ object WriteAction: TWriteAction
     Align = alClient
     Caption = 'Panel'
     TabOrder = 0
-    ExplicitWidth = 342
-    ExplicitHeight = 194
     object MemoAction: TMemo
       Left = 1
       Top = 1
@@ -43,8 +41,6 @@ object WriteAction: TWriteAction
       ScrollBars = ssBoth
       TabOrder = 0
       OnKeyDown = MemoActionKeyDown
-      ExplicitWidth = 340
-      ExplicitHeight = 155
     end
     object btnOK: TButton
       Left = 1
@@ -55,8 +51,6 @@ object WriteAction: TWriteAction
       Caption = 'OK'
       TabOrder = 1
       OnClick = btnOKClick
-      ExplicitTop = 152
-      ExplicitWidth = 340
     end
   end
 end

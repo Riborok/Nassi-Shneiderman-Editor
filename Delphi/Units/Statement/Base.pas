@@ -12,7 +12,7 @@ type
   // in the statement
   TStatement = class abstract
   public const
-    UncertaintySymbol = '?';
+    UncertaintySymbol = '';
   protected
 
     // FYStart and FYLast are used to store the Y position of the statement

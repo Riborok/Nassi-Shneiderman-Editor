@@ -4,7 +4,7 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Types, Stack, Constants, CorrectAction,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Types, Stack, Constants,
   Vcl.ExtCtrls;
 
 type
@@ -55,7 +55,7 @@ implementation
     for I := FMemoStack.Count - 1 downto 0 do
     begin
       Memo:= FMemoStack.Pop;
-      Result[I]:= GetActionForStatement(Memo.Lines.Text);
+      Result[I]:= Memo.Lines.Text;
       Memo.Destroy;
     end;
   end;
@@ -84,7 +84,7 @@ implementation
     end;
 
     for I := 0 to High(ACond) do
-      CreateMemo(GetActionForOutput(ACond[i]));
+      CreateMemo(ACond[i]);
 
     for I := Length(ACond) + 1 to MinCond do
       CreateMemo;
