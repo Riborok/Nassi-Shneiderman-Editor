@@ -1,7 +1,7 @@
 ﻿unit Base;
 
 interface
-uses Vcl.graphics, ArrayList, MinMaxInt, DetermineDimensions;
+uses Vcl.graphics, ArrayList, MinMaxInt, DetermineDimensions, Types;
 type
   TBlock = class;
 
@@ -20,8 +20,8 @@ type
 
     // FAction stores the text of the statement
     FAction: String;
+    FActionSize: TSize;
 
-    FActWidth, FActHeight: Integer;
 
     FYIndentText, FXMinIndentText: Integer;
 
@@ -213,8 +213,8 @@ implementation
 
   procedure TStatement.SetActionSizes;
   begin
-    FActWidth:= GetTextWidth(BaseBlock.Canvas, FAction);
-    FActHeight:= GetTextHeight(BaseBlock.Canvas, FAction);
+    FActionSize.Width:= GetTextWidth(BaseBlock.Canvas, FAction);
+    FActionSize.Height:= GetTextHeight(BaseBlock.Canvas, FAction);
   end;
 
   procedure TStatement.RedefineStatement;
@@ -340,10 +340,10 @@ implementation
   function TStatement.Clone: TStatement;
   begin
     Result:= TStatementClass(Self.ClassType).CreateUncertainty(Self.BaseBlock);
+
     Result.FAction:= Self.FAction;
 
-    Result.FActWidth:= Self.FActWidth;
-    Result.FActHeight:= Self.FActHeight;
+    Result.FActionSize:= Self.FActionSize;
 
     Result.FYIndentText := Self.FYIndentText;
     Result.FXMinIndentText := Self.FXMinIndentText;
@@ -398,7 +398,7 @@ implementation
     AInsertedStatement.FBaseBlock:= Self;
     FStatements.Insert(AInsertedStatement, Index);
 
-    if AStatement.FAction = TStatement.UncertaintySymbol then
+    if (AStatement.FAction = TStatement.UncertaintySymbol) and (AStatement.ClassType = DefaultBlock) then
       Self.RemoveStatementAt(Index + 1);
   end;
 
@@ -415,7 +415,7 @@ implementation
       AInsertedStatement.FBaseBlock:= Self;
       FStatements.Insert(AInsertedStatement, Index);
 
-      if AStatement.FAction = TStatement.UncertaintySymbol then
+      if (AStatement.FAction = TStatement.UncertaintySymbol) and (AStatement.ClassType = DefaultBlock) then
         Self.RemoveStatementAt(Index + 1);
     end
     else
@@ -436,7 +436,7 @@ implementation
       PrevStatement.SetYBottom(PrevStatement.GetMaxOptimalYBottom);
       AStatement.FYStart:= PrevStatement.GetYBottom;
 
-      if PrevStatement.FAction = TStatement.UncertaintySymbol then
+      if (PrevStatement.FAction = TStatement.UncertaintySymbol) and (PrevStatement.ClassType = DefaultBlock) then
       begin
         AStatement.FYStart:= PrevStatement.FYStart;
         Self.RemoveStatementAt(FStatements.Count - 2);

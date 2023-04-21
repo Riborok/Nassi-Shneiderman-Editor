@@ -70,8 +70,8 @@ type
     MIDel: TMenuItem;
     actSortAsc: TAction;
     actSortDesc: TAction;
-    Sortconditionsascending1: TMenuItem;
-    sortconditionsdescending1: TMenuItem;
+    MIDescSort: TMenuItem;
+    MIAscSort: TMenuItem;
 
     procedure FormCreate(Sender: TObject);
 
@@ -91,6 +91,7 @@ type
     procedure MIInsetClick(Sender: TObject);
     procedure DeleteStatement(Sender: TObject);
     procedure Sort(Sender: TObject);
+    procedure PopupMenuPopup(Sender: TObject);
     { Private declarations }
   private
     MainBlock : TBlock;
@@ -193,6 +194,20 @@ implementation
     end;
   end;
 
+  procedure TNassiShneiderman.PopupMenuPopup(Sender: TObject);
+  begin
+    if DedicatedStatement is TCaseBranching then
+    begin
+      MIAscSort.Visible:= True;
+      MIDescSort.Visible:= True;
+    end
+    else
+    begin
+      MIAscSort.Visible:= False;
+      MIDescSort.Visible:= False;
+    end;
+  end;
+
   procedure TNassiShneiderman.ImageMouseDown(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
   begin
@@ -274,13 +289,13 @@ implementation
       1: Compare:= CompareStrDesc;
     end;
     CaseBranching:= TCaseBranching(DedicatedStatement);
-    QuickSort(CaseBranching.Cond, CaseBranching.Blocks, 0, High(CaseBranching.Cond), Compare);
+    QuickSort(CaseBranching.Conds, CaseBranching.CondsSizes, CaseBranching.Blocks, 0, High(CaseBranching.Conds), Compare);
 
     CaseBranching.RepositionBlocksByX;
     ClearAndRedraw;
   end;
 
-procedure TNassiShneiderman.AddAfter(Sender: TObject);
+  procedure TNassiShneiderman.AddAfter(Sender: TObject);
   var
     NewStatement: TStatement;
   begin
@@ -338,9 +353,9 @@ procedure TNassiShneiderman.AddAfter(Sender: TObject);
         if Statement is TCaseBranching then
         begin
           CaseBranching:= TCaseBranching(Statement);
-          Cond:= CaseBranching.Cond;
+          Cond:= CaseBranching.Conds;
           if TryGetCond(Cond) then
-            CaseBranching.ChangeActionWithCond(Action, Cond);
+            CaseBranching.ChangeActionWithConds(Action, Cond);
         end
         else
           Statement.ChangeAction(Action);

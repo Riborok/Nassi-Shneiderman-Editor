@@ -6,14 +6,14 @@ uses Types, Stack, Base;
 type
   TCompareFunction = function(const AFirstStr, ASecondStr: String): Boolean;
 
-procedure QuickSort(const AStr: TStringArr; const ABlocks : TBlockArr;
+procedure QuickSort(const AStr: TStringArr; const ACondsSizes: TSizeArr; const ABlocks : TBlockArr;
                     const AL, AR: Integer; const ACompare: TCompareFunction);
 
 function CompareStrAsc(const AFirstStr, ASecondStr: string): Boolean;
 function CompareStrDesc(const AFirstStr, ASecondStr: string): Boolean;
 implementation
 
-  procedure QuickSort(const AStr: TStringArr; const ABlocks : TBlockArr;
+  procedure QuickSort(const AStr: TStringArr; const ACondsSizes: TSizeArr; const ABlocks : TBlockArr;
                       const AL, AR: Integer; const ACompare: TCompareFunction);
   type
     TIndexRange = record
@@ -22,7 +22,9 @@ implementation
     end;
   var
     I, J: Integer;
-    Pivot, TempStr: string;
+    Pivot: string;
+    TempStr: string;
+    TempSize: TSize;
     TempBlock: TBlock;
     Stack: TStack<TIndexRange>;
     IndexRange: TIndexRange;
@@ -55,9 +57,13 @@ implementation
           AStr[I] := AStr[J];
           AStr[J] := TempStr;
 
-          TempBlock:= ABlocks[I];
-          ABlocks[I]:= ABlocks[J];
-          ABlocks[J]:= TempBlock;
+          TempSize := ACondsSizes[I];
+          ACondsSizes[I] := ACondsSizes[J];
+          ACondsSizes[J] := TempSize;
+
+          TempBlock := ABlocks[I];
+          ABlocks[I] := ABlocks[J];
+          ABlocks[J] := TempBlock;
 
           Inc(I);
           Dec(J);
@@ -84,11 +90,17 @@ implementation
 
   function CompareStrAsc(const AFirstStr, ASecondStr: string): Boolean;
   begin
-    Result := AFirstStr < ASecondStr;
+    if Length(AFirstStr) = Length(ASecondStr) then
+      Result := AFirstStr < ASecondStr
+    else
+      Result := Length(AFirstStr) < Length(ASecondStr);
   end;
 
   function CompareStrDesc(const AFirstStr, ASecondStr: string): Boolean;
   begin
-    Result := AFirstStr > ASecondStr;
+    if Length(AFirstStr) = Length(ASecondStr) then
+      Result := AFirstStr > ASecondStr
+    else
+      Result := Length(AFirstStr) > Length(ASecondStr);
   end;
 end.

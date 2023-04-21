@@ -46,7 +46,7 @@ implementation
 
   function TLoop.GetOptimaWidth: Integer;
   begin
-    Result := FActWidth + 2 * FXMinIndentText;
+    Result := FActionSize.Width + 2 * FXMinIndentText;
   end;
 
   function TLoop.GetXLastStrip: Integer;

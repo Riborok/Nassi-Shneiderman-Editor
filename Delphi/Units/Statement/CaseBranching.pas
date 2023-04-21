@@ -6,10 +6,10 @@ type
 
   TCaseBranching = class(TOperator)
   private
-    FCond: TStringArr;
-    FCondHeight, FCondWidth: array of Integer;
-    function GetMaxHeightOfCond: Integer;
-    procedure SetCondSizes;
+    FConds: TStringArr;
+    FCondsSizes: TSizeArr;
+    function GetMaxHeightOfConds: Integer;
+    procedure SetCondSize(const AIndex: Integer);
   protected
     procedure SetTextSize; override;
     procedure CreateBlock; override;
@@ -24,12 +24,14 @@ type
     procedure Draw; override;
   public
     constructor Create(const AAction : String;
-        const ACond: TStringArr; const ABaseBlock: TBlock);
+        const AConds: TStringArr; const ABaseBlock: TBlock);
     function IsPreсOperator: Boolean; override;
 
-    procedure ChangeActionWithCond(const AAction: String; const ACond: TStringArr);
+    procedure ChangeActionWithConds(const AAction: String; const AConds: TStringArr);
 
-    property Cond: TStringArr read FCond;
+    property Conds: TStringArr read FConds;
+
+    property CondsSizes: TSizeArr read FCondsSizes;
 
     function Clone: TStatement; override;
 
@@ -38,24 +40,18 @@ type
 
 implementation
 
-  constructor TCaseBranching.Create(const AAction : String; const ACond: TStringArr;
+  constructor TCaseBranching.Create(const AAction : String; const AConds: TStringArr;
                                     const ABaseBlock: TBlock);
   begin
-    FCond:= ACond;
-    SetLength(FCondHeight, Length(ACond));
-    SetLength(FCondWidth, Length(ACond));
+    FConds:= AConds;
+    SetLength(FCondsSizes, Length(AConds));
     inherited Create(AAction, ABaseBlock);
   end;
 
-  procedure TCaseBranching.SetCondSizes;
-  var
-    I: Integer;
+  procedure TCaseBranching.SetCondSize(const AIndex: Integer);
   begin
-    for I := 0 to High(FCond) do
-    begin
-      FCondHeight[I]:= GetTextHeight(BaseBlock.Canvas, FCond[I]);
-      FCondWidth[I]:= GetTextWidth(BaseBlock.Canvas, FCond[I]);
-    end;
+    FCondsSizes[AIndex].Height:= GetTextHeight(BaseBlock.Canvas, FConds[AIndex]);
+    FCondsSizes[AIndex].Width:= GetTextWidth(BaseBlock.Canvas, FConds[AIndex]);
   end;
 
   procedure TCaseBranching.RepositionBlocksByX;
@@ -69,55 +65,59 @@ implementation
   end;
 
   procedure TCaseBranching.SetTextSize;
+  var
+    I: Integer;
   begin
     inherited;
-    SetCondSizes;
+    for I := 0 to High(FConds) do
+      SetCondSize(I);
   end;
 
-  procedure TCaseBranching.ChangeActionWithCond(const AAction: String; const ACond: TStringArr);
+  procedure TCaseBranching.ChangeActionWithConds(const AAction: String; const AConds: TStringArr);
   var
     I: Integer;
     PrevCond: TStringArr;
   begin
 
-    PrevCond:= FCond;
-    FCond:= ACond;
+    PrevCond:= FConds;
+    FConds:= AConds;
+
+    SetLength(FCondsSizes, Length(AConds));
 
     // Check what conditions have changed
-    for I := 0 to Min(High(PrevCond), High(FCond)) do
-      if FCond[I] <> PrevCond[I] then
+    for I := 0 to Min(High(PrevCond), High(FConds)) do
+      if FConds[I] <> PrevCond[I] then
+      begin
+        SetCondSize(I);
         Blocks[I].SetOptimalXLastBlock;
+      end;
 
     // Remove blocks if the amount of conditions has decreased
-    for I := Length(FCond) to High(Blocks) do
+    for I := Length(FConds) to High(Blocks) do
       Blocks[I].Destroy;
 
     // Setting a new amount for blocks
-    SetLength(FBlocks, Length(FCond));
+    SetLength(FBlocks, Length(AConds));
 
     // Add new blocks if the amount of conditions has increased
-    if Length(PrevCond) <= High(FCond) then
+    if Length(PrevCond) <= High(FConds) then
     begin
-      // Set the width to zero, to untie the X of the last block. In the future
-      // will set the optimal width
-      Blocks[High(PrevCond)].ChangeXLastBlock(Blocks[High(PrevCond)].XStart);
 
-      // Сreate and initialize new blocks. Set the width to zero, in the future
+      // Сreate and initialize new blocks. Set the width to one. In the future
       // will set the optimal width
-      CreateBlockStarting(Length(PrevCond), 0);
+      CreateBlockStarting(Length(PrevCond), 1);
       InitializeBlockStarting(Length(PrevCond));
 
-      // Set the optimal width of the last block, as promised :)
-      Blocks[High(PrevCond)].SetOptimalXLastBlock;
-
       // Set dimensions after adding
-      for I := Length(PrevCond) to High(FCond) do
+      for I := Length(PrevCond) to High(FConds) do
+      begin
+        SetCondSize(I);
         Blocks[I].Statements.GetLast.Install;
-    end;
+      end;
 
-    SetLength(FCondHeight, Length(ACond));
-    SetLength(FCondWidth, Length(ACond));
-    SetCondSizes;
+      // Coordinating the base block with the last child
+      BaseBlock.ChangeXLastBlock(Blocks[High(Blocks)].XLast);
+    end;
 
     // Changing the action
     ChangeAction(AAction);
@@ -131,41 +131,40 @@ implementation
 
     ResultCase:= TCaseBranching(Result);
 
-    ResultCase.FCond:= Self.FCond;
+    ResultCase.FConds:= Self.FConds;
 
-    ResultCase.FCondHeight:= Self.FCondHeight;
-    ResultCase.FCondWidth:= Self.FCondWidth;
+    ResultCase.FCondsSizes:= Self.FCondsSizes;
   end;
 
-  function TCaseBranching.GetMaxHeightOfCond: Integer;
+  function TCaseBranching.GetMaxHeightOfConds: Integer;
   var
     I: Integer;
   begin
-    Result:= FCondHeight[0];
-    for I := 1 to High(FCond) do
-      if FCondHeight[I] > Result then
-        Result:= FCondHeight[I];
+    Result:= FCondsSizes[0].Height;
+    for I := 1 to High(FConds) do
+      if FCondsSizes[I].Height > Result then
+        Result:= FCondsSizes[I].Height;
   end;
 
   function TCaseBranching.GetOptimalYLast: Integer;
   begin
-    Result:= FYStart + GetMaxHeightOfCond + FActHeight + 4 * FYIndentText;
+    Result:= FYStart + GetMaxHeightOfConds + FActionSize.Height + 4 * FYIndentText;
   end;
 
   function TCaseBranching.GetOptimaWidth: Integer;
   begin
-    Result:= (FActWidth + 2 * FXMinIndentText) *
-             (FActHeight + 2 * FYIndentText) div FYIndentText;
+    Result:= (FActionSize.Width + 2 * FXMinIndentText) *
+             (FActionSize.Height + 2 * FYIndentText) div FYIndentText;
   end;
 
   function TCaseBranching.GetOptimalWidthForBlock(const ABlock: TBlock): Integer;
   begin
-    Result:= FCondWidth[FindBlockIndex(ABlock.XStart)] + 2 * FXMinIndentText;
+    Result:= FCondsSizes[FindBlockIndex(ABlock.XStart)].Width + 2 * FXMinIndentText;
   end;
 
   procedure TCaseBranching.CreateBlock;
   begin
-    SetLength(FBlocks, Length(FCond));
+    SetLength(FBlocks, Length(FConds));
     CreateBlockStarting(0, (BaseBlock.XLast - BaseBlock.XStart) div Length(FBlocks));
   end;
 
@@ -219,7 +218,7 @@ implementation
   begin
 
     // Calculate the height of a triangle
-    YTriangleHeight:= FYStart + FActHeight + 2 * FYIndentText;
+    YTriangleHeight:= FYStart + FActionSize.Height + 2 * FYIndentText;
 
     // Drawing the main block
     DrawRectangle(BaseBlock.XStart, BaseBlock.XLast, FYStart, FYLast, BaseBlock.Canvas);
@@ -257,21 +256,21 @@ implementation
     DrawText(BaseBlock.Canvas,
       BaseBlock.XStart
       +
-      LeftTriangleWidth * (FActHeight +  FYIndentText) div (YTriangleHeight - FYStart)
+      LeftTriangleWidth * (FActionSize.Height +  FYIndentText) div (YTriangleHeight - FYStart)
       +
       (BaseBlock.XLast - BaseBlock.XStart) * FYIndentText div (YTriangleHeight - FYStart) div 2
       -
-      FActWidth div 2
+      FActionSize.Width div 2
       ,
       FYStart + FYIndentText, Action);
 
     // Drawing the conditions
     Inc(YTriangleHeight, FYIndentText);
-    for I := 0 to High(FCond) do
+    for I := 0 to High(FConds) do
       DrawText(BaseBlock.Canvas,
         Blocks[I].XStart + ((Blocks[I].XLast - Blocks[I].XStart) div 2)
-        - (FCondWidth[I] div 2),
-        YTriangleHeight, FCond[I]);
+        - (FCondsSizes[I].Width div 2),
+        YTriangleHeight, FConds[I]);
 
     // Drawing child blocks
     for I := 0 to High(FBlocks) do

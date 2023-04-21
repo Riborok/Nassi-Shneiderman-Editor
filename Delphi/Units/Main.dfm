@@ -2,7 +2,7 @@ object NassiShneiderman: TNassiShneiderman
   Left = 0
   Top = 0
   Caption = 'NassiShneiderman'
-  ClientHeight = 540
+  ClientHeight = 580
   ClientWidth = 960
   Color = clCream
   Font.Charset = DEFAULT_CHARSET
@@ -2151,6 +2151,7 @@ object NassiShneiderman: TNassiShneiderman
     ParentDoubleBuffered = False
     TabOrder = 0
     Transparent = False
+    ExplicitLeft = 8
     object tbProcess: TToolButton
       Left = 0
       Top = 0
@@ -2181,12 +2182,13 @@ object NassiShneiderman: TNassiShneiderman
     Left = 0
     Top = 41
     Width = 960
-    Height = 499
+    Height = 539
     Align = alClient
     Color = clBtnFace
     ParentColor = False
     TabOrder = 1
     OnMouseWheel = ScrollBoxMouseWheel
+    ExplicitHeight = 499
     object Image: TImage
       Left = -5
       Top = -4
@@ -2642,6 +2644,7 @@ object NassiShneiderman: TNassiShneiderman
   end
   object PopupMenu: TPopupMenu
     Images = ilIcons
+    OnPopup = PopupMenuPopup
     Left = 336
     Top = 305
     object MIAdd: TMenuItem
@@ -2709,11 +2712,13 @@ object NassiShneiderman: TNassiShneiderman
     object MIDel: TMenuItem
       Action = actDelete
     end
-    object Sortconditionsascending1: TMenuItem
+    object MIAscSort: TMenuItem
       Action = actSortAsc
+      Visible = False
     end
-    object sortconditionsdescending1: TMenuItem
+    object MIDescSort: TMenuItem
       Action = actSortDesc
+      Visible = False
     end
   end
   object alActions: TActionList
@@ -2819,7 +2824,7 @@ object NassiShneiderman: TNassiShneiderman
     end
     object actSortDesc: TAction
       Tag = 1
-      Caption = 'sort conditions descending'
+      Caption = 'Sort conditions descending'
       ImageIndex = 10
       OnExecute = Sort
     end
