@@ -8,7 +8,7 @@ uses
   Base, FirstLoop, IfBranching, CaseBranching, LastLoop, StatementSearch, DrawShapes,
   Vcl.StdCtrls, Vcl.Menus, System.Actions, Vcl.ActnList, Vcl.ToolWin, GetСaseСonditions,
   Vcl.ComCtrls, Vcl.Buttons, System.ImageList, Vcl.ImgList, GetAction, Types,
-  AdjustBorders;
+  AdjustBorders, CaseBlockSorting;
 
 type
   TNassiShneiderman = class(TForm)
@@ -67,7 +67,11 @@ type
     N1: TMenuItem;
     N3: TMenuItem;
     actDelete: TAction;
-    Delete1: TMenuItem;
+    MIDel: TMenuItem;
+    actSortAsc: TAction;
+    actSortDesc: TAction;
+    Sortconditionsascending1: TMenuItem;
+    sortconditionsdescending1: TMenuItem;
 
     procedure FormCreate(Sender: TObject);
 
@@ -86,6 +90,7 @@ type
     procedure MICutClick(Sender: TObject);
     procedure MIInsetClick(Sender: TObject);
     procedure DeleteStatement(Sender: TObject);
+    procedure Sort(Sender: TObject);
     { Private declarations }
   private
     MainBlock : TBlock;
@@ -196,8 +201,10 @@ implementation
     ClearAndRedraw;
 
     if (Button = mbRight) and (DedicatedStatement <> nil) then
-      PopupMenu.Popup(Image.Left + X + ScrollBox.Left, Image.Top + Y
-                      + ScrollBox.Top);
+    begin
+      PopupMenu.PopupComponent := ScrollBox;
+      PopupMenu.Popup(Mouse.CursorPos.X, Mouse.CursorPos.Y);
+    end;
   end;
 
   procedure TNassiShneiderman.MICopyClick(Sender: TObject);
@@ -257,7 +264,23 @@ implementation
     end;
   end;
 
-  procedure TNassiShneiderman.AddAfter(Sender: TObject);
+  procedure TNassiShneiderman.Sort(Sender: TObject);
+  var
+    CaseBranching: TCaseBranching;
+    Compare:TCompareFunction;
+  begin
+    case TComponent(Sender).Tag of
+      0: Compare:= CompareStrAsc;
+      1: Compare:= CompareStrDesc;
+    end;
+    CaseBranching:= TCaseBranching(DedicatedStatement);
+    QuickSort(CaseBranching.Cond, CaseBranching.Blocks, 0, High(CaseBranching.Cond), Compare);
+
+    CaseBranching.RepositionBlocksByX;
+    ClearAndRedraw;
+  end;
+
+procedure TNassiShneiderman.AddAfter(Sender: TObject);
   var
     NewStatement: TStatement;
   begin

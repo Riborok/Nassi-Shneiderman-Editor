@@ -31,10 +31,11 @@ implementation
   end;
 
   destructor TStack<T>.Destroy;
+  var
+    I: Integer;
   begin
-    while FTop <> nil do
+    for I := FCount - 1 downto 0 do
       Pop;
-
     inherited;
   end;
 

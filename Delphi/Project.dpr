@@ -24,7 +24,8 @@ uses
   Loop in 'Units\Statement\Loop.pas',
   Get—ase—onditions in 'Units\Forms\Get—ase—onditions.pas' {Write—ase—onditions},
   Types in 'Units\Support\Types.pas',
-  Constants in 'Units\Support\Constants.pas';
+  Constants in 'Units\Support\Constants.pas',
+  CaseBlockSorting in 'Units\Support\CaseBlockSorting.pas';
 
 {$R *.res}
 

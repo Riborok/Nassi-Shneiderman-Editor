@@ -12,7 +12,7 @@ implementation
     CurrOperator: TOperator;
     CurrStatement: TStatement;
 
-    function BinarySearchBlockArray(const Blocks: TBlockArr; const AX: Integer): TBlock;
+    function BinarySearchBlock(const Blocks: TBlockArr; const AX: Integer): TBlock;
     var
       L, R, M: Integer;
     begin
@@ -68,7 +68,7 @@ implementation
                           (AX <= TLoop(CurrOperator).GetXLastStrip) then
               Exit(CurrStatement);
 
-            Exit(BinarySearchStatement(AX, AY, BinarySearchBlockArray(CurrOperator.Blocks, AX)));
+            Exit(BinarySearchStatement(AX, AY, BinarySearchBlock(CurrOperator.Blocks, AX)));
           end
           else
             Exit(CurrStatement);

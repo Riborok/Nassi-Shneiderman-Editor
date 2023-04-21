@@ -239,7 +239,6 @@ implementation
 
   procedure TStatement.ChangeAction(const AAction: String);
   begin
-
     FAction := AAction;
     SetActionSizes;
 

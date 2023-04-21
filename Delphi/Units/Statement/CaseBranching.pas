@@ -29,9 +29,11 @@ type
 
     procedure ChangeActionWithCond(const AAction: String; const ACond: TStringArr);
 
-    property Cond: TStringArr read Fcond;
+    property Cond: TStringArr read FCond;
 
     function Clone: TStatement; override;
+
+    procedure RepositionBlocksByX;
   end;
 
 implementation
@@ -54,6 +56,16 @@ implementation
       FCondHeight[I]:= GetTextHeight(BaseBlock.Canvas, FCond[I]);
       FCondWidth[I]:= GetTextWidth(BaseBlock.Canvas, FCond[I]);
     end;
+  end;
+
+  procedure TCaseBranching.RepositionBlocksByX;
+  var
+    I: Integer;
+  begin
+    FBlocks[0].MoveRight(BaseBlock.XStart - FBlocks[0].XStart);
+
+    for I := 1 to High(FBlocks) do
+      FBlocks[I].MoveRight(FBlocks[I - 1].XLast - FBlocks[I].XStart);
   end;
 
   procedure TCaseBranching.SetTextSize;

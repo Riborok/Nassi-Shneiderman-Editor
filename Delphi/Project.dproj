@@ -129,6 +129,7 @@
         </DCCReference>
         <DCCReference Include="Units\Support\Types.pas"/>
         <DCCReference Include="Units\Support\Constants.pas"/>
+        <DCCReference Include="Units\Support\CaseBlockSorting.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
