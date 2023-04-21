@@ -7,14 +7,14 @@ type
   TCompareFunction = function(const AFirstStr, ASecondStr: String): Boolean;
 
 procedure QuickSort(const AStr: TStringArr; const ACondsSizes: TSizeArr; const ABlocks : TBlockArr;
-                    const AL, AR: Integer; const ACompare: TCompareFunction);
+                    const ACompare: TCompareFunction);
 
 function CompareStrAsc(const AFirstStr, ASecondStr: string): Boolean;
 function CompareStrDesc(const AFirstStr, ASecondStr: string): Boolean;
 implementation
 
   procedure QuickSort(const AStr: TStringArr; const ACondsSizes: TSizeArr; const ABlocks : TBlockArr;
-                      const AL, AR: Integer; const ACompare: TCompareFunction);
+                      const ACompare: TCompareFunction);
   type
     TIndexRange = record
       LeftIndex: Integer;
@@ -31,15 +31,15 @@ implementation
   begin
     Stack := TStack<TIndexRange>.Create;
 
-    IndexRange.LeftIndex := AL;
-    IndexRange.RightIndex := AR;
+    IndexRange.LeftIndex := Low(AStr);
+    IndexRange.RightIndex := High(AStr);
     Stack.Push(IndexRange);
 
     while Stack.Count > 0 do
     begin
       IndexRange := Stack.Pop;
 
-      Pivot := AStr[(IndexRange.LeftIndex + IndexRange.RightIndex) div 2];
+      Pivot := AStr[(IndexRange.LeftIndex + IndexRange.RightIndex) shr 1];
 
       I := IndexRange.LeftIndex;
       J := IndexRange.RightIndex;

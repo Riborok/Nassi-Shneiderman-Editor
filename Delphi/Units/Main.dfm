@@ -2,7 +2,7 @@ object NassiShneiderman: TNassiShneiderman
   Left = 0
   Top = 0
   Caption = 'NassiShneiderman'
-  ClientHeight = 580
+  ClientHeight = 600
   ClientWidth = 960
   Color = clCream
   Font.Charset = DEFAULT_CHARSET
@@ -2125,7 +2125,6 @@ object NassiShneiderman: TNassiShneiderman
     00000000000000000000000005FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
     FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
     FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF}
-  Menu = MainMenu
   OldCreateOrder = False
   WindowState = wsMaximized
   OnClose = FormClose
@@ -2151,7 +2150,6 @@ object NassiShneiderman: TNassiShneiderman
     ParentDoubleBuffered = False
     TabOrder = 0
     Transparent = False
-    ExplicitLeft = 8
     object tbProcess: TToolButton
       Left = 0
       Top = 0
@@ -2182,58 +2180,25 @@ object NassiShneiderman: TNassiShneiderman
     Left = 0
     Top = 41
     Width = 960
-    Height = 539
+    Height = 559
     Align = alClient
-    Color = clBtnFace
+    Color = clWindow
     ParentColor = False
     TabOrder = 1
+    OnDblClick = ImageDblClick
+    OnMouseDown = ImageMouseDown
     OnMouseWheel = ScrollBoxMouseWheel
-    ExplicitHeight = 499
+    ExplicitHeight = 539
     object Image: TImage
       Left = -5
       Top = -4
       Width = 958
-      Height = 496
+      Height = 541
       AutoSize = True
       Proportional = True
       OnDblClick = ImageDblClick
       OnMouseDown = ImageMouseDown
     end
-  end
-  object MainMenu: TMainMenu
-    Left = 16
-    Top = 304
-    object mnFile: TMenuItem
-      Caption = 'File'
-      object mnNew: TMenuItem
-        Caption = 'New'
-        ShortCut = 16462
-      end
-      object mnOpen: TMenuItem
-        Caption = 'Open'
-        ShortCut = 16463
-      end
-      object mnSave: TMenuItem
-        Caption = 'Save'
-        ShortCut = 16467
-      end
-      object mnSaveAs: TMenuItem
-        Caption = 'Save As'
-        ShortCut = 49235
-      end
-      object mnExport: TMenuItem
-        Caption = 'Export'
-        ShortCut = 16453
-      end
-    end
-  end
-  object OpenDialog: TOpenDialog
-    Left = 144
-    Top = 304
-  end
-  object SaveDialog: TSaveDialog
-    Left = 80
-    Top = 304
   end
   object ilIcons: TImageList
     Left = 912
@@ -2645,8 +2610,8 @@ object NassiShneiderman: TNassiShneiderman
   object PopupMenu: TPopupMenu
     Images = ilIcons
     OnPopup = PopupMenuPopup
-    Left = 336
-    Top = 305
+    Left = 912
+    Top = 185
     object MIAdd: TMenuItem
       Caption = 'Add Statement'
       object MIAfter: TMenuItem
@@ -2711,6 +2676,9 @@ object NassiShneiderman: TNassiShneiderman
     end
     object MIDel: TMenuItem
       Action = actDelete
+    end
+    object N2: TMenuItem
+      Caption = '-'
     end
     object MIAscSort: TMenuItem
       Action = actSortAsc
@@ -2828,9 +2796,5 @@ object NassiShneiderman: TNassiShneiderman
       ImageIndex = 10
       OnExecute = Sort
     end
-  end
-  object MainMenu1: TMainMenu
-    Left = 248
-    Top = 312
   end
 end

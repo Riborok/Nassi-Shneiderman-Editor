@@ -21,7 +21,7 @@ implementation
 
   function TFirstLoop.GetOptimalYLast: Integer;
   begin
-    Result := FYStart + FActionSize.Height + 2 * FYIndentText;
+    Result := FYStart + FActionSize.Height + FYIndentText shl 1;
   end;
 
   procedure TFirstLoop.Draw;
@@ -32,8 +32,8 @@ implementation
 
     EraseLine(BaseBlock.XStart +  1, GetXLastStrip, FYLast, FYLast, BaseBlock.Canvas);
 
-    DrawText(BaseBlock.Canvas, BaseBlock.XStart + ((BaseBlock.XLast - BaseBlock.XStart) div 2)
-      - (FActionSize.Width div 2), FYStart + FYIndentText, Action);
+    DrawText(BaseBlock.Canvas, BaseBlock.XStart + ((BaseBlock.XLast - BaseBlock.XStart) shr 1)
+      - (FActionSize.Width shr 1), FYStart + FYIndentText, Action);
 
     FBlocks[0].DrawBlock;
   end;

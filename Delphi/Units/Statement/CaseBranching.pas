@@ -148,18 +148,18 @@ implementation
 
   function TCaseBranching.GetOptimalYLast: Integer;
   begin
-    Result:= FYStart + GetMaxHeightOfConds + FActionSize.Height + 4 * FYIndentText;
+    Result:= FYStart + GetMaxHeightOfConds + FActionSize.Height + FYIndentText shl 2;
   end;
 
   function TCaseBranching.GetOptimaWidth: Integer;
   begin
-    Result:= (FActionSize.Width + 2 * FXMinIndentText) *
-             (FActionSize.Height + 2 * FYIndentText) div FYIndentText;
+    Result:= (FActionSize.Width + FXMinIndentText shl 1) *
+             (FActionSize.Height + FYIndentText shl 1) div FYIndentText;
   end;
 
   function TCaseBranching.GetOptimalWidthForBlock(const ABlock: TBlock): Integer;
   begin
-    Result:= FCondsSizes[FindBlockIndex(ABlock.XStart)].Width + 2 * FXMinIndentText;
+    Result:= FCondsSizes[FindBlockIndex(ABlock.XStart)].Width + FXMinIndentText shl 1;
   end;
 
   procedure TCaseBranching.CreateBlock;
@@ -218,7 +218,7 @@ implementation
   begin
 
     // Calculate the height of a triangle
-    YTriangleHeight:= FYStart + FActionSize.Height + 2 * FYIndentText;
+    YTriangleHeight:= FYStart + FActionSize.Height + FYIndentText shl 1;
 
     // Drawing the main block
     DrawRectangle(BaseBlock.XStart, BaseBlock.XLast, FYStart, FYLast, BaseBlock.Canvas);
@@ -258,9 +258,9 @@ implementation
       +
       LeftTriangleWidth * (FActionSize.Height +  FYIndentText) div (YTriangleHeight - FYStart)
       +
-      (BaseBlock.XLast - BaseBlock.XStart) * FYIndentText div (YTriangleHeight - FYStart) div 2
+      (BaseBlock.XLast - BaseBlock.XStart) * FYIndentText div (YTriangleHeight - FYStart) shr 1
       -
-      FActionSize.Width div 2
+      FActionSize.Width shr 1
       ,
       FYStart + FYIndentText, Action);
 
@@ -268,8 +268,8 @@ implementation
     Inc(YTriangleHeight, FYIndentText);
     for I := 0 to High(FConds) do
       DrawText(BaseBlock.Canvas,
-        Blocks[I].XStart + ((Blocks[I].XLast - Blocks[I].XStart) div 2)
-        - (FCondsSizes[I].Width div 2),
+        Blocks[I].XStart + ((Blocks[I].XLast - Blocks[I].XStart) shr 1)
+        - (FCondsSizes[I].Width shr 1),
         YTriangleHeight, FConds[I]);
 
     // Drawing child blocks

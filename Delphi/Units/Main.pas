@@ -12,17 +12,6 @@ uses
 
 type
   TNassiShneiderman = class(TForm)
-
-    MainMenu: TMainMenu;
-    mnFile: TMenuItem;
-    mnNew: TMenuItem;
-    mnOpen: TMenuItem;
-    mnSave: TMenuItem;
-    mnSaveAs: TMenuItem;
-    mnExport: TMenuItem;
-
-    OpenDialog: TOpenDialog;
-    SaveDialog: TSaveDialog;
     tbSelectFigType: TToolBar;
     ilIcons: TImageList;
     ScrollBox: TScrollBox;
@@ -60,7 +49,6 @@ type
     actBeforeMultBranch: TAction;
     actBeforeLoop: TAction;
     actBeforeRevLoop: TAction;
-    MainMenu1: TMainMenu;
     actCopy: TAction;
     actInsert: TAction;
     actCut: TAction;
@@ -72,6 +60,7 @@ type
     actSortDesc: TAction;
     MIDescSort: TMenuItem;
     MIAscSort: TMenuItem;
+    N2: TMenuItem;
 
     procedure FormCreate(Sender: TObject);
 
@@ -153,16 +142,13 @@ implementation
     MainBlock.AddFirstStatement(NewStatement, SchemeInitialIndent);
     NewStatement.Install;
 
-    // Пока так ( может и не пока, выглядит хайпово :) )
-    Image.Picture.Bitmap.Width := Screen.Width;
-    Image.Picture.Bitmap.Height := Screen.Height;
-
     ClearAndRedraw;
   end;
 
   procedure TNassiShneiderman.ClearAndRedraw;
   begin
     Clear(Image.Canvas);
+    DefineBorders(MainBlock.XLast, MainBlock.Statements.GetLast.GetYBottom, Image);
 
     if DedicatedStatement <> nil then
       ColorizeRectangle(Image.Canvas, DedicatedStatement.BaseBlock.XStart, DedicatedStatement.BaseBlock.XLast,
@@ -253,7 +239,7 @@ implementation
 
       BufferStatement:= BufferStatement.Clone;
       DedicatedStatement:= nil;
-      DefineBorders(MainBlock.XLast, MainBlock.Statements.GetLast.GetYBottom, Image);
+
       ClearAndRedraw;
     end;
   end;
@@ -271,7 +257,6 @@ implementation
       begin
         DedicatedStatement.BaseBlock.AddStatementBefore(DedicatedStatement, NewStatement);
         NewStatement.Install;
-        DefineBorders(MainBlock.XLast, MainBlock.Statements.GetLast.GetYBottom, Image);
       end;
 
       DedicatedStatement:= nil;
@@ -289,9 +274,10 @@ implementation
       1: Compare:= CompareStrDesc;
     end;
     CaseBranching:= TCaseBranching(DedicatedStatement);
-    QuickSort(CaseBranching.Conds, CaseBranching.CondsSizes, CaseBranching.Blocks, 0, High(CaseBranching.Conds), Compare);
+    QuickSort(CaseBranching.Conds, CaseBranching.CondsSizes, CaseBranching.Blocks, Compare);
 
     CaseBranching.RepositionBlocksByX;
+
     ClearAndRedraw;
   end;
 
@@ -308,7 +294,6 @@ implementation
       begin
         DedicatedStatement.BaseBlock.AddStatementAfter(DedicatedStatement, NewStatement);
         NewStatement.Install;
-        DefineBorders(MainBlock.XLast, MainBlock.Statements.GetLast.GetYBottom, Image);
       end;
 
       DedicatedStatement:= nil;
@@ -327,7 +312,6 @@ implementation
 
       DedicatedStatement:= nil;
 
-      DefineBorders(MainBlock.XLast, MainBlock.Statements.GetLast.GetYBottom, Image);
       ClearAndRedraw;
     end;
   end;
@@ -360,7 +344,6 @@ implementation
         else
           Statement.ChangeAction(Action);
 
-        DefineBorders(MainBlock.XLast, MainBlock.Statements.GetLast.GetYBottom, Image);
       end;
     end;
 

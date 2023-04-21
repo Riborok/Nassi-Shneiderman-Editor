@@ -30,15 +30,15 @@ implementation
 
     EraseLine(BaseBlock.XStart +  1, GetXLastStrip, GetBlockYBottom, GetBlockYBottom, BaseBlock.Canvas);
 
-    DrawText(BaseBlock.Canvas, BaseBlock.XStart + ((BaseBlock.XLast - BaseBlock.XStart) div 2)
-      - (FActionSize.Width div 2), GetBlockYBottom + FYIndentText, Action);
+    DrawText(BaseBlock.Canvas, BaseBlock.XStart + ((BaseBlock.XLast - BaseBlock.XStart) shr 1)
+      - (FActionSize.Width shr 1), GetBlockYBottom + FYIndentText, Action);
 
     FBlocks[0].DrawBlock;
   end;
 
   function TLastLoop.GetOptimalYLast: Integer;
   begin
-    Result := GetBlockYBottom + FActionSize.Height + 2 * FXMinIndentText;
+    Result := GetBlockYBottom + FActionSize.Height + FXMinIndentText shl 1;
   end;
 
   function TLastLoop.GetBlockYBottom: Integer;

@@ -15,20 +15,20 @@ implementation
 
   function TProcessStatement.GetOptimaWidth: Integer;
   begin
-    result:= FActionSize.Width + 2 * FXMinIndentText;
+    result:= FActionSize.Width + FXMinIndentText shl 1;
   end;
 
   procedure TProcessStatement.Draw;
   begin
     DrawRectangle(BaseBlock.XStart, BaseBlock.XLast, FYStart, FYLast, BaseBlock.Canvas);
 
-    DrawText(BaseBlock.Canvas, BaseBlock.XStart + ((BaseBlock.XLast - BaseBlock.XStart) div 2)
-      - (FActionSize.Width div 2), FYStart + FYIndentText, Action);
+    DrawText(BaseBlock.Canvas, BaseBlock.XStart + ((BaseBlock.XLast - BaseBlock.XStart) shr 1)
+      - (FActionSize.Width shr 1), FYStart + FYIndentText, Action);
   end;
 
   function TProcessStatement.GetOptimalYLast: Integer;
   begin
-    Result := FYStart + FActionSize.Height + 2 * FYIndentText;
+    Result := FYStart + FActionSize.Height + FYIndentText shl 1;
   end;
 
 end.

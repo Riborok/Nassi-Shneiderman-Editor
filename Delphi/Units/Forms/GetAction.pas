@@ -45,13 +45,13 @@ implementation
     if AOwner is TControl then
     begin
       OwnerControl := TControl(AOwner);
-      Left := OwnerControl.Left + (OwnerControl.Width - Width) div 2;
-      Top := OwnerControl.Top + (OwnerControl.Height - Height) div 2;
+      Left := OwnerControl.Left + (OwnerControl.Width - Width) shr 1;
+      Top := OwnerControl.Top + (OwnerControl.Height - Height) shr 1;
     end
     else
     begin
-      Left := (Screen.Width - Width) div 2;
-      Top := (Screen.Height - Height) div 2;
+      Left := (Screen.Width - Width) shr 1;
+      Top := (Screen.Height - Height) shr 1;
     end;
 
     MemoAction.Text := ACurrAction;

@@ -21,7 +21,7 @@ implementation
       R := High(Blocks);
       while L <= R do
       begin
-        M := (L + R) div 2;
+        M := (L + R) shr 1;
 
         if (AX >= Blocks[M].XStart) and (AX <= Blocks[M].XLast) then
           Exit(Blocks[M])
@@ -44,7 +44,7 @@ implementation
       while L <= R do
       begin
 
-        M := (L + R) div 2;
+        M := (L + R) shr 1;
         CurrStatement := ABlock.Statements[M];
 
         if (AY >= CurrStatement.YStart) and (AY <= CurrStatement.GetYBottom) then

@@ -80,7 +80,7 @@ implementation
 
     Lines := SplitString(AText, sLineBreak);
 
-    LineHeight := ACanvas.TextHeight(' ') div 2;
+    LineHeight := ACanvas.TextHeight(' ') shr 1;
 
     for I := 0 to High(Lines) do
       ACanvas.TextOut(AX, AY + I * LineHeight, Lines[i]);

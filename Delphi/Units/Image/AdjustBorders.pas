@@ -1,18 +1,16 @@
 unit AdjustBorders;
 
 interface
-uses Vcl.ExtCtrls, Vcl.Forms, MinMaxInt;
+uses Vcl.ExtCtrls;
 
-procedure DefineBorders(AXLast, AYLast: Integer; const AImage: TImage);
+procedure DefineBorders(const AXLast, AYLast: Integer; const AImage: TImage);
 
 implementation
 
-  procedure DefineBorders(AXLast, AYLast: Integer; const AImage: TImage);
+  procedure DefineBorders(const AXLast, AYLast: Integer; const AImage: TImage);
   begin
-    Inc(AXLast, 10);
-    Inc(AYLast, 10);
-    AImage.Picture.Bitmap.Width := Max(AXLast, Screen.Width);
-    AImage.Picture.Bitmap.Height := Max(AYLast, Screen.Height);
+    AImage.Picture.Bitmap.Width := AXLast + 5;
+    AImage.Picture.Bitmap.Height := AYLast + 5;
   end;
 
 end.

@@ -677,7 +677,7 @@ implementation
     while L <= R do
     begin
 
-      M := (L + R) div 2;
+      M := (L + R) shr 1;
 
       if FStatements[M].FYStart = AFYStart then
         Exit(M)
@@ -755,7 +755,7 @@ implementation
     while L <= R do
     begin
 
-      M := (L + R) div 2;
+      M := (L + R) shr 1;
 
       if FBlocks[M].FXStart = AXStart then
         Exit(M)

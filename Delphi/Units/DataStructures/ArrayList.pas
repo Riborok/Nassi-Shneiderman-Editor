@@ -94,7 +94,7 @@ implementation
 
   procedure TArrayList<T>.CapacityInc;
   begin
-    SetLength(FArray, Length(FArray) * 2 + 4);
+    SetLength(FArray, Length(FArray) shl 1 + 4);
   end;
 
 end.

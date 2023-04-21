@@ -32,7 +32,7 @@ implementation
   procedure TLoop.SetTextSize;
   begin
     inherited;
-    FCountPixelCorrection:= 2 * BaseBlock.Canvas.Font.Size + 5;
+    FCountPixelCorrection:= BaseBlock.Canvas.Font.Size shl 1 + 5;
   end;
 
   procedure TLoop.InitializeBlock;
@@ -46,7 +46,7 @@ implementation
 
   function TLoop.GetOptimaWidth: Integer;
   begin
-    Result := FActionSize.Width + 2 * FXMinIndentText;
+    Result := FActionSize.Width + FXMinIndentText shl 1;
   end;
 
   function TLoop.GetXLastStrip: Integer;

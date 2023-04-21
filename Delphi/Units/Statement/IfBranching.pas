@@ -72,7 +72,7 @@ implementation
     SetLength(FBlocks, FBlockCount);
 
     FBlocks[0]:= TBlock.Create(FBaseBlock.XStart,
-                       (FBaseBlock.XStart + FBaseBlock.XLast) div 2, Self, BaseBlock.Canvas);
+                       (FBaseBlock.XStart + FBaseBlock.XLast) shr 1, Self, BaseBlock.Canvas);
 
     FBlocks[1]:= TBlock.Create(FBlocks[0].XLast, FBaseBlock.XLast, Self, BaseBlock.Canvas);
   end;
@@ -99,7 +99,7 @@ implementation
   function TIfBranching.GetMinValidPartWidth(const ATextHeight,
                                              ATextWidth: Integer): Integer;
   begin
-    Result:= (ATextWidth + 2 * FXMinIndentText) *
+    Result:= (ATextWidth + FXMinIndentText shl 1) *
              (FYLast - FYStart) div (FYLast - FYStart - ATextHeight - FYIndentText);
   end;
 
@@ -132,23 +132,23 @@ implementation
     DrawText(BaseBlock.Canvas,
       FBlocks[0].XStart +
       GetAvailablePartWidth(FBlocks[0].XLast - FBlocks[0].XStart, FTrueSize.Height + FYIndentText) +
-      GetAvailablePartWidth(BaseBlock.XLast - BaseBlock.XStart, FActionSize.Height) div 2 -
-      FActionSize.Width div 2,
+      GetAvailablePartWidth(BaseBlock.XLast - BaseBlock.XStart, FActionSize.Height) shr 1 -
+      FActionSize.Width shr 1,
       FYStart + FYIndentText, Action);
 
     // Drawing the True text
     DrawText(BaseBlock.Canvas,
                     FBlocks[0].XStart + GetAvailablePartWidth(
-                    FBlocks[0].XLast - FBlocks[0].XStart, FTrueSize.Height) div 2 -
-                    FTrueSize.Width div 2,
-                    FYStart + 2*FYIndentText + FActionSize.Height, TrueCond);
+                    FBlocks[0].XLast - FBlocks[0].XStart, FTrueSize.Height) shr 1 -
+                    FTrueSize.Width shr 1,
+                    FYStart + FYIndentText shl 1 + FActionSize.Height, TrueCond);
 
     // Drawing the False text
     DrawText(BaseBlock.Canvas,
                     FBlocks[1].XLast - GetAvailablePartWidth(
-                    FBlocks[1].XLast - FBlocks[1].XStart, FFalseSize.Height) div 2 -
-                    FFalseSize.Width div 2,
-                    FYStart + 2*FYIndentText + FActionSize.Height, FalseCond);
+                    FBlocks[1].XLast - FBlocks[1].XStart, FFalseSize.Height) shr 1 -
+                    FFalseSize.Width shr 1,
+                    FYStart + FYIndentText shl 1 + FActionSize.Height, FalseCond);
 
     // Drawing child blocks
     FBlocks[0].DrawBlock;
