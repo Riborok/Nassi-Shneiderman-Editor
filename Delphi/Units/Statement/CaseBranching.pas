@@ -1,7 +1,7 @@
 ﻿unit CaseBranching;
 
 interface
-uses Base, Types, DrawShapes, DetermineDimensions, MinMaxInt;
+uses Base, Types, DrawShapes, DetermineDimensions, MinMaxInt, CaseBlockSorting;
 type
 
   TCaseBranching = class(TOperator)
@@ -10,6 +10,7 @@ type
     FCondsSizes: TSizeArr;
     function GetMaxHeightOfConds: Integer;
     procedure SetCondSize(const AIndex: Integer);
+    procedure RepositionBlocksByX;
   protected
     procedure SetTextSize; override;
     procedure CreateBlock; override;
@@ -29,13 +30,11 @@ type
 
     procedure ChangeActionWithConds(const AAction: String; const AConds: TStringArr);
 
-    property Conds: TStringArr read FConds;
-
-    property CondsSizes: TSizeArr read FCondsSizes;
-
     function Clone: TStatement; override;
 
-    procedure RepositionBlocksByX;
+    procedure SortConditions(const SortNumber: Integer);
+
+    property Conds: TStringArr read FConds;
   end;
 
 implementation
@@ -51,6 +50,36 @@ implementation
   procedure TCaseBranching.SetCondSize(const AIndex: Integer);
   begin
     FCondsSizes[AIndex] := GetTextSize(BaseBlock.Canvas, FConds[AIndex]);
+  end;
+
+  procedure TCaseBranching.SortConditions(const SortNumber: Integer);
+  var
+    Compare: TCompareFunction;
+    LastBlock: TBlock;
+  begin
+    case SortNumber of
+      0: Compare:= CompareStrAsc;
+      1: Compare:= CompareStrDesc;
+    end;
+
+    // Finding the last block before sorting
+    LastBlock:= FBlocks[High(FBlocks)];
+
+    // Decrease the last x by 1 to untie it from the base block
+    LastBlock.ChangeXLastBlock(LastBlock.XLast - 1);
+
+    // Sorting blocks
+    QuickSort(FConds, FCondsSizes, FBlocks, Compare);
+
+    // Move the blocks in a new order
+    RepositionBlocksByX;
+
+    // Set the optimal length for the last block before sorting
+    LastBlock.SetOptimalXLastBlock;
+
+    // Stretch the new last block to the base
+    LastBlock:= FBlocks[High(FBlocks)];
+    LastBlock.ChangeXLastBlock(FBaseBlock.XLast);
   end;
 
   procedure TCaseBranching.RepositionBlocksByX;

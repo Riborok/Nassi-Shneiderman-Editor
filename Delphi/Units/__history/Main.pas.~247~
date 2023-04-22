@@ -12,17 +12,6 @@ uses
 
 type
   TNassiShneiderman = class(TForm)
-
-    MainMenu: TMainMenu;
-    mnFile: TMenuItem;
-    mnNew: TMenuItem;
-    mnOpen: TMenuItem;
-    mnSave: TMenuItem;
-    mnSaveAs: TMenuItem;
-    mnExport: TMenuItem;
-
-    OpenDialog: TOpenDialog;
-    SaveDialog: TSaveDialog;
     tbSelectFigType: TToolBar;
     ilIcons: TImageList;
     ScrollBox: TScrollBox;
@@ -60,7 +49,6 @@ type
     actBeforeMultBranch: TAction;
     actBeforeLoop: TAction;
     actBeforeRevLoop: TAction;
-    MainMenu1: TMainMenu;
     actCopy: TAction;
     actInsert: TAction;
     actCut: TAction;
@@ -70,8 +58,9 @@ type
     MIDel: TMenuItem;
     actSortAsc: TAction;
     actSortDesc: TAction;
-    Sortconditionsascending1: TMenuItem;
-    sortconditionsdescending1: TMenuItem;
+    MIDescSort: TMenuItem;
+    MIAscSort: TMenuItem;
+    N2: TMenuItem;
 
     procedure FormCreate(Sender: TObject);
 
@@ -91,6 +80,7 @@ type
     procedure MIInsetClick(Sender: TObject);
     procedure DeleteStatement(Sender: TObject);
     procedure Sort(Sender: TObject);
+    procedure PopupMenuPopup(Sender: TObject);
     { Private declarations }
   private
     MainBlock : TBlock;
@@ -152,22 +142,21 @@ implementation
     MainBlock.AddFirstStatement(NewStatement, SchemeInitialIndent);
     NewStatement.Install;
 
-    // Пока так ( может и не пока, выглядит хайпово :) )
-    Image.Picture.Bitmap.Width := Screen.Width;
-    Image.Picture.Bitmap.Height := Screen.Height;
-
     ClearAndRedraw;
   end;
 
   procedure TNassiShneiderman.ClearAndRedraw;
   begin
     Clear(Image.Canvas);
+    DefineBorders(MainBlock.XLast, MainBlock.Statements.GetLast.GetYBottom, Image);
 
     if DedicatedStatement <> nil then
       ColorizeRectangle(Image.Canvas, DedicatedStatement.BaseBlock.XStart, DedicatedStatement.BaseBlock.XLast,
                       DedicatedStatement.YStart, DedicatedStatement.GetYBottom, HighlightColor);
 
     MainBlock.DrawBlock;
+    //ScrollBox.VertScrollBar.Position := ScrollBox.VertScrollBar.Range;
+    //ScrollBox.HorzScrollBar.Position := ScrollBox.HorzScrollBar.Range;
     //DrawCoordinates(Image.Canvas, 50);
   end;
 
@@ -193,6 +182,20 @@ implementation
     end;
   end;
 
+  procedure TNassiShneiderman.PopupMenuPopup(Sender: TObject);
+  begin
+    if DedicatedStatement is TCaseBranching then
+    begin
+      MIAscSort.Visible:= True;
+      MIDescSort.Visible:= True;
+    end
+    else
+    begin
+      MIAscSort.Visible:= False;
+      MIDescSort.Visible:= False;
+    end;
+  end;
+
   procedure TNassiShneiderman.ImageMouseDown(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
   begin
@@ -201,10 +204,8 @@ implementation
     ClearAndRedraw;
 
     if (Button = mbRight) and (DedicatedStatement <> nil) then
-    begin
-      PopupMenu.PopupComponent := ScrollBox;
       PopupMenu.Popup(Mouse.CursorPos.X, Mouse.CursorPos.Y);
-    end;
+
   end;
 
   procedure TNassiShneiderman.MICopyClick(Sender: TObject);
@@ -238,7 +239,7 @@ implementation
 
       BufferStatement:= BufferStatement.Clone;
       DedicatedStatement:= nil;
-      DefineBorders(MainBlock.XLast, MainBlock.Statements.GetLast.GetYBottom, Image);
+
       ClearAndRedraw;
     end;
   end;
@@ -256,7 +257,6 @@ implementation
       begin
         DedicatedStatement.BaseBlock.AddStatementBefore(DedicatedStatement, NewStatement);
         NewStatement.Install;
-        DefineBorders(MainBlock.XLast, MainBlock.Statements.GetLast.GetYBottom, Image);
       end;
 
       DedicatedStatement:= nil;
@@ -274,13 +274,14 @@ implementation
       1: Compare:= CompareStrDesc;
     end;
     CaseBranching:= TCaseBranching(DedicatedStatement);
-    QuickSort(CaseBranching.Cond, CaseBranching.CondsSizes, CaseBranching.Blocks, 0, High(CaseBranching.Cond), Compare);
+    QuickSort(CaseBranching.Conds, CaseBranching.CondsSizes, CaseBranching.Blocks, Compare);
 
     CaseBranching.RepositionBlocksByX;
+
     ClearAndRedraw;
   end;
 
-procedure TNassiShneiderman.AddAfter(Sender: TObject);
+  procedure TNassiShneiderman.AddAfter(Sender: TObject);
   var
     NewStatement: TStatement;
   begin
@@ -293,7 +294,6 @@ procedure TNassiShneiderman.AddAfter(Sender: TObject);
       begin
         DedicatedStatement.BaseBlock.AddStatementAfter(DedicatedStatement, NewStatement);
         NewStatement.Install;
-        DefineBorders(MainBlock.XLast, MainBlock.Statements.GetLast.GetYBottom, Image);
       end;
 
       DedicatedStatement:= nil;
@@ -312,7 +312,6 @@ procedure TNassiShneiderman.AddAfter(Sender: TObject);
 
       DedicatedStatement:= nil;
 
-      DefineBorders(MainBlock.XLast, MainBlock.Statements.GetLast.GetYBottom, Image);
       ClearAndRedraw;
     end;
   end;
@@ -338,14 +337,13 @@ procedure TNassiShneiderman.AddAfter(Sender: TObject);
         if Statement is TCaseBranching then
         begin
           CaseBranching:= TCaseBranching(Statement);
-          Cond:= CaseBranching.Cond;
+          Cond:= CaseBranching.Conds;
           if TryGetCond(Cond) then
-            CaseBranching.ChangeActionWithCond(Action, Cond);
+            CaseBranching.ChangeActionWithConds(Action, Cond);
         end
         else
           Statement.ChangeAction(Action);
 
-        DefineBorders(MainBlock.XLast, MainBlock.Statements.GetLast.GetYBottom, Image);
       end;
     end;
 

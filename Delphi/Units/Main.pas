@@ -8,7 +8,7 @@ uses
   Base, FirstLoop, IfBranching, CaseBranching, LastLoop, StatementSearch, DrawShapes,
   Vcl.StdCtrls, Vcl.Menus, System.Actions, Vcl.ActnList, Vcl.ToolWin, GetСaseСonditions,
   Vcl.ComCtrls, Vcl.Buttons, System.ImageList, Vcl.ImgList, GetAction, Types,
-  AdjustBorders, CaseBlockSorting;
+  AdjustBorders;
 
 type
   TNassiShneiderman = class(TForm)
@@ -203,8 +203,14 @@ implementation
 
     ClearAndRedraw;
 
-    if (Button = mbRight) and (DedicatedStatement <> nil) then
-      PopupMenu.Popup(Mouse.CursorPos.X, Mouse.CursorPos.Y);
+    if DedicatedStatement <> nil then
+      case Button of
+        mbRight: PopupMenu.Popup(Mouse.CursorPos.X, Mouse.CursorPos.Y);
+        mbLeft:
+          begin
+
+          end;
+      end;
 
   end;
 
@@ -265,19 +271,8 @@ implementation
   end;
 
   procedure TNassiShneiderman.Sort(Sender: TObject);
-  var
-    CaseBranching: TCaseBranching;
-    Compare:TCompareFunction;
   begin
-    case TComponent(Sender).Tag of
-      0: Compare:= CompareStrAsc;
-      1: Compare:= CompareStrDesc;
-    end;
-    CaseBranching:= TCaseBranching(DedicatedStatement);
-    QuickSort(CaseBranching.Conds, CaseBranching.CondsSizes, CaseBranching.Blocks, Compare);
-
-    CaseBranching.RepositionBlocksByX;
-
+    TCaseBranching(DedicatedStatement).SortConditions(TComponent(Sender).Tag);
     ClearAndRedraw;
   end;
 
