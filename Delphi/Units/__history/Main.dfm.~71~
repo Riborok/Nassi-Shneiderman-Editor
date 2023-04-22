@@ -2188,6 +2188,7 @@ object NassiShneiderman: TNassiShneiderman
     OnDblClick = ImageDblClick
     OnMouseDown = ImageMouseDown
     OnMouseWheel = ScrollBoxMouseWheel
+    ExplicitHeight = 539
     object Image: TImage
       Left = -5
       Top = -4

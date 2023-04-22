@@ -93,7 +93,7 @@ implementation
       end;
 
     // Remove blocks if the amount of conditions has decreased
-    for I := Length(FConds) to High(Blocks) do
+    for I := Length(FConds) to High(FBlocks) do
       Blocks[I].Destroy;
 
     // Setting a new amount for blocks
@@ -102,21 +102,24 @@ implementation
     // Add new blocks if the amount of conditions has increased
     if Length(PrevCond) <= High(FConds) then
     begin
+      // Set the width to one, to untie the X of the last block. In the future
+      // will set the optimal width
+      Blocks[High(PrevCond)].ChangeXLastBlock(Blocks[High(PrevCond)].XStart + 1);
 
       // Сreate and initialize new blocks. Set the width to one. In the future
       // will set the optimal width
       CreateBlockStarting(Length(PrevCond), 1);
       InitializeBlockStarting(Length(PrevCond));
 
+      // Set the optimal width of the last block
+      Blocks[High(PrevCond)].SetOptimalXLastBlock;
+
       // Set dimensions after adding
       for I := Length(PrevCond) to High(FConds) do
       begin
         SetCondSize(I);
-        Blocks[I].Statements.GetLast.Install;
+        Blocks[I].Statements[0].Install;
       end;
-
-      // Coordinating the base block with the last child
-      BaseBlock.ChangeXLastBlock(Blocks[High(Blocks)].XLast);
     end;
 
     // Changing the action

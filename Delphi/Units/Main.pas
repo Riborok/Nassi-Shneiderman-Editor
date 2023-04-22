@@ -155,6 +155,8 @@ implementation
                       DedicatedStatement.YStart, DedicatedStatement.GetYBottom, HighlightColor);
 
     MainBlock.DrawBlock;
+    //ScrollBox.VertScrollBar.Position := ScrollBox.VertScrollBar.Range;
+    //ScrollBox.HorzScrollBar.Position := ScrollBox.HorzScrollBar.Range;
     //DrawCoordinates(Image.Canvas, 50);
   end;
 
