@@ -1,50 +1,38 @@
 unit DetermineDimensions;
 
 interface
-uses Vcl.graphics, System.StrUtils, System.Types, System.SysUtils, MinMaxInt;
+uses Vcl.graphics, System.Types, System.SysUtils, MinMaxInt, Constants, Types;
 
-function GetTextWidth(const ACanvas: TCanvas; const AText: string): Integer;
-function GetTextHeight(const ACanvas: TCanvas; const AText: string): Integer;
-
+function GetTextSize(const ACanvas: TCanvas; const AText: string): TSize;
 implementation
 
-  function GetTextHeight(const ACanvas: TCanvas; const AText: string): Integer;
+  function GetTextSize(const ACanvas: TCanvas; const AText: string): TSize;
   var
     Lines: TStringDynArray;
-    i: Integer;
+    I: Integer;
   begin
     if AText = '' then
-      Result:= ACanvas.TextHeight(' ')
+    begin
+      Result.Height:= ACanvas.TextHeight(Space);
+      Result.Width:= ACanvas.TextWidth(Space);
+    end
     else
     begin
-      Result := 0;
-      Lines := SplitString(AText, sLineBreak);
+      Result.Width := 0;
+      Result.Height := 0;
 
-      Inc(Result, ACanvas.TextHeight(Lines[0]));
-      for i := 1 to High(Lines) do
+      Lines := AText.Split([sLineBreak]);
+
+      for I := 0 to High(Lines) do
       begin
         if Length(Lines[i]) > 0 then
-          Inc(Result, ACanvas.TextHeight(Lines[i]))
+          Inc(Result.Height, ACanvas.TextHeight(Lines[i]))
         else if Length(Lines[i - 1]) = 0 then
-          Inc(Result, ACanvas.Font.Size);
+          Inc(Result.Height, ACanvas.Font.Size);
+
+        Result.Width := Max(Result.Width, ACanvas.TextWidth(Lines[I]));
       end;
     end;
   end;
 
-  function GetTextWidth(const ACanvas: TCanvas; const AText: string): Integer;
-  var
-    Lines: TStringDynArray;
-    i: Integer;
-  begin
-    if AText = '' then
-      Result:= ACanvas.TextWidth(' ')
-    else
-    begin
-      Result := 0;
-      Lines := SplitString(AText, sLineBreak);
-
-      for i := 0 to High(Lines) do
-        Result := Max(Result, ACanvas.TextWidth(Lines[i]));
-    end;
-  end;
 end.

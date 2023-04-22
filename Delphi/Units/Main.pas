@@ -204,10 +204,8 @@ implementation
     ClearAndRedraw;
 
     if (Button = mbRight) and (DedicatedStatement <> nil) then
-    begin
-      PopupMenu.PopupComponent := ScrollBox;
       PopupMenu.Popup(Mouse.CursorPos.X, Mouse.CursorPos.Y);
-    end;
+
   end;
 
   procedure TNassiShneiderman.MICopyClick(Sender: TObject);

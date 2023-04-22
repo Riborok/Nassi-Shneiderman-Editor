@@ -32,11 +32,9 @@ implementation
   procedure TIfBranching.SetTextSize;
   begin
     inherited;
-    FTrueSize.Width:= GetTextWidth(BaseBlock.Canvas, TrueCond);
-    FTrueSize.Height:= GetTextHeight(BaseBlock.Canvas, TrueCond);
+    FTrueSize := GetTextSize(BaseBlock.Canvas, TrueCond);
 
-    FFalseSize.Width:= GetTextWidth(BaseBlock.Canvas, FalseCond);
-    FFalseSize.Height:= GetTextHeight(BaseBlock.Canvas, FalseCond);
+    FFalseSize := GetTextSize(BaseBlock.Canvas, FalseCond);
   end;
 
   function TIfBranching.Clone: TStatement;

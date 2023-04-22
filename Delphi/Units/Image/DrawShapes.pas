@@ -1,7 +1,7 @@
 unit DrawShapes;
 
 interface
-uses Vcl.graphics, System.StrUtils, System.Types, System.SysUtils;
+uses Vcl.graphics, System.StrUtils, System.Types, System.SysUtils, Constants;
 
 procedure DrawRectangle(const AXStart, AXLast, AYStart, AYLast : Integer; const ACanvas: TCanvas);
 
@@ -80,7 +80,7 @@ implementation
 
     Lines := SplitString(AText, sLineBreak);
 
-    LineHeight := ACanvas.TextHeight(' ') shr 1;
+    LineHeight := ACanvas.TextHeight(Space) shr 1;
 
     for I := 0 to High(Lines) do
       ACanvas.TextOut(AX, AY + I * LineHeight, Lines[i]);

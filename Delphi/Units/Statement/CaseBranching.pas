@@ -50,8 +50,7 @@ implementation
 
   procedure TCaseBranching.SetCondSize(const AIndex: Integer);
   begin
-    FCondsSizes[AIndex].Height:= GetTextHeight(BaseBlock.Canvas, FConds[AIndex]);
-    FCondsSizes[AIndex].Width:= GetTextWidth(BaseBlock.Canvas, FConds[AIndex]);
+    FCondsSizes[AIndex] := GetTextSize(BaseBlock.Canvas, FConds[AIndex]);
   end;
 
   procedure TCaseBranching.RepositionBlocksByX;
@@ -89,12 +88,12 @@ implementation
       if FConds[I] <> PrevCond[I] then
       begin
         SetCondSize(I);
-        Blocks[I].SetOptimalXLastBlock;
+        FBlocks[I].SetOptimalXLastBlock;
       end;
 
     // Remove blocks if the amount of conditions has decreased
     for I := Length(FConds) to High(FBlocks) do
-      Blocks[I].Destroy;
+      FBlocks[I].Destroy;
 
     // Setting a new amount for blocks
     SetLength(FBlocks, Length(AConds));
@@ -104,7 +103,7 @@ implementation
     begin
       // Set the width to one, to untie the X of the last block. In the future
       // will set the optimal width
-      Blocks[High(PrevCond)].ChangeXLastBlock(Blocks[High(PrevCond)].XStart + 1);
+      FBlocks[High(PrevCond)].ChangeXLastBlock(FBlocks[High(PrevCond)].XStart + 1);
 
       // Сreate and initialize new blocks. Set the width to one. In the future
       // will set the optimal width
@@ -112,13 +111,13 @@ implementation
       InitializeBlockStarting(Length(PrevCond));
 
       // Set the optimal width of the last block
-      Blocks[High(PrevCond)].SetOptimalXLastBlock;
+      FBlocks[High(PrevCond)].SetOptimalXLastBlock;
 
       // Set dimensions after adding
       for I := Length(PrevCond) to High(FConds) do
       begin
         SetCondSize(I);
-        Blocks[I].Statements[0].Install;
+        FBlocks[I].Statements[0].Install;
       end;
     end;
 
@@ -271,7 +270,7 @@ implementation
     Inc(YTriangleHeight, FYIndentText);
     for I := 0 to High(FConds) do
       DrawText(BaseBlock.Canvas,
-        Blocks[I].XStart + ((Blocks[I].XLast - Blocks[I].XStart) shr 1)
+        FBlocks[I].XStart + ((FBlocks[I].XLast - FBlocks[I].XStart) shr 1)
         - (FCondsSizes[I].Width shr 1),
         YTriangleHeight, FConds[I]);
 

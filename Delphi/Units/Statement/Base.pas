@@ -213,8 +213,7 @@ implementation
 
   procedure TStatement.SetActionSizes;
   begin
-    FActionSize.Width:= GetTextWidth(BaseBlock.Canvas, FAction);
-    FActionSize.Height:= GetTextHeight(BaseBlock.Canvas, FAction);
+    FActionSize:= GetTextSize(BaseBlock.Canvas, FAction);
   end;
 
   procedure TStatement.RedefineStatement;
