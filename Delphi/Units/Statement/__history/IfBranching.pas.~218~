@@ -149,7 +149,8 @@ implementation
                     FYStart + FYIndentText shl 1 + FActionSize.Height, FalseCond);
 
     // Drawing child blocks
-    DrawBlocks;
+    FBlocks[0].DrawBlock;
+    FBlocks[1].DrawBlock;
   end;
 
 

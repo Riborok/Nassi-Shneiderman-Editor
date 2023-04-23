@@ -3,7 +3,7 @@
 interface
 
 uses
-  Winapi.Windows, System.SysUtils, System.Variants, System.Classes,
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls, ProcessStatement,
   Base, FirstLoop, IfBranching, CaseBranching, LastLoop, StatementSearch, DrawShapes,
   Vcl.StdCtrls, Vcl.Menus, System.Actions, Vcl.ActnList, Vcl.ToolWin, GetСaseСonditions,
@@ -81,18 +81,10 @@ type
     procedure DeleteStatement(Sender: TObject);
     procedure Sort(Sender: TObject);
     procedure PopupMenuPopup(Sender: TObject);
-    procedure ImageMouseUp(Sender: TObject; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer);
-    procedure ImageMouseMove(Sender: TObject; Shift: TShiftState; X,
-      Y: Integer);
     { Private declarations }
   private
     FMainBlock : TBlock;
     FDedicatedStatement: TStatement;
-
-    FPrevMousePos: TPoint;
-    FIsMouseDown: Boolean;
-    FCarryBlock: TBlock;
 
     FHighlightColor: TColor;
 
@@ -100,7 +92,6 @@ type
     function TryGetCond(var AInitialStr: TStringArr): Boolean;
     function CreateStatement(const AStatementClass: TStatementClass; const ABaseBlock: TBlock): TStatement;
     class function ConvertToBlockType(const AIndex: Integer): TStatementClass;
-    procedure GetVisibleImageRect(out TopLeft, BottomRight: TPoint);
   private const
     SchemeInitialIndent = 10;
     SchemeInitialFontSize = 14;
@@ -117,14 +108,6 @@ implementation
 
   {$R *.dfm}
 
-  procedure TNassiShneiderman.GetVisibleImageRect(out TopLeft, BottomRight: TPoint);
-  begin
-    TopLeft.X := Image.Left - ScrollBox.HorzScrollBar.Position;
-    TopLeft.Y := Image.Top - ScrollBox.VertScrollBar.Position;
-    BottomRight.X := TopLeft.X + ScrollBox.ClientWidth;
-    BottomRight.Y := TopLeft.Y + ScrollBox.ClientHeight;
-  end;
-
   procedure TNassiShneiderman.FormClose(Sender: TObject;
   var Action: TCloseAction);
   begin
@@ -139,7 +122,6 @@ implementation
 
     FDedicatedStatement:= nil;
     BufferStatement:= nil;
-    FCarryBlock:= nil;
 
     Constraints.MinWidth := 960;
     Constraints.MinHeight := 540;
@@ -226,54 +208,13 @@ implementation
         mbRight: PopupMenu.Popup(Mouse.CursorPos.X, Mouse.CursorPos.Y);
         mbLeft:
           begin
-            FCarryBlock:= TBlock.Create(
-              FDedicatedStatement.BaseBlock.XStart,
-              FDedicatedStatement.BaseBlock.XLast,
-              nil,
-              Image.Canvas
-            );
 
-            FCarryBlock.AddFirstStatement(FDedicatedStatement.Clone,
-                                          FDedicatedStatement.YStart);
-
-            FIsMouseDown := True;
-            FPrevMousePos.X := X;
-            FPrevMousePos.Y := Y;
           end;
       end;
 
   end;
 
-  procedure TNassiShneiderman.ImageMouseMove(Sender: TObject; Shift: TShiftState;
-  X, Y: Integer);
-  begin
-    if FIsMouseDown and (ssLeft in Shift) then
-    begin
-
-      FCarryBlock.MoveRight(X - FPrevMousePos.X);
-      FCarryBlock.MoveDown(Y - FPrevMousePos.Y);
-
-      ClearAndRedraw;
-      FCarryBlock.DrawBlock;
-
-      FPrevMousePos := Point(X, Y);
-    end;
-  end;
-
-  procedure TNassiShneiderman.ImageMouseUp(Sender: TObject; Button: TMouseButton;
-  Shift: TShiftState; X, Y: Integer);
-  begin
-    if (Button = mbLeft) and FIsMouseDown then
-    begin
-      FIsMouseDown := False;
-
-      FCarryBlock.Destroy;
-
-      ClearAndRedraw;
-    end;
-  end;
-
-procedure TNassiShneiderman.MICopyClick(Sender: TObject);
+  procedure TNassiShneiderman.MICopyClick(Sender: TObject);
   begin
     if FDedicatedStatement <> nil then
     begin

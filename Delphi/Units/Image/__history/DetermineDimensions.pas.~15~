@@ -9,7 +9,7 @@ implementation
   function GetTextSize(const ACanvas: TCanvas; const AText: string): TSize;
   var
     Lines: TStringDynArray;
-    I: Integer;
+    I, SpaceHeight: Integer;
   begin
     if AText = '' then
     begin
@@ -25,7 +25,8 @@ implementation
       for I := 0 to High(Lines) do
         Result.Width := Max(Result.Width, ACanvas.TextWidth(Lines[I]));
 
-      Result.Height:= ACanvas.TextHeight(Space) * Length(Lines);
+      SpaceHeight := ACanvas.TextHeight(Space);
+      Result.Height:= Max(SpaceHeight, SpaceHeight * High(Lines));
     end;
   end;
 

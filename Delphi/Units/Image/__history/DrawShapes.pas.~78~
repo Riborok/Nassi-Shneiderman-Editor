@@ -1,7 +1,7 @@
 unit DrawShapes;
 
 interface
-uses Vcl.graphics, System.Types, System.SysUtils, Constants;
+uses Vcl.graphics, System.StrUtils, System.Types, System.SysUtils, Constants;
 
 procedure DrawRectangle(const AXStart, AXLast, AYStart, AYLast : Integer; const ACanvas: TCanvas);
 
@@ -78,9 +78,9 @@ implementation
     SavedColor := ACanvas.Brush.Color;
     ACanvas.Brush.Style := bsClear;
 
-    Lines := AText.Split([sLineBreak]);
+    Lines := SplitString(AText, sLineBreak);
 
-    Indent := ACanvas.TextHeight(Space);
+    Indent := ACanvas.TextHeight(Space) shr 1;
 
     for I := 0 to High(Lines) do
       ACanvas.TextOut(AX, AY + I * Indent, Lines[I]);

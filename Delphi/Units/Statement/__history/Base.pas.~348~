@@ -116,8 +116,6 @@ type
     function GetBlockYStart: Integer;
 
     procedure SetInitiaXLast; override;
-
-    procedure DrawBlocks;
   public
     constructor Create(const AAction : String; const ABaseBlock: TBlock); override;
     destructor Destroy; override;
@@ -178,7 +176,6 @@ type
     procedure SetOptimalXLastBlock;
 
     procedure ChangeXLastBlock(const ANewXLast: Integer);
-
     procedure MoveRight(const AOffset: Integer);
     procedure MoveDown(const AOffset: Integer);
 
@@ -837,14 +834,6 @@ implementation
           Result := Max(Result, FBlocks[I].Statements.GetLast.GetMaxOptimalYBottom);
       False: Result := GetOptimalYLast;
     end;
-  end;
-
-  procedure TOperator.DrawBlocks;
-  var
-    I: Integer;
-  begin
-    for I := 0 to High(FBlocks) do
-      FBlocks[I].DrawBlock;
   end;
 
   function TOperator.Clone: TStatement;

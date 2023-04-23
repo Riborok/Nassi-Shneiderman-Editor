@@ -33,8 +33,7 @@ implementation
     DrawText(BaseBlock.Canvas, BaseBlock.XStart + ((BaseBlock.XLast - BaseBlock.XStart) shr 1)
       - (FActionSize.Width shr 1), GetBlockYBottom + FYIndentText, Action);
 
-    // Drawing child blocks
-    DrawBlocks;
+    FBlocks[0].DrawBlock;
   end;
 
   function TLastLoop.GetOptimalYLast: Integer;

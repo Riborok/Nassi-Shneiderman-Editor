@@ -304,7 +304,7 @@ implementation
         YTriangleHeight, FConds[I]);
 
     // Drawing child blocks
-    DrawBlocks;
+    inherited;
   end;
 
 end.

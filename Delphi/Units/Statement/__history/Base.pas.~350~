@@ -117,7 +117,7 @@ type
 
     procedure SetInitiaXLast; override;
 
-    procedure DrawBlocks;
+    procedure Draw; override;
   public
     constructor Create(const AAction : String; const ABaseBlock: TBlock); override;
     destructor Destroy; override;
@@ -839,7 +839,7 @@ implementation
     end;
   end;
 
-  procedure TOperator.DrawBlocks;
+  procedure TOperator.Draw;
   var
     I: Integer;
   begin

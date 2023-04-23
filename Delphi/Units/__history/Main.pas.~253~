@@ -3,7 +3,7 @@
 interface
 
 uses
-  Winapi.Windows, System.SysUtils, System.Variants, System.Classes,
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls, ProcessStatement,
   Base, FirstLoop, IfBranching, CaseBranching, LastLoop, StatementSearch, DrawShapes,
   Vcl.StdCtrls, Vcl.Menus, System.Actions, Vcl.ActnList, Vcl.ToolWin, GetСaseСonditions,
@@ -81,26 +81,25 @@ type
     procedure DeleteStatement(Sender: TObject);
     procedure Sort(Sender: TObject);
     procedure PopupMenuPopup(Sender: TObject);
+    procedure ScrollBoxMouseMove(Sender: TObject; Shift: TShiftState; X,
+      Y: Integer);
     procedure ImageMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
-    procedure ImageMouseMove(Sender: TObject; Shift: TShiftState; X,
-      Y: Integer);
     { Private declarations }
   private
-    FMainBlock : TBlock;
-    FDedicatedStatement: TStatement;
-
-    FPrevMousePos: TPoint;
-    FIsMouseDown: Boolean;
-    FCarryBlock: TBlock;
+    MainBlock : TBlock;
+    DedicatedStatement: TStatement;
 
     FHighlightColor: TColor;
+
+    FCarryBlock: TBlock;
+    FPrevMousePos: TPoint;
+    FIsMouseDown: Boolean;
 
     function TryGetAction(var AAction: String): Boolean;
     function TryGetCond(var AInitialStr: TStringArr): Boolean;
     function CreateStatement(const AStatementClass: TStatementClass; const ABaseBlock: TBlock): TStatement;
     class function ConvertToBlockType(const AIndex: Integer): TStatementClass;
-    procedure GetVisibleImageRect(out TopLeft, BottomRight: TPoint);
   private const
     SchemeInitialIndent = 10;
     SchemeInitialFontSize = 14;
@@ -117,18 +116,10 @@ implementation
 
   {$R *.dfm}
 
-  procedure TNassiShneiderman.GetVisibleImageRect(out TopLeft, BottomRight: TPoint);
-  begin
-    TopLeft.X := Image.Left - ScrollBox.HorzScrollBar.Position;
-    TopLeft.Y := Image.Top - ScrollBox.VertScrollBar.Position;
-    BottomRight.X := TopLeft.X + ScrollBox.ClientWidth;
-    BottomRight.Y := TopLeft.Y + ScrollBox.ClientHeight;
-  end;
-
   procedure TNassiShneiderman.FormClose(Sender: TObject;
   var Action: TCloseAction);
   begin
-    FMainBlock.Destroy;
+    MainBlock.Destroy;
   end;
 
   procedure TNassiShneiderman.FormCreate(Sender: TObject);
@@ -137,9 +128,8 @@ implementation
   begin
     actDelete.ShortCut := ShortCut(VK_DELETE, []);
 
-    FDedicatedStatement:= nil;
+    DedicatedStatement:= nil;
     BufferStatement:= nil;
-    FCarryBlock:= nil;
 
     Constraints.MinWidth := 960;
     Constraints.MinHeight := 540;
@@ -154,10 +144,10 @@ implementation
 
     FHighlightColor:= clYellow;
 
-    FMainBlock:= TBlock.Create(SchemeInitialIndent, 0, nil, Image.Canvas);
+    MainBlock:= TBlock.Create(SchemeInitialIndent, 0, nil, Image.Canvas);
 
-    NewStatement:= TProcessStatement.CreateUncertainty(FMainBlock);
-    FMainBlock.AddFirstStatement(NewStatement, SchemeInitialIndent);
+    NewStatement:= TProcessStatement.CreateUncertainty(MainBlock);
+    MainBlock.AddFirstStatement(NewStatement, SchemeInitialIndent);
     NewStatement.Install;
 
     ClearAndRedraw;
@@ -166,13 +156,13 @@ implementation
   procedure TNassiShneiderman.ClearAndRedraw;
   begin
     Clear(Image.Canvas);
-    DefineBorders(FMainBlock.XLast, FMainBlock.Statements.GetLast.GetYBottom, Image);
+    DefineBorders(MainBlock.XLast, MainBlock.Statements.GetLast.GetYBottom, Image);
 
-    if FDedicatedStatement <> nil then
-      ColorizeRectangle(Image.Canvas, FDedicatedStatement.BaseBlock.XStart, FDedicatedStatement.BaseBlock.XLast,
-                      FDedicatedStatement.YStart, FDedicatedStatement.GetYBottom, FHighlightColor);
+    if DedicatedStatement <> nil then
+      ColorizeRectangle(Image.Canvas, DedicatedStatement.BaseBlock.XStart, DedicatedStatement.BaseBlock.XLast,
+                      DedicatedStatement.YStart, DedicatedStatement.GetYBottom, FHighlightColor);
 
-    FMainBlock.DrawBlock;
+    MainBlock.DrawBlock;
     //ScrollBox.VertScrollBar.Position := ScrollBox.VertScrollBar.Range;
     //ScrollBox.HorzScrollBar.Position := ScrollBox.HorzScrollBar.Range;
     //DrawCoordinates(Image.Canvas, 50);
@@ -202,7 +192,7 @@ implementation
 
   procedure TNassiShneiderman.PopupMenuPopup(Sender: TObject);
   begin
-    if FDedicatedStatement is TCaseBranching then
+    if DedicatedStatement is TCaseBranching then
     begin
       MIAscSort.Visible:= True;
       MIDescSort.Visible:= True;
@@ -217,159 +207,58 @@ implementation
   procedure TNassiShneiderman.ImageMouseDown(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
   begin
-    FDedicatedStatement := BinarySearchStatement(X, Y, FMainBlock);
+    DedicatedStatement := BinarySearchStatement(X, Y, MainBlock);
 
     ClearAndRedraw;
 
-    if FDedicatedStatement <> nil then
+    if DedicatedStatement <> nil then
       case Button of
         mbRight: PopupMenu.Popup(Mouse.CursorPos.X, Mouse.CursorPos.Y);
         mbLeft:
           begin
-            FCarryBlock:= TBlock.Create(
-              FDedicatedStatement.BaseBlock.XStart,
-              FDedicatedStatement.BaseBlock.XLast,
-              nil,
-              Image.Canvas
-            );
-
-            FCarryBlock.AddFirstStatement(FDedicatedStatement.Clone,
-                                          FDedicatedStatement.YStart);
-
+            FPrevMousePos := Point(X, Y);
             FIsMouseDown := True;
-            FPrevMousePos.X := X;
-            FPrevMousePos.Y := Y;
           end;
       end;
 
   end;
 
-  procedure TNassiShneiderman.ImageMouseMove(Sender: TObject; Shift: TShiftState;
-  X, Y: Integer);
-  begin
-    if FIsMouseDown and (ssLeft in Shift) then
-    begin
-
-      FCarryBlock.MoveRight(X - FPrevMousePos.X);
-      FCarryBlock.MoveDown(Y - FPrevMousePos.Y);
-
-      ClearAndRedraw;
-      FCarryBlock.DrawBlock;
-
-      FPrevMousePos := Point(X, Y);
-    end;
-  end;
-
   procedure TNassiShneiderman.ImageMouseUp(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);
   begin
-    if (Button = mbLeft) and FIsMouseDown then
-    begin
+    if Button = mbLeft then
       FIsMouseDown := False;
-
-      FCarryBlock.Destroy;
-
-      ClearAndRedraw;
-    end;
   end;
 
-procedure TNassiShneiderman.MICopyClick(Sender: TObject);
-  begin
-    if FDedicatedStatement <> nil then
-    begin
-      if BufferStatement <> nil then
-        BufferStatement.Destroy;
-      BufferStatement:= FDedicatedStatement.Clone;
-    end;
-  end;
-
-  procedure TNassiShneiderman.MICutClick(Sender: TObject);
-  begin
-    if FDedicatedStatement <> nil then
-    begin
-      if BufferStatement <> nil then
-        BufferStatement.Destroy;
-      BufferStatement:= FDedicatedStatement.Clone;
-      DeleteStatement(Sender);
-    end;
-  end;
-
-  procedure TNassiShneiderman.MIInsetClick(Sender: TObject);
-  begin
-    if (BufferStatement <> nil) and (FDedicatedStatement <> nil) then
-    begin
-      FDedicatedStatement.BaseBlock.AddBlockPartAfter(FDedicatedStatement, BufferStatement);
-
-      BufferStatement.Install;
-
-      FDedicatedStatement:= BufferStatement;
-      BufferStatement:= BufferStatement.Clone;
-
-      ClearAndRedraw;
-    end;
-  end;
-
-  procedure TNassiShneiderman.AddBefore(Sender: TObject);
+  procedure TNassiShneiderman.ScrollBoxMouseMove(Sender: TObject;
+  Shift: TShiftState; X, Y: Integer);
   var
-    NewStatement: TStatement;
+    CurMousePos: TPoint;
+    OffsetX, OffsetY: Integer;
   begin
-
-    if FDedicatedStatement <> nil then
+    if FIsMouseDown and (ssLeft in Shift) then
     begin
-      NewStatement:= CreateStatement(ConvertToBlockType(TComponent(Sender).Tag),
-                                                 FDedicatedStatement.BaseBlock);
+      CurMousePos := Point(X, Y);
 
-      if NewStatement <> nil then
-      begin
-        FDedicatedStatement.BaseBlock.AddStatementBefore(FDedicatedStatement, NewStatement);
-        NewStatement.Install;
-        FDedicatedStatement:= NewStatement;
-      end;
+      OffsetX := CurMousePos.X - FPrevMousePos.X;
+      OffsetY := CurMousePos.Y - FPrevMousePos.Y;
+
+      CarryBlock:= TBlock.Create(
+        DedicatedStatement.BaseBlock.XStart,
+        DedicatedStatement.BaseBlock.XLast,
+        nil,
+        Image.Canvas);
+
+      CarryBlock.Statements.Add(DedicatedStatement.Clone);
+
+      CarryBlock.MoveRight(OffsetX);
+      CarryBlock.MoveDown(OffsetY);
 
       ClearAndRedraw;
-    end;
-  end;
+      CarryBlock.DrawBlock;
+      CarryBlock.Destroy;
 
-  procedure TNassiShneiderman.Sort(Sender: TObject);
-  begin
-    TCaseBranching(FDedicatedStatement).SortConditions(TComponent(Sender).Tag);
-    ClearAndRedraw;
-  end;
-
-  procedure TNassiShneiderman.AddAfter(Sender: TObject);
-  var
-    NewStatement: TStatement;
-  begin
-
-    if FDedicatedStatement <> nil then
-    begin
-      NewStatement:= CreateStatement(ConvertToBlockType(TComponent(Sender).Tag), FDedicatedStatement.BaseBlock);
-
-      if NewStatement <> nil then
-      begin
-        FDedicatedStatement.BaseBlock.AddStatementAfter(FDedicatedStatement, NewStatement);
-        NewStatement.Install;
-        FDedicatedStatement:= NewStatement;
-      end;
-
-      ClearAndRedraw;
-    end;
-  end;
-
-  procedure TNassiShneiderman.DeleteStatement(Sender: TObject);
-  var
-    Block: TBlock;
-    Index: Integer;
-  begin
-    if FDedicatedStatement <> nil then
-    begin
-      Block:= FDedicatedStatement.BaseBlock;
-      Index:= Block.Remove(FDedicatedStatement);
-      Block.Statements[Index].Install;
-
-      FDedicatedStatement:= Block.Statements[Index];
-
-      ClearAndRedraw;
+      FPrevMousePos := CurMousePos;
     end;
   end;
 
@@ -383,7 +272,7 @@ procedure TNassiShneiderman.MICopyClick(Sender: TObject);
   begin
     MousePos := Image.ScreenToClient(Mouse.CursorPos);
 
-    Statement := BinarySearchStatement(MousePos.X, MousePos.Y, FMainBlock);
+    Statement := BinarySearchStatement(MousePos.X, MousePos.Y, MainBlock);
 
     if Statement <> nil then
     begin
@@ -405,6 +294,103 @@ procedure TNassiShneiderman.MICopyClick(Sender: TObject);
     end;
 
     ClearAndRedraw;
+  end;
+
+  procedure TNassiShneiderman.MICopyClick(Sender: TObject);
+  begin
+    if DedicatedStatement <> nil then
+    begin
+      if BufferStatement <> nil then
+        BufferStatement.Destroy;
+      BufferStatement:= DedicatedStatement.Clone;
+    end;
+  end;
+
+  procedure TNassiShneiderman.MICutClick(Sender: TObject);
+  begin
+    if DedicatedStatement <> nil then
+    begin
+      if BufferStatement <> nil then
+        BufferStatement.Destroy;
+      BufferStatement:= DedicatedStatement.Clone;
+      DeleteStatement(Sender);
+    end;
+  end;
+
+  procedure TNassiShneiderman.MIInsetClick(Sender: TObject);
+  begin
+    if (BufferStatement <> nil) and (DedicatedStatement <> nil) then
+    begin
+      DedicatedStatement.BaseBlock.AddBlockPartAfter(DedicatedStatement, BufferStatement);
+
+      BufferStatement.Install;
+
+      BufferStatement:= BufferStatement.Clone;
+      DedicatedStatement:= nil;
+
+      ClearAndRedraw;
+    end;
+  end;
+
+  procedure TNassiShneiderman.AddBefore(Sender: TObject);
+  var
+    NewStatement: TStatement;
+  begin
+
+    if DedicatedStatement <> nil then
+    begin
+      NewStatement:= CreateStatement(ConvertToBlockType(TComponent(Sender).Tag), DedicatedStatement.BaseBlock);
+
+      if NewStatement <> nil then
+      begin
+        DedicatedStatement.BaseBlock.AddStatementBefore(DedicatedStatement, NewStatement);
+        NewStatement.Install;
+      end;
+
+      DedicatedStatement:= nil;
+      ClearAndRedraw;
+    end;
+  end;
+
+  procedure TNassiShneiderman.Sort(Sender: TObject);
+  begin
+    TCaseBranching(DedicatedStatement).SortConditions(TComponent(Sender).Tag);
+    ClearAndRedraw;
+  end;
+
+  procedure TNassiShneiderman.AddAfter(Sender: TObject);
+  var
+    NewStatement: TStatement;
+  begin
+
+    if DedicatedStatement <> nil then
+    begin
+      NewStatement:= CreateStatement(ConvertToBlockType(TComponent(Sender).Tag), DedicatedStatement.BaseBlock);
+
+      if NewStatement <> nil then
+      begin
+        DedicatedStatement.BaseBlock.AddStatementAfter(DedicatedStatement, NewStatement);
+        NewStatement.Install;
+      end;
+
+      DedicatedStatement:= nil;
+      ClearAndRedraw;
+    end;
+  end;
+
+  procedure TNassiShneiderman.DeleteStatement(Sender: TObject);
+  var
+    Block: TBlock;
+  begin
+    if DedicatedStatement <> nil then
+    begin
+      Block:= DedicatedStatement.BaseBlock;
+      Block.Statements[Block.Remove(DedicatedStatement)].Install;
+
+      DedicatedStatement:= nil;
+
+      ClearAndRedraw;
+    end;
   end;
 
   function TNassiShneiderman.CreateStatement(const AStatementClass: TStatementClass;

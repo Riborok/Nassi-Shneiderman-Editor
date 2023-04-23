@@ -1,7 +1,7 @@
-unit DrawShapes;
+п»їunit DrawShapes;
 
 interface
-uses Vcl.graphics, System.Types, System.SysUtils, Constants;
+uses Vcl.graphics, System.StrUtils, System.Types, System.SysUtils, Constants;
 
 procedure DrawRectangle(const AXStart, AXLast, AYStart, AYLast : Integer; const ACanvas: TCanvas);
 
@@ -16,7 +16,7 @@ procedure EraseLine(const AXStart, AXLast, AYStart, AYLast: Integer; const ACanv
 
 procedure Clear(const ACanvas: TCanvas);
 
-// Потом убрать нада
+// РџРѕС‚РѕРј СѓР±СЂР°С‚СЊ РЅР°РґР°
 procedure DrawCoordinates(Canvas: TCanvas; Step: Integer);
 implementation
 
@@ -71,19 +71,19 @@ implementation
   procedure DrawText(const ACanvas: TCanvas; const AX, AY: Integer; const AText: string);
   var
     Lines: TStringDynArray;
-    Indent: Integer;
+    LineHeight: Integer;
     I: Integer;
     SavedColor: TColor;
   begin
     SavedColor := ACanvas.Brush.Color;
     ACanvas.Brush.Style := bsClear;
 
-    Lines := AText.Split([sLineBreak]);
+    Lines := SplitString(AText, sLineBreak);
 
-    Indent := ACanvas.TextHeight(Space);
+    LineHeight := ACanvas.TextHeight(Space) shr 1;
 
     for I := 0 to High(Lines) do
-      ACanvas.TextOut(AX, AY + I * Indent, Lines[I]);
+      ACanvas.TextOut(AX, AY + I * LineHeight, Lines[i]);
 
     ACanvas.Brush.Color := SavedColor;
   end;

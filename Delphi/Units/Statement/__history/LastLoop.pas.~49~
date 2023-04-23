@@ -34,7 +34,7 @@ implementation
       - (FActionSize.Width shr 1), GetBlockYBottom + FYIndentText, Action);
 
     // Drawing child blocks
-    DrawBlocks;
+    inherited;
   end;
 
   function TLastLoop.GetOptimalYLast: Integer;

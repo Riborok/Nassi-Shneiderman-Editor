@@ -1,4 +1,4 @@
-unit DetermineDimensions;
+﻿unit DetermineDimensions;
 
 interface
 uses Vcl.graphics, System.Types, System.SysUtils, MinMaxInt, Constants, Types;
@@ -9,7 +9,7 @@ implementation
   function GetTextSize(const ACanvas: TCanvas; const AText: string): TSize;
   var
     Lines: TStringDynArray;
-    I: Integer;
+    I, Indent: Integer;
   begin
     if AText = '' then
     begin
@@ -18,14 +18,22 @@ implementation
     end
     else
     begin
+      Result.Width := 0;
+      Result.Height := 0;
+
+      Indent := ACanvas.TextHeight(Space);
+
       Lines := AText.Split([sLineBreak]);
 
-      Result.Width := 0;
-
       for I := 0 to High(Lines) do
-        Result.Width := Max(Result.Width, ACanvas.TextWidth(Lines[I]));
+      begin
+        if Length(Lines[I]) > 0 then
+          Inc(Result.Height, ACanvas.TextHeight(Lines[I]))
+        else
+          Inc(Result.Height, Indent);
 
-      Result.Height:= ACanvas.TextHeight(Space) * Length(Lines);
+        Result.Width := Max(Result.Width, ACanvas.TextWidth(Lines[I]));
+      end;
     end;
   end;
 

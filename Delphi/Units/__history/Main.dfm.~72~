@@ -2197,8 +2197,6 @@ object NassiShneiderman: TNassiShneiderman
       Proportional = True
       OnDblClick = ImageDblClick
       OnMouseDown = ImageMouseDown
-      OnMouseMove = ImageMouseMove
-      OnMouseUp = ImageMouseUp
     end
   end
   object ilIcons: TImageList

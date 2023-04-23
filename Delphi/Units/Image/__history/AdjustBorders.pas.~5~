@@ -9,8 +9,8 @@ implementation
 
   procedure DefineBorders(const AXLast, AYLast: Integer; const AImage: TImage);
   begin
-    AImage.Picture.Bitmap.Width := AXLast + 420;
-    AImage.Picture.Bitmap.Height := AYLast + 420;
+    AImage.Picture.Bitmap.Width := AXLast + 5;
+    AImage.Picture.Bitmap.Height := AYLast + 5;
   end;
 
 end.

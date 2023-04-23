@@ -36,7 +36,7 @@ implementation
       - (FActionSize.Width shr 1), FYStart + FYIndentText, Action);
 
     // Drawing child blocks
-    DrawBlocks;
+    inherited;
   end;
 
 end.

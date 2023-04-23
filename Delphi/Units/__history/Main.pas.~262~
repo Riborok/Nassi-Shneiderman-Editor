@@ -100,7 +100,6 @@ type
     function TryGetCond(var AInitialStr: TStringArr): Boolean;
     function CreateStatement(const AStatementClass: TStatementClass; const ABaseBlock: TBlock): TStatement;
     class function ConvertToBlockType(const AIndex: Integer): TStatementClass;
-    procedure GetVisibleImageRect(out TopLeft, BottomRight: TPoint);
   private const
     SchemeInitialIndent = 10;
     SchemeInitialFontSize = 14;
@@ -116,14 +115,6 @@ var
 implementation
 
   {$R *.dfm}
-
-  procedure TNassiShneiderman.GetVisibleImageRect(out TopLeft, BottomRight: TPoint);
-  begin
-    TopLeft.X := Image.Left - ScrollBox.HorzScrollBar.Position;
-    TopLeft.Y := Image.Top - ScrollBox.VertScrollBar.Position;
-    BottomRight.X := TopLeft.X + ScrollBox.ClientWidth;
-    BottomRight.Y := TopLeft.Y + ScrollBox.ClientHeight;
-  end;
 
   procedure TNassiShneiderman.FormClose(Sender: TObject;
   var Action: TCloseAction);
