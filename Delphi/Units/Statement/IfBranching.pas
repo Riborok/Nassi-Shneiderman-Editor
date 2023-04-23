@@ -1,7 +1,7 @@
 ﻿unit IfBranching;
 
 interface
-uses Base, DrawShapes, MinMaxInt, DetermineDimensions, Types;
+uses Base, DrawShapes, MinMaxInt, DetermineDimensions, AdditionalTypes;
 type
 
   TIfBranching = class(TOperator)
@@ -147,9 +147,6 @@ implementation
                     FBlocks[1].XLast - FBlocks[1].XStart, FFalseSize.Height) shr 1 -
                     FFalseSize.Width shr 1,
                     FYStart + FYIndentText shl 1 + FActionSize.Height, FalseCond);
-
-    // Drawing child blocks
-    DrawBlocks;
   end;
 
 

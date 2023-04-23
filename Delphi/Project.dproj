@@ -127,7 +127,7 @@
             <Form>WriteСaseСonditions</Form>
             <FormType>dfm</FormType>
         </DCCReference>
-        <DCCReference Include="Units\Support\Types.pas"/>
+        <DCCReference Include="Units\Support\AdditionalTypes.pas"/>
         <DCCReference Include="Units\Support\Constants.pas"/>
         <DCCReference Include="Units\Support\CaseBlockSorting.pas"/>
         <BuildConfiguration Include="Release">

@@ -1,7 +1,7 @@
 ﻿unit CaseBranching;
 
 interface
-uses Base, Types, DrawShapes, DetermineDimensions, MinMaxInt, CaseBlockSorting;
+uses Base, AdditionalTypes, DrawShapes, DetermineDimensions, MinMaxInt, CaseBlockSorting;
 type
 
   TCaseBranching = class(TOperator)
@@ -303,8 +303,6 @@ implementation
         - (FCondsSizes[I].Width shr 1),
         YTriangleHeight, FConds[I]);
 
-    // Drawing child blocks
-    DrawBlocks;
   end;
 
 end.

@@ -34,9 +34,6 @@ implementation
 
     DrawText(BaseBlock.Canvas, BaseBlock.XStart + ((BaseBlock.XLast - BaseBlock.XStart) shr 1)
       - (FActionSize.Width shr 1), FYStart + FYIndentText, Action);
-
-    // Drawing child blocks
-    DrawBlocks;
   end;
 
 end.
