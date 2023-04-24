@@ -2150,7 +2150,6 @@ object NassiShneiderman: TNassiShneiderman
     ParentDoubleBuffered = False
     TabOrder = 0
     Transparent = False
-    ExplicitWidth = 960
     object tbProcess: TToolButton
       Left = 0
       Top = 0
@@ -2183,14 +2182,12 @@ object NassiShneiderman: TNassiShneiderman
     Width = 965
     Height = 562
     Align = alClient
-    Color = clWindow
+    Color = cl3DLight
     ParentColor = False
     TabOrder = 1
     OnDblClick = ImageDblClick
     OnMouseDown = ImageMouseDown
     OnMouseWheel = ScrollBoxMouseWheel
-    ExplicitWidth = 960
-    ExplicitHeight = 559
     object Image: TImage
       Left = -2
       Top = -2
@@ -2800,5 +2797,12 @@ object NassiShneiderman: TNassiShneiderman
       ImageIndex = 10
       OnExecute = Sort
     end
+  end
+  object tmRedrawingMovements: TTimer
+    Enabled = False
+    Interval = 15
+    OnTimer = tmRedrawingMovementsTimer
+    Left = 912
+    Top = 241
   end
 end

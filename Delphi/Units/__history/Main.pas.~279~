@@ -101,7 +101,7 @@ type
     function CreateStatement(const AStatementClass: TStatementClass; const ABaseBlock: TBlock): TStatement;
     class function ConvertToBlockType(const AIndex: Integer): TStatementClass;
     function GetVisibleBlock(const ACarryBlock: TBlock): TVisibleImageRect;
-    function GetVisibleImageRect: TVisibleImageRect;
+    function GetVisibleImageScreen: TVisibleImageRect;
   private const
     SchemeInitialIndent = 10;
     SchemeInitialFontSize = 14;
@@ -127,7 +127,7 @@ implementation
      ACarryBlock.Statements[ACarryBlock.Statements.Count - 1].GetYBottom + 1;
   end;
 
-  function TNassiShneiderman.GetVisibleImageRect: TVisibleImageRect;
+  function TNassiShneiderman.GetVisibleImageScreen: TVisibleImageRect;
   var
     ImageRect: TRect;
   begin
@@ -170,7 +170,7 @@ implementation
     FMainBlock.AddFirstStatement(NewStatement, SchemeInitialIndent);
     NewStatement.Install;
 
-    ClearAndRedraw(GetVisibleImageRect);
+    ClearAndRedraw(GetVisibleImageScreen);
   end;
 
   procedure TNassiShneiderman.ClearAndRedraw(const AVisibleImageRect: TVisibleImageRect);
@@ -188,7 +188,7 @@ implementation
     FMainBlock.DrawBlock(AVisibleImageRect);
     //ScrollBox.VertScrollBar.Position := ScrollBox.VertScrollBar.Range;
     //ScrollBox.HorzScrollBar.Position := ScrollBox.HorzScrollBar.Range;
-    DrawCoordinates(Image.Canvas, 50);
+    //DrawCoordinates(Image.Canvas, 50);
   end;
 
   procedure TNassiShneiderman.ScrollBoxMouseWheel(Sender: TObject;
@@ -211,7 +211,7 @@ implementation
       else
         ScrollBox.VertScrollBar.Position := ScrollBox.VertScrollBar.Position + ScrotStep;
     end;
-    ClearAndRedraw(GetVisibleImageRect);
+    ClearAndRedraw(GetVisibleImageScreen);
   end;
 
   procedure TNassiShneiderman.PopupMenuPopup(Sender: TObject);
@@ -233,7 +233,7 @@ implementation
   begin
     FDedicatedStatement := BinarySearchStatement(X, Y, FMainBlock);
 
-    ClearAndRedraw(GetVisibleImageRect);
+    ClearAndRedraw(GetVisibleImageScreen);
 
     if FDedicatedStatement <> nil then
     begin
@@ -264,15 +264,19 @@ implementation
   begin
     if FIsMouseDown and (ssLeft in Shift) then
     begin
-      Clear(FCarryBlock.Canvas, GetVisibleBlock(FCarryBlock));
-
-      FCarryBlock.MoveRight(X - FPrevMousePos.X);
-      FCarryBlock.MoveDown(Y - FPrevMousePos.Y);
-
       var VisibleImageRect: TVisibleImageRect := GetVisibleBlock(FCarryBlock);
 
-      ClearAndRedraw(VisibleImageRect);
+      Clear(FCarryBlock.Canvas, VisibleImageRect);
+
+      var XDifference: Integer := X - FPrevMousePos.X;
+      var YDifference: Integer := Y - FPrevMousePos.Y;
+
+      FCarryBlock.MoveRight(XDifference);
+      FCarryBlock.MoveDown(YDifference);
+
+      VisibleImageRect.Expand(Abs(XDifference), Abs(YDifference));
       FCarryBlock.DrawBlock(VisibleImageRect);
+      FMainBlock.DrawBlock(VisibleImageRect);
 
       FPrevMousePos := Point(X, Y);
     end;
@@ -283,11 +287,15 @@ implementation
   begin
     if (Button = mbLeft) and FIsMouseDown then
     begin
+      ClearAndRedraw(GetVisibleImageScreen);
+
       FIsMouseDown := False;
 
-      FCarryBlock.Destroy;
-
-      ClearAndRedraw(GetVisibleImageRect);
+      if FCarryBlock <> nil then
+      begin
+        FCarryBlock.Destroy;
+        FCarryBlock:= nil;
+      end;
     end;
   end;
 
@@ -323,7 +331,7 @@ procedure TNassiShneiderman.MICopyClick(Sender: TObject);
       FDedicatedStatement:= BufferStatement;
       BufferStatement:= BufferStatement.Clone;
 
-      ClearAndRedraw(GetVisibleImageRect);
+      ClearAndRedraw(GetVisibleImageScreen);
     end;
   end;
 
@@ -344,14 +352,14 @@ procedure TNassiShneiderman.MICopyClick(Sender: TObject);
         FDedicatedStatement:= NewStatement;
       end;
 
-      ClearAndRedraw(GetVisibleImageRect);
+      ClearAndRedraw(GetVisibleImageScreen);
     end;
   end;
 
   procedure TNassiShneiderman.Sort(Sender: TObject);
   begin
     TCaseBranching(FDedicatedStatement).SortConditions(TComponent(Sender).Tag);
-    ClearAndRedraw(GetVisibleImageRect);
+    ClearAndRedraw(GetVisibleImageScreen);
   end;
 
   procedure TNassiShneiderman.AddAfter(Sender: TObject);
@@ -370,7 +378,7 @@ procedure TNassiShneiderman.MICopyClick(Sender: TObject);
         FDedicatedStatement:= NewStatement;
       end;
 
-      ClearAndRedraw(GetVisibleImageRect);
+      ClearAndRedraw(GetVisibleImageScreen);
     end;
   end;
 
@@ -387,7 +395,7 @@ procedure TNassiShneiderman.MICopyClick(Sender: TObject);
 
       FDedicatedStatement:= Block.Statements[Index];
 
-      ClearAndRedraw(GetVisibleImageRect);
+      ClearAndRedraw(GetVisibleImageScreen);
     end;
   end;
 
@@ -422,7 +430,7 @@ procedure TNassiShneiderman.MICopyClick(Sender: TObject);
       end;
     end;
 
-    ClearAndRedraw(GetVisibleImageRect);
+    ClearAndRedraw(GetVisibleImageScreen);
   end;
 
   function TNassiShneiderman.CreateStatement(const AStatementClass: TStatementClass;

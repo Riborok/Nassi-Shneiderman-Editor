@@ -715,7 +715,7 @@ implementation
     L, R, M: Integer;
     CurrStatement: TStatement;
     function GetStatementMask(const ACurrStatement: TStatement;
-          const AVisibleImageRect: TVisibleImageRect): Integer; inline
+          const AVisibleImageRect: TVisibleImageRect): Integer; inline;
     begin
       Result := Ord(ACurrStatement.YStart >= AVisibleImageRect.FTopLeft.Y) shl 3 or
                 Ord(ACurrStatement.YLast <= AVisibleImageRect.FBottomRight.Y) shl 2 or
@@ -881,12 +881,12 @@ implementation
   var
     L, R, M: Integer;
     function GetBlockMask(const ACurrBlock: TBlock;
-          const AVisibleImageRect: TVisibleImageRect): Integer; inline
+          const AVisibleImageRect: TVisibleImageRect): Integer; inline;
     begin
       Result := Ord(ACurrBlock.XStart >= AVisibleImageRect.FTopLeft.X) shl 3 or
-              Ord(ACurrBlock.XLast <= AVisibleImageRect.FBottomRight.X) shl 2 or
-              Ord(ACurrBlock.XStart <= AVisibleImageRect.FBottomRight.X) shl 1 or
-              Ord(ACurrBlock.XLast >= AVisibleImageRect.FTopLeft.X);
+                Ord(ACurrBlock.XLast <= AVisibleImageRect.FBottomRight.X) shl 2 or
+                Ord(ACurrBlock.XStart <= AVisibleImageRect.FBottomRight.X) shl 1 or
+                Ord(ACurrBlock.XLast >= AVisibleImageRect.FTopLeft.X);
     end;
   begin
     L := 0;

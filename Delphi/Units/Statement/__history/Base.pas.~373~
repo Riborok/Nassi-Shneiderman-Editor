@@ -712,27 +712,47 @@ implementation
 
   procedure TBlock.DrawBlock(const AVisibleImageRect: TVisibleImageRect);
   var
-    I: Integer;
+    L, R, M: Integer;
     CurrStatement: TStatement;
-    Mask: Byte;
-  begin
-    for I := 0 to FStatements.Count - 1 do
+    function GetStatementMask(const ACurrStatement: TStatement;
+          const AVisibleImageRect: TVisibleImageRect): Integer; inline
     begin
-      CurrStatement := FStatements[I];
+      Result := Ord(ACurrStatement.YStart >= AVisibleImageRect.FTopLeft.Y) shl 3 or
+                Ord(ACurrStatement.YLast <= AVisibleImageRect.FBottomRight.Y) shl 2 or
+                Ord(ACurrStatement.YStart <= AVisibleImageRect.FBottomRight.Y) shl 1 or
+                Ord(ACurrStatement.YLast >= AVisibleImageRect.FTopLeft.Y);
+    end;
+  begin
+    L := 0;
+    R := FStatements.Count - 1;
 
-      Mask := Ord(CurrStatement.YStart >= AVisibleImageRect.FTopLeft.Y) shl 3 or
-              Ord(CurrStatement.YLast <= AVisibleImageRect.FBottomRight.Y) shl 2 or
-              Ord(CurrStatement.YStart <= AVisibleImageRect.FBottomRight.Y) shl 1 or
-              Ord(CurrStatement.YLast >= AVisibleImageRect.FTopLeft.Y);
-      case Mask of
+    while L < R do
+    begin
+      M := (L + R) shr 1;
+      case GetStatementMask(FStatements[M], AVisibleImageRect) of
         $0F, $03, $07, $0B:
-          CurrStatement.Draw;
+          R := M;
         $09:
-          Break;
+          R := M - 1;
+        else
+          L := M + 1;
       end;
+    end;
 
+    if (R > 0) and (FStatements[R - 1] is TOperator) then
+        TOperator(FStatements[R - 1]).DrawBlocks(AVisibleImageRect);
+
+    for M := R to FStatements.Count - 1 do
+    begin
+      CurrStatement:= FStatements[M];
       if CurrStatement is TOperator then
         TOperator(CurrStatement).DrawBlocks(AVisibleImageRect);
+      case GetStatementMask(CurrStatement, AVisibleImageRect) of
+        $0F, $03, $07, $0B:
+          CurrStatement.Draw;
+        else
+          Break;
+      end;
     end;
   end;
 
@@ -859,21 +879,38 @@ implementation
 
   procedure TOperator.DrawBlocks(const AVisibleImageRect: TVisibleImageRect);
   var
-    I: Integer;
-    CurrBlock: TBlock;
-    Mask: Byte;
-  begin
-    for I := 0 to High(FBlocks) do
+    L, R, M: Integer;
+    function GetBlockMask(const ACurrBlock: TBlock;
+          const AVisibleImageRect: TVisibleImageRect): Integer; inline
     begin
-      CurrBlock:= FBlocks[I];
-      Mask := Ord(CurrBlock.XStart >= AVisibleImageRect.FTopLeft.X) shl 3 or
-              Ord(CurrBlock.XLast <= AVisibleImageRect.FBottomRight.X) shl 2 or
-              Ord(CurrBlock.XStart <= AVisibleImageRect.FBottomRight.X) shl 1 or
-              Ord(CurrBlock.XLast >= AVisibleImageRect.FTopLeft.X);
-      case Mask of
+      Result := Ord(ACurrBlock.XStart >= AVisibleImageRect.FTopLeft.X) shl 3 or
+              Ord(ACurrBlock.XLast <= AVisibleImageRect.FBottomRight.X) shl 2 or
+              Ord(ACurrBlock.XStart <= AVisibleImageRect.FBottomRight.X) shl 1 or
+              Ord(ACurrBlock.XLast >= AVisibleImageRect.FTopLeft.X);
+    end;
+  begin
+    L := 0;
+    R := High(FBlocks);
+
+    while L < R do
+    begin
+      M := (L + R) shr 1;
+      case GetBlockMask(FBlocks[M], AVisibleImageRect) of
         $0F, $03, $07, $0B:
-          CurrBlock.DrawBlock(AVisibleImageRect);
+          R := M;
         $09:
+          R := M - 1;
+        else
+          L := M + 1;
+      end;
+    end;
+
+    for M := R to High(FBlocks) do
+    begin
+      case GetBlockMask(FBlocks[M], AVisibleImageRect) of
+        $0F, $03, $07, $0B:
+          FBlocks[M].DrawBlock(AVisibleImageRect);
+        else
           Break;
       end;
     end;

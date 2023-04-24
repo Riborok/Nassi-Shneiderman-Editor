@@ -2,8 +2,8 @@ object NassiShneiderman: TNassiShneiderman
   Left = 0
   Top = 0
   Caption = 'NassiShneiderman'
-  ClientHeight = 580
-  ClientWidth = 960
+  ClientHeight = 603
+  ClientWidth = 965
   Color = clCream
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -2125,7 +2125,6 @@ object NassiShneiderman: TNassiShneiderman
     00000000000000000000000005FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
     FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
     FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF}
-  Menu = MainMenu
   OldCreateOrder = False
   WindowState = wsMaximized
   OnClose = FormClose
@@ -2135,7 +2134,7 @@ object NassiShneiderman: TNassiShneiderman
   object tbSelectFigType: TToolBar
     Left = 0
     Top = 0
-    Width = 960
+    Width = 965
     Height = 41
     BorderWidth = 1
     ButtonHeight = 33
@@ -2151,7 +2150,7 @@ object NassiShneiderman: TNassiShneiderman
     ParentDoubleBuffered = False
     TabOrder = 0
     Transparent = False
-    ExplicitLeft = 8
+    ExplicitWidth = 960
     object tbProcess: TToolButton
       Left = 0
       Top = 0
@@ -2181,59 +2180,29 @@ object NassiShneiderman: TNassiShneiderman
   object ScrollBox: TScrollBox
     Left = 0
     Top = 41
-    Width = 960
-    Height = 539
+    Width = 965
+    Height = 562
     Align = alClient
-    Color = clBtnFace
+    Color = clWindow
     ParentColor = False
     TabOrder = 1
+    OnDblClick = ImageDblClick
+    OnMouseDown = ImageMouseDown
     OnMouseWheel = ScrollBoxMouseWheel
-    ExplicitHeight = 499
+    ExplicitWidth = 960
+    ExplicitHeight = 559
     object Image: TImage
-      Left = -5
-      Top = -4
+      Left = -2
+      Top = -2
       Width = 958
-      Height = 496
+      Height = 556
       AutoSize = True
       Proportional = True
       OnDblClick = ImageDblClick
       OnMouseDown = ImageMouseDown
+      OnMouseMove = ImageMouseMove
+      OnMouseUp = ImageMouseUp
     end
-  end
-  object MainMenu: TMainMenu
-    Left = 16
-    Top = 304
-    object mnFile: TMenuItem
-      Caption = 'File'
-      object mnNew: TMenuItem
-        Caption = 'New'
-        ShortCut = 16462
-      end
-      object mnOpen: TMenuItem
-        Caption = 'Open'
-        ShortCut = 16463
-      end
-      object mnSave: TMenuItem
-        Caption = 'Save'
-        ShortCut = 16467
-      end
-      object mnSaveAs: TMenuItem
-        Caption = 'Save As'
-        ShortCut = 49235
-      end
-      object mnExport: TMenuItem
-        Caption = 'Export'
-        ShortCut = 16453
-      end
-    end
-  end
-  object OpenDialog: TOpenDialog
-    Left = 144
-    Top = 304
-  end
-  object SaveDialog: TSaveDialog
-    Left = 80
-    Top = 304
   end
   object ilIcons: TImageList
     Left = 912
@@ -2643,8 +2612,10 @@ object NassiShneiderman: TNassiShneiderman
       000000000000}
   end
   object PopupMenu: TPopupMenu
-    Left = 336
-    Top = 305
+    Images = ilIcons
+    OnPopup = PopupMenuPopup
+    Left = 912
+    Top = 185
     object MIAdd: TMenuItem
       Caption = 'Add Statement'
       object MIAfter: TMenuItem
@@ -2710,11 +2681,16 @@ object NassiShneiderman: TNassiShneiderman
     object MIDel: TMenuItem
       Action = actDelete
     end
-    object Sortconditionsascending1: TMenuItem
-      Action = actSortAsc
+    object N2: TMenuItem
+      Caption = '-'
     end
-    object sortconditionsdescending1: TMenuItem
+    object MIAscSort: TMenuItem
+      Action = actSortAsc
+      Visible = False
+    end
+    object MIDescSort: TMenuItem
       Action = actSortDesc
+      Visible = False
     end
   end
   object alActions: TActionList
@@ -2820,13 +2796,9 @@ object NassiShneiderman: TNassiShneiderman
     end
     object actSortDesc: TAction
       Tag = 1
-      Caption = 'sort conditions descending'
+      Caption = 'Sort conditions descending'
       ImageIndex = 10
       OnExecute = Sort
     end
-  end
-  object MainMenu1: TMainMenu
-    Left = 248
-    Top = 312
   end
 end
