@@ -3,7 +3,7 @@
 interface
 
 uses
-  Winapi.Windows, System.SysUtils, System.Variants, System.Classes,
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls, ProcessStatement,
   Base, FirstLoop, IfBranching, CaseBranching, LastLoop, StatementSearch, DrawShapes,
   Vcl.StdCtrls, Vcl.Menus, System.Actions, Vcl.ActnList, Vcl.ToolWin, GetСaseСonditions,
@@ -11,6 +11,17 @@ uses
   AdjustBorders;
 
 type
+  TScrollBox= Class(VCL.Forms.TScrollBox)
+    procedure WMHScroll(var Message: TWMHScroll); message WM_HSCROLL;
+    procedure WMVScroll(var Message: TWMVScroll); message WM_VSCROLL;
+  private
+    FOnScrollVert: TNotifyEvent;
+    FOnScrollHorz: TNotifyEvent;
+  public
+   Property OnScrollVert:TNotifyEvent read FOnScrollVert Write FonScrollVert;
+   Property OnScrollHorz:TNotifyEvent read FOnScrollHorz Write FonScrollHorz;
+  End;
+
   TNassiShneiderman = class(TForm)
     tbSelectFigType: TToolBar;
     ilIcons: TImageList;
@@ -61,6 +72,7 @@ type
     MIDescSort: TMenuItem;
     MIAscSort: TMenuItem;
     N2: TMenuItem;
+    tmRedrawingMovements: TTimer;
 
     procedure FormCreate(Sender: TObject);
 
@@ -85,6 +97,7 @@ type
       Shift: TShiftState; X, Y: Integer);
     procedure ImageMouseMove(Sender: TObject; Shift: TShiftState; X,
       Y: Integer);
+    procedure tmRedrawingMovementsTimer(Sender: TObject);
     { Private declarations }
   private
     FMainBlock : TBlock;
@@ -96,12 +109,14 @@ type
 
     FHighlightColor: TColor;
 
+    procedure MyScroll(Sender: TObject);
+
     function TryGetAction(var AAction: String): Boolean;
     function TryGetCond(var AInitialStr: TStringArr): Boolean;
     function CreateStatement(const AStatementClass: TStatementClass; const ABaseBlock: TBlock): TStatement;
     class function ConvertToBlockType(const AIndex: Integer): TStatementClass;
-    function GetVisibleBlock(const ACarryBlock: TBlock): TVisibleImageRect;
     function GetVisibleImageScreen: TVisibleImageRect;
+
   private const
     SchemeInitialIndent = 10;
     SchemeInitialFontSize = 14;
@@ -112,19 +127,28 @@ type
 
 var
   NassiShneiderman: TNassiShneiderman;
-  BufferStatement: TStatement;
+
+  BufferBlock: TBlock;
 
 implementation
 
   {$R *.dfm}
 
-  function TNassiShneiderman.GetVisibleBlock(const ACarryBlock: TBlock): TVisibleImageRect;
+  procedure TScrollBox.WMHScroll(var Message: TWMHScroll);
   begin
-    Result.FTopLeft.X:= ACarryBlock.XStart - 1;
-    Result.FTopLeft.Y:= ACarryBlock.Statements[0].YStart - 1;
-    Result.FBottomRight.X:= ACarryBlock.XLast + 1;
-    Result.FBottomRight.Y:=
-     ACarryBlock.Statements[ACarryBlock.Statements.Count - 1].GetYBottom + 1;
+     inherited;
+     if Assigned(FOnScrollHorz) then  FOnScrollHorz(Self);
+  end;
+
+  procedure TScrollBox.WMVScroll(var Message: TWMVScroll);
+  begin
+     inherited;
+     if Assigned(FOnScrollVert) then  FOnScrollVert(Self);
+  end;
+
+  procedure TNassiShneiderman.MyScroll(Sender: TObject);
+  begin
+    ClearAndRedraw(GetVisibleImageScreen);
   end;
 
   function TNassiShneiderman.GetVisibleImageScreen: TVisibleImageRect;
@@ -147,8 +171,10 @@ implementation
   begin
     actDelete.ShortCut := ShortCut(VK_DELETE, []);
 
+    ScrollBox.OnScrollVert := MyScroll;
+    ScrollBox.OnScrollHorz := MyScroll;
+
     FDedicatedStatement:= nil;
-    BufferStatement:= nil;
     FCarryBlock:= nil;
 
     Constraints.MinWidth := 960;
@@ -178,7 +204,7 @@ implementation
     TopLeft, BottomRight: TPoint;
   begin
     Clear(Image.Canvas, AVisibleImageRect);
-    //Image.Canvas.FillRect(Rect(0, 0, Image.Canvas.ClipRect.Right, Image.Canvas.ClipRect.Bottom));
+
     DefineBorders(FMainBlock.XLast, FMainBlock.Statements.GetLast.GetYBottom, Image);
 
     if FDedicatedStatement <> nil then
@@ -186,8 +212,6 @@ implementation
                       FDedicatedStatement.YStart, FDedicatedStatement.GetYBottom, FHighlightColor);
 
     FMainBlock.DrawBlock(AVisibleImageRect);
-    //ScrollBox.VertScrollBar.Position := ScrollBox.VertScrollBar.Range;
-    //ScrollBox.HorzScrollBar.Position := ScrollBox.HorzScrollBar.Range;
     //DrawCoordinates(Image.Canvas, 50);
   end;
 
@@ -246,8 +270,7 @@ implementation
           Image.Canvas
         );
 
-        FCarryBlock.AddFirstStatement(FDedicatedStatement.Clone,
-                                      FDedicatedStatement.YStart);
+        FCarryBlock.AddFirstStatement(FDedicatedStatement.Clone);
 
         FIsMouseDown := True;
         FPrevMousePos.X := X;
@@ -259,24 +282,28 @@ implementation
 
   end;
 
+  procedure TNassiShneiderman.tmRedrawingMovementsTimer(Sender: TObject);
+  var
+    VisibleImageRect: TVisibleImageRect;
+  begin
+    tmRedrawingMovements.Enabled:= False;
+
+    VisibleImageRect := GetVisibleImageScreen;
+
+    ClearAndRedraw(VisibleImageRect);
+    FCarryBlock.DrawBlock(VisibleImageRect);
+  end;
+
   procedure TNassiShneiderman.ImageMouseMove(Sender: TObject; Shift: TShiftState;
   X, Y: Integer);
   begin
     if FIsMouseDown and (ssLeft in Shift) then
     begin
-      Clear(FCarryBlock.Canvas, GetVisibleBlock(FCarryBlock));
+      if not tmRedrawingMovements.Enabled then
+        tmRedrawingMovements.Enabled := True;
 
-      var XDifference: Integer := X - FPrevMousePos.X;
-      var YDifference: Integer := Y - FPrevMousePos.Y;
-
-      FCarryBlock.MoveRight(XDifference);
-      FCarryBlock.MoveDown(YDifference);
-
-      var VisibleImageRect: TVisibleImageRect := GetVisibleBlock(FCarryBlock);
-
-      FCarryBlock.DrawBlock(VisibleImageRect);
-      VisibleImageRect.Expand(Abs(XDifference), Abs(YDifference));
-      FMainBlock.DrawBlock(VisibleImageRect);
+      FCarryBlock.MoveRight(X - FPrevMousePos.X);
+      FCarryBlock.MoveDown(Y - FPrevMousePos.Y);
 
       FPrevMousePos := Point(X, Y);
     end;
@@ -287,21 +314,31 @@ implementation
   begin
     if (Button = mbLeft) and FIsMouseDown then
     begin
-      FIsMouseDown := False;
-
-      FCarryBlock.Destroy;
-
       ClearAndRedraw(GetVisibleImageScreen);
+
+      FIsMouseDown := False;
+      tmRedrawingMovements.Enabled := False;
+
+      if FCarryBlock <> nil then
+      begin
+        FCarryBlock.Destroy;
+        FCarryBlock:= nil;
+      end;
     end;
   end;
 
-procedure TNassiShneiderman.MICopyClick(Sender: TObject);
+  procedure TNassiShneiderman.MICopyClick(Sender: TObject);
+  var
+    I: Integer;
   begin
     if FDedicatedStatement <> nil then
     begin
-      if BufferStatement <> nil then
-        BufferStatement.Destroy;
-      BufferStatement:= FDedicatedStatement.Clone;
+      for I := 0 to BufferBlock.Statements.Count - 1 do
+        BufferBlock.Statements[I].Destroy;
+
+      BufferBlock.Assign(FDedicatedStatement.BaseBlock);
+
+      BufferBlock.AddFirstStatement(FDedicatedStatement.Clone);
     end;
   end;
 
@@ -309,16 +346,15 @@ procedure TNassiShneiderman.MICopyClick(Sender: TObject);
   begin
     if FDedicatedStatement <> nil then
     begin
-      if BufferStatement <> nil then
-        BufferStatement.Destroy;
-      BufferStatement:= FDedicatedStatement.Clone;
+      MICopyClick(Sender);
+
       DeleteStatement(Sender);
     end;
   end;
 
   procedure TNassiShneiderman.MIInsetClick(Sender: TObject);
   begin
-    if (BufferStatement <> nil) and (FDedicatedStatement <> nil) then
+    if (BufferBlock.Statements.Count <> 0) and (FDedicatedStatement <> nil) then
     begin
       FDedicatedStatement.BaseBlock.AddBlockPartAfter(FDedicatedStatement, BufferStatement);
 
@@ -387,6 +423,7 @@ procedure TNassiShneiderman.MICopyClick(Sender: TObject);
     begin
       Block:= FDedicatedStatement.BaseBlock;
       Index:= Block.Remove(FDedicatedStatement);
+
       Block.Statements[Index].Install;
 
       FDedicatedStatement:= Block.Statements[Index];
@@ -498,5 +535,8 @@ procedure TNassiShneiderman.MICopyClick(Sender: TObject);
 
     WriteActionForm.Destroy;
   end;
+
+  initialization
+  BufferBlock.Create(0, 0, nil, nil);
 
 end.

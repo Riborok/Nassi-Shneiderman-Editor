@@ -169,7 +169,8 @@ type
     procedure AddStatementBefore(const AStatement: TStatement; const AInsertedStatement: TStatement);
     procedure AddStatementAfter(const AStatement: TStatement; const AInsertedStatement: TStatement);
     procedure AddStatementLast(const AStatement: TStatement);
-    procedure AddFirstStatement(const AStatement: TStatement; const AYStart: Integer);
+    procedure AddFirstStatement(const AStatement: TStatement; const AYStart: Integer); overload;
+    procedure AddFirstStatement(const AStatement: TStatement); overload;
 
     procedure AddBlockPartAfter(const AStatement: TStatement; const AComplexStatement: TStatement);
 
@@ -183,6 +184,8 @@ type
     procedure MoveDown(const AOffset: Integer);
 
     procedure DrawBlock(const AVisibleImageRect: TVisibleImageRect);
+
+    procedure Assign(const Source: TBlock);
 
     procedure RedefineSizes;
   end;
@@ -456,6 +459,12 @@ implementation
     AStatement.FBaseBlock:= Self;
   end;
 
+  procedure TBlock.AddFirstStatement(const AStatement: TStatement);
+  begin
+    FStatements.Add(AStatement);
+    AStatement.FBaseBlock:= Self;
+  end;
+
   procedure TBlock.AddBlockPartAfter(const AStatement: TStatement; const AComplexStatement: TStatement);
   var
     Offset, I: Integer;
@@ -493,7 +502,9 @@ implementation
     begin
       FStatements.Add(DefaultBlock.CreateUncertainty(Self));
       FStatements[0].FYStart:= Statement.FYStart;
-    end;
+    end
+    else if (Statement.BaseBlock.BaseOperator = nil) and (Index = 0) then
+      FStatements[0].FYStart:= Statement.FYStart;
     Statement.Destroy;
   end;
 
@@ -715,7 +726,7 @@ implementation
     L, R, M: Integer;
     CurrStatement: TStatement;
     function GetStatementMask(const ACurrStatement: TStatement;
-          const AVisibleImageRect: TVisibleImageRect): Integer; inline
+          const AVisibleImageRect: TVisibleImageRect): Integer; inline;
     begin
       Result := Ord(ACurrStatement.YStart >= AVisibleImageRect.FTopLeft.Y) shl 3 or
                 Ord(ACurrStatement.YLast <= AVisibleImageRect.FBottomRight.Y) shl 2 or
@@ -728,55 +739,31 @@ implementation
 
     while L < R do
     begin
-      M := (L + R) div 2;
-      CurrStatement:= FStatements[M];
-      case GetStatementMask(CurrStatement, AVisibleImageRect) of
+      M := (L + R) shr 1;
+      case GetStatementMask(FStatements[M], AVisibleImageRect) of
         $0F, $03, $07, $0B:
           R := M;
+        $09:
+          R := M - 1;
         else
           L := M + 1;
       end;
-      if CurrStatement is TOperator then
-        TOperator(CurrStatement).DrawBlocks(AVisibleImageRect);
     end;
+
+    if (R > 0) and (FStatements[R - 1] is TOperator) then
+        TOperator(FStatements[R - 1]).DrawBlocks(AVisibleImageRect);
 
     for M := R to FStatements.Count - 1 do
     begin
       CurrStatement:= FStatements[M];
+      if CurrStatement is TOperator then
+        TOperator(CurrStatement).DrawBlocks(AVisibleImageRect);
       case GetStatementMask(CurrStatement, AVisibleImageRect) of
         $0F, $03, $07, $0B:
           CurrStatement.Draw;
         else
           Break;
       end;
-      if CurrStatement is TOperator then
-        TOperator(CurrStatement).DrawBlocks(AVisibleImageRect);
-    end;
-  end;
-
-  {procedure TBlock.DrawBlock(const AVisibleImageRect: TVisibleImageRect);
-  var
-    I: Integer;
-    CurrStatement: TStatement;
-    Mask: Byte;
-  begin
-    for I := 0 to FStatements.Count - 1 do
-    begin
-      CurrStatement := FStatements[I];
-
-      Mask := Ord(CurrStatement.YStart >= AVisibleImageRect.FTopLeft.Y) shl 3 or
-              Ord(CurrStatement.YLast <= AVisibleImageRect.FBottomRight.Y) shl 2 or
-              Ord(CurrStatement.YStart <= AVisibleImageRect.FBottomRight.Y) shl 1 or
-              Ord(CurrStatement.YLast >= AVisibleImageRect.FTopLeft.Y);
-      case Mask of
-        $0F, $03, $07, $0B:
-          CurrStatement.Draw;
-        $09:
-          Break;
-      end;
-
-      if CurrStatement is TOperator then
-        TOperator(CurrStatement).DrawBlocks(AVisibleImageRect);
     end;
   end;
 
@@ -786,7 +773,7 @@ implementation
       Result:= FStatements.GetLast
     else
       Result:= BaseOperator;
-  end;}
+  end;
 
   function TBlock.Clone(const ABaseOperator: TOperator): TBlock;
   var
@@ -804,6 +791,13 @@ implementation
       NewStatements.FBaseBlock:= Result;
       Result.FStatements.Add(NewStatements);
     end;
+  end;
+
+  procedure TBlock.Assign(const Source: TBlock);
+  begin
+    Self.FXStart:= Source.FXStart;
+    Self.FXLast:= Source.FXLast;
+    Self.FCanvas:= Source.FCanvas;
   end;
 
   { TOperator }
@@ -901,48 +895,16 @@ implementation
     end;
   end;
 
-  {procedure TOperator.DrawBlocks(const AVisibleImageRect: TVisibleImageRect);
-  var
-    L, R, M, BaseM: Integer;
-    CurrBlock: TBlock;
-    Mask: Byte;
-  begin
-    L := 0;
-    R := High(FBlocks);
-
-    repeat
-
-      M := (L + R) shr 1;
-      CurrBlock := FBlocks[M];
-
-      Mask := Ord(CurrBlock.XStart >= AVisibleImageRect.FTopLeft.X) shl 3 or
-              Ord(CurrBlock.XLast <= AVisibleImageRect.FBottomRight.X) shl 2 or
-              Ord(CurrBlock.XStart <= AVisibleImageRect.FBottomRight.X) shl 1 or
-              Ord(CurrBlock.XLast >= AVisibleImageRect.FTopLeft.X);
-
-      case Mask of
-        $0F, $03, $07, $0B:
-          begin
-            CurrBlock.DrawBlock(AVisibleImageRect);
-
-          end;
-        $09: R := M - 1;
-        $06: L := M + 1;
-      end;
-
-    until L > R;
-  end;}
-
   procedure TOperator.DrawBlocks(const AVisibleImageRect: TVisibleImageRect);
   var
     L, R, M: Integer;
-    function GetBlockMask(const CurrBlock: TBlock;
-          const AVisibleImageRect: TVisibleImageRect): Integer; inline
+    function GetBlockMask(const ACurrBlock: TBlock;
+          const AVisibleImageRect: TVisibleImageRect): Integer; inline;
     begin
-      Result := Ord(CurrBlock.XStart >= AVisibleImageRect.FTopLeft.X) shl 3 or
-              Ord(CurrBlock.XLast <= AVisibleImageRect.FBottomRight.X) shl 2 or
-              Ord(CurrBlock.XStart <= AVisibleImageRect.FBottomRight.X) shl 1 or
-              Ord(CurrBlock.XLast >= AVisibleImageRect.FTopLeft.X);
+      Result := Ord(ACurrBlock.XStart >= AVisibleImageRect.FTopLeft.X) shl 3 or
+                Ord(ACurrBlock.XLast <= AVisibleImageRect.FBottomRight.X) shl 2 or
+                Ord(ACurrBlock.XStart <= AVisibleImageRect.FBottomRight.X) shl 1 or
+                Ord(ACurrBlock.XLast >= AVisibleImageRect.FTopLeft.X);
     end;
   begin
     L := 0;
@@ -950,10 +912,12 @@ implementation
 
     while L < R do
     begin
-      M := (L + R) div 2;
+      M := (L + R) shr 1;
       case GetBlockMask(FBlocks[M], AVisibleImageRect) of
         $0F, $03, $07, $0B:
           R := M;
+        $09:
+          R := M - 1;
         else
           L := M + 1;
       end;

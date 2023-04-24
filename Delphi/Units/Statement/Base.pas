@@ -152,8 +152,6 @@ type
 
     function FindStatementIndex(const AFYStart: Integer): Integer;
 
-    procedure RemoveStatementAt(const Index: Integer);
-
     function Clone(const ABaseOperator: TOperator): TBlock;
   public
     constructor Create(const AXStart, AXLast: Integer; const ABaseOperator: TOperator;
@@ -169,11 +167,13 @@ type
     procedure AddStatementBefore(const AStatement: TStatement; const AInsertedStatement: TStatement);
     procedure AddStatementAfter(const AStatement: TStatement; const AInsertedStatement: TStatement);
     procedure AddStatementLast(const AStatement: TStatement);
-    procedure AddFirstStatement(const AStatement: TStatement; const AYStart: Integer);
+    procedure AddFirstStatement(const AStatement: TStatement; const AYStart: Integer); overload;
+    procedure AddFirstStatement(const AStatement: TStatement); overload;
 
-    procedure AddBlockPartAfter(const AStatement: TStatement; const AComplexStatement: TStatement);
+    procedure AddBlockAfter(const AStatement: TStatement; const AInsertedBlock: TBlock);
 
     function Remove(const AStatement: TStatement): Integer;
+    procedure RemoveStatementAt(const Index: Integer);
 
     procedure SetOptimalXLastBlock;
 
@@ -183,6 +183,8 @@ type
     procedure MoveDown(const AOffset: Integer);
 
     procedure DrawBlock(const AVisibleImageRect: TVisibleImageRect);
+
+    procedure Assign(const Source: TBlock);
 
     procedure RedefineSizes;
   end;
@@ -456,21 +458,40 @@ implementation
     AStatement.FBaseBlock:= Self;
   end;
 
-  procedure TBlock.AddBlockPartAfter(const AStatement: TStatement; const AComplexStatement: TStatement);
+  procedure TBlock.AddFirstStatement(const AStatement: TStatement);
+  begin
+    FStatements.Add(AStatement);
+    AStatement.FBaseBlock:= Self;
+  end;
+
+  procedure TBlock.AddBlockAfter(const AStatement: TStatement; const AInsertedBlock: TBlock);
   var
-    Offset, I: Integer;
+    Offset, I, J: Integer;
     Blocks: TBlockArr;
   begin
-    Offset:= Self.XStart - AComplexStatement.BaseBlock.XStart;
+    Offset:= Self.XStart - AInsertedBlock.XStart;
 
-    Self.AddStatementAfter(AStatement, AComplexStatement);
+    Self.AddStatementAfter(AStatement, AInsertedBlock.FStatements[0]);
 
-    if AComplexStatement is TOperator then
+    if AInsertedBlock.FStatements[0] is TOperator then
     begin
-      Blocks:= TOperator(AComplexStatement).Blocks;
-      for I := 0 to High(Blocks) do
-        Blocks[I].MoveRight(Offset);
+      Blocks:= TOperator(AInsertedBlock.FStatements[0]).Blocks;
+      for J := 0 to High(Blocks) do
+        Blocks[J].MoveRight(Offset);
       Blocks[High(Blocks)].ChangeXLastBlock(XLast);
+    end;
+
+    for I := 1 to AInsertedBlock.FStatements.Count - 1 do
+    begin
+      Self.AddStatementAfter(AInsertedBlock.FStatements[I - 1], AInsertedBlock.FStatements[I]);
+
+      if AInsertedBlock.FStatements[I] is TOperator then
+      begin
+        Blocks:= TOperator(AInsertedBlock.FStatements[I]).Blocks;
+        for J := 0 to High(Blocks) do
+          Blocks[J].MoveRight(Offset);
+        Blocks[High(Blocks)].ChangeXLastBlock(XLast);
+      end;
     end;
   end;
 
@@ -493,7 +514,9 @@ implementation
     begin
       FStatements.Add(DefaultBlock.CreateUncertainty(Self));
       FStatements[0].FYStart:= Statement.FYStart;
-    end;
+    end
+    else if (Statement.BaseBlock.BaseOperator = nil) and (Index = 0) then
+      FStatements[0].FYStart:= Statement.FYStart;
     Statement.Destroy;
   end;
 
@@ -638,7 +661,7 @@ implementation
   var
     CurrBlock: TBlock;
     NewXLast, OldXLast: Integer;
-    I, J, Index: Integer;
+    I, Index: Integer;
     Blocks: TBlockArr;
   begin
     OldXLast:= Self.FXLast;
@@ -654,33 +677,17 @@ implementation
 
     if CurrBlock.FBaseOperator <> nil then
     begin
-      CurrBlock:= CurrBlock.FBaseOperator.BaseBlock;
 
-      for I := 0 to CurrBlock.FStatements.Count - 1 do
-        if CurrBlock.FStatements[I] is TOperator then
-        begin
+      Blocks:= CurrBlock.FBaseOperator.FBlocks;
 
-          Blocks:= TOperator(CurrBlock.FStatements[I]).FBlocks;
+      Index:= CurrBlock.FBaseOperator.FindBlockIndex(CurrBlock.XStart) + 1;
 
-          for J := 0 to High(Blocks) do
-            if Blocks[J].FXLast = NewXLast then
-            begin
-              Index:= J + 1;
-              break;
-            end;
+      for I := Index to High(Blocks) - 1 do
+        Blocks[I].MoveRight(Blocks[I - 1].FXLast - Blocks[I].FXStart);
 
-          for J := Index to High(Blocks) - 1 do
-            Blocks[J].MoveRight(Blocks[J - 1].FXLast - Blocks[J].FXStart);
-
-          J:= High(Blocks);
-          if Index <= J then
-          begin
-            Blocks[J].MoveRightExceptXLast(Blocks[J - 1].FXLast - Blocks[J].FXStart);
-
-            Blocks[J].SetOptimalXLastBlock;
-          end;
-
-        end;
+      I:= High(Blocks);
+      Blocks[I].MoveRightExceptXLast(Blocks[I - 1].FXLast - Blocks[I].FXStart);
+      Blocks[I].SetOptimalXLastBlock;
     end;
 
   end;
@@ -782,6 +789,13 @@ implementation
     end;
   end;
 
+  procedure TBlock.Assign(const Source: TBlock);
+  begin
+    Self.FXStart:= Source.FXStart;
+    Self.FXLast:= Source.FXLast;
+    Self.FCanvas:= Source.FCanvas;
+  end;
+
   { TOperator }
   constructor TOperator.Create(const AAction : String; const ABaseBlock: TBlock);
   begin
@@ -838,7 +852,7 @@ implementation
   var
     I: Integer;
   begin
-    for I := 0 to High(FBlocks) do
+    for I := 0 to High(FBlocks) - 1 do
       FBlocks[I].SetOptimalXLastBlock;
   end;
 

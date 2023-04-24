@@ -115,7 +115,6 @@ type
     function TryGetCond(var AInitialStr: TStringArr): Boolean;
     function CreateStatement(const AStatementClass: TStatementClass; const ABaseBlock: TBlock): TStatement;
     class function ConvertToBlockType(const AIndex: Integer): TStatementClass;
-    function GetVisibleBlock(const ACarryBlock: TBlock): TVisibleImageRect;
     function GetVisibleImageScreen: TVisibleImageRect;
 
   private const
@@ -128,7 +127,8 @@ type
 
 var
   NassiShneiderman: TNassiShneiderman;
-  BufferStatement: TStatement;
+
+  BufferBlock: TBlock;
 
 implementation
 
@@ -149,15 +149,6 @@ implementation
   procedure TNassiShneiderman.MyScroll(Sender: TObject);
   begin
     ClearAndRedraw(GetVisibleImageScreen);
-  end;
-
-  function TNassiShneiderman.GetVisibleBlock(const ACarryBlock: TBlock): TVisibleImageRect;
-  begin
-    Result.FTopLeft.X:= ACarryBlock.XStart - 1;
-    Result.FTopLeft.Y:= ACarryBlock.Statements[0].YStart - 1;
-    Result.FBottomRight.X:= ACarryBlock.XLast + 1;
-    Result.FBottomRight.Y:=
-     ACarryBlock.Statements[ACarryBlock.Statements.Count - 1].GetYBottom + 1;
   end;
 
   function TNassiShneiderman.GetVisibleImageScreen: TVisibleImageRect;
@@ -184,7 +175,6 @@ implementation
     ScrollBox.OnScrollHorz := MyScroll;
 
     FDedicatedStatement:= nil;
-    BufferStatement:= nil;
     FCarryBlock:= nil;
 
     Constraints.MinWidth := 960;
@@ -222,7 +212,7 @@ implementation
                       FDedicatedStatement.YStart, FDedicatedStatement.GetYBottom, FHighlightColor);
 
     FMainBlock.DrawBlock(AVisibleImageRect);
-    //DrawCoordinates(Image.Canvas, 50);
+    DrawCoordinates(Image.Canvas, 50);
   end;
 
   procedure TNassiShneiderman.ScrollBoxMouseWheel(Sender: TObject;
@@ -280,8 +270,7 @@ implementation
           Image.Canvas
         );
 
-        FCarryBlock.AddFirstStatement(FDedicatedStatement.Clone,
-                                      FDedicatedStatement.YStart);
+        FCarryBlock.AddFirstStatement(FDedicatedStatement.Clone);
 
         FIsMouseDown := True;
         FPrevMousePos.X := X;
@@ -338,13 +327,18 @@ implementation
     end;
   end;
 
-procedure TNassiShneiderman.MICopyClick(Sender: TObject);
+  procedure TNassiShneiderman.MICopyClick(Sender: TObject);
+  var
+    I: Integer;
   begin
     if FDedicatedStatement <> nil then
     begin
-      if BufferStatement <> nil then
-        BufferStatement.Destroy;
-      BufferStatement:= FDedicatedStatement.Clone;
+      for I := 0 to BufferBlock.Statements.Count - 1 do
+        BufferBlock.RemoveStatementAt(I);
+
+      BufferBlock.Assign(FDedicatedStatement.BaseBlock);
+
+      BufferBlock.AddFirstStatement(FDedicatedStatement.Clone);
     end;
   end;
 
@@ -352,23 +346,27 @@ procedure TNassiShneiderman.MICopyClick(Sender: TObject);
   begin
     if FDedicatedStatement <> nil then
     begin
-      if BufferStatement <> nil then
-        BufferStatement.Destroy;
-      BufferStatement:= FDedicatedStatement.Clone;
+      MICopyClick(Sender);
+
       DeleteStatement(Sender);
     end;
   end;
 
   procedure TNassiShneiderman.MIInsetClick(Sender: TObject);
+  var
+    I: Integer;
   begin
-    if (BufferStatement <> nil) and (FDedicatedStatement <> nil) then
+    if (BufferBlock.Statements.Count <> 0) and (FDedicatedStatement <> nil) then
     begin
-      FDedicatedStatement.BaseBlock.AddBlockPartAfter(FDedicatedStatement, BufferStatement);
+      FDedicatedStatement.BaseBlock.AddBlockAfter(FDedicatedStatement, BufferBlock);
 
-      BufferStatement.Install;
+      for I := 0 to BufferBlock.Statements.Count - 1 do
+        BufferBlock.Statements[I].Install;
 
-      FDedicatedStatement:= BufferStatement;
-      BufferStatement:= BufferStatement.Clone;
+      BufferBlock.Assign(FDedicatedStatement.BaseBlock);
+      FDedicatedStatement:= BufferBlock.Statements.GetLast;
+      for I := 0 to BufferBlock.Statements.Count - 1 do
+        BufferBlock.Statements[I]:= BufferBlock.Statements[I].Clone;
 
       ClearAndRedraw(GetVisibleImageScreen);
     end;
@@ -430,6 +428,7 @@ procedure TNassiShneiderman.MICopyClick(Sender: TObject);
     begin
       Block:= FDedicatedStatement.BaseBlock;
       Index:= Block.Remove(FDedicatedStatement);
+
       Block.Statements[Index].Install;
 
       FDedicatedStatement:= Block.Statements[Index];
@@ -541,5 +540,8 @@ procedure TNassiShneiderman.MICopyClick(Sender: TObject);
 
     WriteActionForm.Destroy;
   end;
+
+  initialization
+  BufferBlock:= TBlock.Create(0, 0, nil, nil);
 
 end.
