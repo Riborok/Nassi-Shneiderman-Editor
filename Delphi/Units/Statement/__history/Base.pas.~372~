@@ -712,48 +712,52 @@ implementation
 
   procedure TBlock.DrawBlock(const AVisibleImageRect: TVisibleImageRect);
   var
-    I: Integer;
+    L, R, M: Integer;
+    RightmostIndex: Integer;
     CurrStatement: TStatement;
-
-    function FirstCase(const CurrStatement: TStatement;
-                  const AVisibleImageRect: TVisibleImageRect): Boolean; inline;
+    function GetStatementMask(const ACurrStatement: TStatement;
+          const AVisibleImageRect: TVisibleImageRect): Integer; inline
     begin
-      Result:= (CurrStatement.YStart >= AVisibleImageRect.FTopLeft.Y) and
-                 (CurrStatement.YLast <= AVisibleImageRect.FBottomRight.Y);
-    end;
-    function SecondCase(const CurrStatement: TStatement;
-                  const AVisibleImageRect: TVisibleImageRect): Boolean; inline;
-    begin
-      Result:= (CurrStatement.YStart <= AVisibleImageRect.FTopLeft.Y) and
-                 (CurrStatement.YLast >= AVisibleImageRect.FBottomRight.Y);
-    end;
-    function ThirdCase(const CurrStatement: TStatement;
-                  const AVisibleImageRect: TVisibleImageRect): Boolean; inline;
-    begin
-      Result:= (CurrStatement.YStart <= AVisibleImageRect.FTopLeft.Y) and
-                 ((CurrStatement.YLast <= AVisibleImageRect.FBottomRight.Y) and
-                 (CurrStatement.YLast >= AVisibleImageRect.FTopLeft.Y));
-    end;
-    function FourthCase(const CurrStatement: TStatement;
-                  const AVisibleImageRect: TVisibleImageRect): Boolean; inline;
-    begin
-      Result:= ((CurrStatement.YStart >= AVisibleImageRect.FTopLeft.Y) and
-                 (CurrStatement.YStart <= AVisibleImageRect.FBottomRight.Y)) and
-                 (CurrStatement.YLast >= AVisibleImageRect.FBottomRight.Y);
+      Result := Ord(ACurrStatement.YStart >= AVisibleImageRect.FTopLeft.Y) shl 3 or
+                Ord(ACurrStatement.YLast <= AVisibleImageRect.FBottomRight.Y) shl 2 or
+                Ord(ACurrStatement.YStart <= AVisibleImageRect.FBottomRight.Y) shl 1 or
+                Ord(ACurrStatement.YLast >= AVisibleImageRect.FTopLeft.Y);
     end;
   begin
-    for I := 0 to FStatements.Count - 1 do
-    begin
-      CurrStatement:= FStatements[I];
+    L := 0;
+    R := FStatements.Count - 1;
+    RightmostIndex:= R;
 
-      if FirstCase(CurrStatement, AVisibleImageRect) or
-                 SecondCase(CurrStatement, AVisibleImageRect) or
-                 ThirdCase(CurrStatement, AVisibleImageRect) or
-                 FourthCase(CurrStatement, AVisibleImageRect)
-                 then
-          CurrStatement.Draw;
+    while L < R do
+    begin
+      M := (L + R) shr 1;
+      case GetStatementMask(FStatements[M], AVisibleImageRect) of
+        $0F, $03, $07, $0B:
+          R := M;
+        $09:
+        begin
+          R := M - 1;
+          RightmostIndex:= R;
+        end;
+        else
+          L := M + 1;
+      end;
+    end;
+
+    if (R > 0) and (FStatements[R - 1] is TOperator) then
+        TOperator(FStatements[R - 1]).DrawBlocks(AVisibleImageRect);
+
+    for M := R to RightmostIndex do
+    begin
+      CurrStatement:= FStatements[M];
       if CurrStatement is TOperator then
         TOperator(CurrStatement).DrawBlocks(AVisibleImageRect);
+      case GetStatementMask(CurrStatement, AVisibleImageRect) of
+        $0F, $03, $07, $0B:
+          CurrStatement.Draw;
+        else
+          Break;
+      end;
     end;
   end;
 
@@ -880,44 +884,45 @@ implementation
 
   procedure TOperator.DrawBlocks(const AVisibleImageRect: TVisibleImageRect);
   var
-    I: Integer;
-    CurrBlock: TBlock;
-    function FirstCase(const CurrBlock: TBlock;
-                  const AVisibleImageRect: TVisibleImageRect): Boolean; inline;
+    L, R, M: Integer;
+    RightmostIndex: Integer;
+    function GetBlockMask(const ACurrBlock: TBlock;
+          const AVisibleImageRect: TVisibleImageRect): Integer; inline
     begin
-      Result:= (CurrBlock.XStart >= AVisibleImageRect.FTopLeft.X) and
-                 (CurrBlock.XLast <= AVisibleImageRect.FBottomRight.X);
-    end;
-    function SecondCase(const CurrBlock: TBlock;
-                  const AVisibleImageRect: TVisibleImageRect): Boolean; inline;
-    begin
-      Result:= (CurrBlock.XStart <= AVisibleImageRect.FTopLeft.X) and
-                 (CurrBlock.XLast >= AVisibleImageRect.FBottomRight.X);
-    end;
-    function ThirdCase(const CurrBlock: TBlock;
-                  const AVisibleImageRect: TVisibleImageRect): Boolean; inline;
-    begin
-      Result:= (CurrBlock.XStart <= AVisibleImageRect.FTopLeft.X) and
-                 ((CurrBlock.XLast <= AVisibleImageRect.FBottomRight.X) and
-                 (CurrBlock.XLast >= AVisibleImageRect.FTopLeft.X));
-    end;
-    function FourthCase(const CurrBlock: TBlock;
-                  const AVisibleImageRect: TVisibleImageRect): Boolean; inline;
-    begin
-      Result:= ((CurrBlock.XStart >= AVisibleImageRect.FTopLeft.X) and
-                 (CurrBlock.XStart <= AVisibleImageRect.FBottomRight.X)) and
-                 (CurrBlock.XLast >= AVisibleImageRect.FBottomRight.X);
+      Result := Ord(ACurrBlock.XStart >= AVisibleImageRect.FTopLeft.X) shl 3 or
+              Ord(ACurrBlock.XLast <= AVisibleImageRect.FBottomRight.X) shl 2 or
+              Ord(ACurrBlock.XStart <= AVisibleImageRect.FBottomRight.X) shl 1 or
+              Ord(ACurrBlock.XLast >= AVisibleImageRect.FTopLeft.X);
     end;
   begin
-    for I := 0 to High(FBlocks) do
+    L := 0;
+    R := High(FBlocks);
+    RightmostIndex:= R;
+
+    while L < R do
     begin
-      CurrBlock:= FBlocks[I];
-      if FirstCase(CurrBlock, AVisibleImageRect) or
-                     SecondCase(CurrBlock, AVisibleImageRect) or
-                     ThirdCase(CurrBlock, AVisibleImageRect) or
-                     FourthCase(CurrBlock, AVisibleImageRect)
-                     then
-        CurrBlock.DrawBlock(AVisibleImageRect);
+      M := (L + R) shr 1;
+      case GetBlockMask(FBlocks[M], AVisibleImageRect) of
+        $0F, $03, $07, $0B:
+          R := M;
+        $09:
+        begin
+          R := M - 1;
+          RightmostIndex:= R;
+        end;
+        else
+          L := M + 1;
+      end;
+    end;
+
+    for M := R to RightmostIndex do
+    begin
+      case GetBlockMask(FBlocks[M], AVisibleImageRect) of
+        $0F, $03, $07, $0B:
+          FBlocks[M].DrawBlock(AVisibleImageRect);
+        else
+          Break;
+      end;
     end;
   end;
 

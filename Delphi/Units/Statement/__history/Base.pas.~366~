@@ -859,24 +859,36 @@ implementation
 
   procedure TOperator.DrawBlocks(const AVisibleImageRect: TVisibleImageRect);
   var
-    I: Integer;
+    L, R, M, Correction: Integer;
     CurrBlock: TBlock;
     Mask: Byte;
   begin
-    for I := 0 to High(FBlocks) do
-    begin
-      CurrBlock:= FBlocks[I];
+    Correction:= 1;
+    L := 0;
+    R := High(FBlocks);
+
+    repeat
+      Dec(Correction);
+      M := (L + R) shr 1 + Correction;
+      CurrBlock := FBlocks[M];
+
       Mask := Ord(CurrBlock.XStart >= AVisibleImageRect.FTopLeft.X) shl 3 or
               Ord(CurrBlock.XLast <= AVisibleImageRect.FBottomRight.X) shl 2 or
               Ord(CurrBlock.XStart <= AVisibleImageRect.FBottomRight.X) shl 1 or
               Ord(CurrBlock.XLast >= AVisibleImageRect.FTopLeft.X);
+
       case Mask of
         $0F, $03, $07, $0B:
-          CurrBlock.DrawBlock(AVisibleImageRect);
-        $09:
-          Break;
+          begin
+            CurrBlock.DrawBlock(AVisibleImageRect);
+            Inc(Correction);
+          end;
+        $09: R := M - 1;
+        $06: L := M + 1;
       end;
-    end;
+    until (L > R) or (M < High(FBlocks));
+
+    Inc(Correction);
   end;
 
   function TOperator.Clone: TStatement;
