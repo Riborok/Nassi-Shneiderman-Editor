@@ -746,19 +746,22 @@ implementation
       end;
     end;
 
-    if (R > 0) and (FStatements[R - 1] is TOperator) then
+    if R >= 0 then
+    begin
+      if (R <> 0) and (FStatements[R - 1] is TOperator) then
         TOperator(FStatements[R - 1]).DrawBlocks(AVisibleImageRect);
 
-    for M := R to FStatements.Count - 1 do
-    begin
-      CurrStatement:= FStatements[M];
-      if CurrStatement is TOperator then
-        TOperator(CurrStatement).DrawBlocks(AVisibleImageRect);
-      case GetStatementMask(CurrStatement, AVisibleImageRect) of
-        $0F, $03, $07, $0B:
-          CurrStatement.Draw;
-        else
-          Break;
+      for M := R to FStatements.Count - 1 do
+      begin
+        CurrStatement:= FStatements[M];
+        if CurrStatement is TOperator then
+          TOperator(CurrStatement).DrawBlocks(AVisibleImageRect);
+        case GetStatementMask(CurrStatement, AVisibleImageRect) of
+          $0F, $03, $07, $0B:
+            CurrStatement.Draw;
+          else
+            Break;
+        end;
       end;
     end;
   end;
@@ -919,15 +922,16 @@ implementation
       end;
     end;
 
-    for M := R to High(FBlocks) do
-    begin
-      case GetBlockMask(FBlocks[M], AVisibleImageRect) of
-        $0F, $03, $07, $0B:
-          FBlocks[M].DrawBlock(AVisibleImageRect);
-        else
-          Break;
+    if R >= 0 then
+      for M := R to High(FBlocks) do
+      begin
+        case GetBlockMask(FBlocks[M], AVisibleImageRect) of
+          $0F, $03, $07, $0B:
+            FBlocks[M].DrawBlock(AVisibleImageRect);
+          else
+            Break;
+        end;
       end;
-    end;
   end;
 
   function TOperator.Clone: TStatement;

@@ -2177,10 +2177,11 @@ object NassiShneiderman: TNassiShneiderman
     end
   end
   object ScrollBox: TScrollBox
-    Left = 0
-    Top = 41
-    Width = 965
-    Height = 562
+    AlignWithMargins = True
+    Left = 3
+    Top = 44
+    Width = 959
+    Height = 556
     Align = alClient
     Color = cl3DLight
     ParentColor = False
@@ -2188,6 +2189,10 @@ object NassiShneiderman: TNassiShneiderman
     OnDblClick = ImageDblClick
     OnMouseDown = ImageMouseDown
     OnMouseWheel = ScrollBoxMouseWheel
+    ExplicitLeft = 0
+    ExplicitTop = 41
+    ExplicitWidth = 965
+    ExplicitHeight = 562
     object Image: TImage
       Left = -2
       Top = -2

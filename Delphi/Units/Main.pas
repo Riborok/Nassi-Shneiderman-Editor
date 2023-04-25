@@ -8,7 +8,7 @@ uses
   Base, FirstLoop, IfBranching, CaseBranching, LastLoop, StatementSearch, DrawShapes,
   Vcl.StdCtrls, Vcl.Menus, System.Actions, Vcl.ActnList, Vcl.ToolWin, GetСaseСonditions,
   Vcl.ComCtrls, Vcl.Buttons, System.ImageList, Vcl.ImgList, GetAction, AdditionalTypes,
-  AdjustBorders;
+  AdjustBorders, Types;
 
 type
   TScrollBox= Class(VCL.Forms.TScrollBox)
@@ -148,13 +148,11 @@ implementation
 
   procedure TNassiShneiderman.MyScroll(Sender: TObject);
   begin
-    if not tmRedrawingMovements.Enabled then
+    if not tmRedrawingMovements.Enabled and (GetKeyState(VK_LBUTTON) >= 0) then
       tmRedrawingMovements.Enabled := True;
   end;
 
   function TNassiShneiderman.GetVisibleImageScreen: TVisibleImageRect;
-  var
-    ImageRect: TRect;
   begin
     Result.FTopLeft := Image.ScreenToClient(ScrollBox.ClientToScreen(Point(0, 0)));
     Result.FBottomRight := Image.ScreenToClient(ScrollBox.ClientToScreen(Point(ScrollBox.Width, ScrollBox.Height)));
@@ -201,8 +199,6 @@ implementation
   end;
 
   procedure TNassiShneiderman.Redraw(const AVisibleImageRect: TVisibleImageRect);
-  var
-    TopLeft, BottomRight: TPoint;
   begin
     Clear(Image.Canvas, AVisibleImageRect);
 
