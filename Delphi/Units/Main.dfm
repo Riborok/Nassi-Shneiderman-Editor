@@ -2800,8 +2800,8 @@ object NassiShneiderman: TNassiShneiderman
   end
   object tmRedrawingMovements: TTimer
     Enabled = False
-    Interval = 15
-    OnTimer = tmRedrawingMovementsTimer
+    Interval = 5
+    OnTimer = tmRedrawingTimer
     Left = 912
     Top = 241
   end

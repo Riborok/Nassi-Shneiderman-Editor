@@ -76,7 +76,7 @@ type
 
     procedure FormCreate(Sender: TObject);
 
-    procedure ClearAndRedraw(const AVisibleImageRect: TVisibleImageRect);
+    procedure Redraw(const AVisibleImageRect: TVisibleImageRect);
 
     procedure ImageMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
@@ -97,7 +97,7 @@ type
       Shift: TShiftState; X, Y: Integer);
     procedure ImageMouseMove(Sender: TObject; Shift: TShiftState; X,
       Y: Integer);
-    procedure tmRedrawingMovementsTimer(Sender: TObject);
+    procedure tmRedrawingTimer(Sender: TObject);
     { Private declarations }
   private
     FMainBlock : TBlock;
@@ -148,7 +148,8 @@ implementation
 
   procedure TNassiShneiderman.MyScroll(Sender: TObject);
   begin
-    ClearAndRedraw(GetVisibleImageScreen);
+    if not tmRedrawingMovements.Enabled then
+      tmRedrawingMovements.Enabled := True;
   end;
 
   function TNassiShneiderman.GetVisibleImageScreen: TVisibleImageRect;
@@ -196,10 +197,10 @@ implementation
     FMainBlock.AddFirstStatement(NewStatement, SchemeInitialIndent);
     NewStatement.Install;
 
-    ClearAndRedraw(GetVisibleImageScreen);
+    Redraw(GetVisibleImageScreen);
   end;
 
-  procedure TNassiShneiderman.ClearAndRedraw(const AVisibleImageRect: TVisibleImageRect);
+  procedure TNassiShneiderman.Redraw(const AVisibleImageRect: TVisibleImageRect);
   var
     TopLeft, BottomRight: TPoint;
   begin
@@ -210,6 +211,9 @@ implementation
     if FDedicatedStatement <> nil then
       ColorizeRectangle(Image.Canvas, FDedicatedStatement.BaseBlock.XStart, FDedicatedStatement.BaseBlock.XLast,
                       FDedicatedStatement.YStart, FDedicatedStatement.GetYBottom, FHighlightColor);
+
+    if FCarryBlock <> nil then
+      FCarryBlock.DrawBlock(AVisibleImageRect);
 
     FMainBlock.DrawBlock(AVisibleImageRect);
     DrawCoordinates(Image.Canvas, 50);
@@ -235,7 +239,11 @@ implementation
       else
         ScrollBox.VertScrollBar.Position := ScrollBox.VertScrollBar.Position + ScrotStep;
     end;
-    ClearAndRedraw(GetVisibleImageScreen);
+    if not tmRedrawingMovements.Enabled then
+      tmRedrawingMovements.Enabled := True;
+
+    MousePos:= Image.ScreenToClient(Mouse.CursorPos);
+    ImageMouseMove(Sender, Shift, MousePos.X, MousePos.Y);
   end;
 
   procedure TNassiShneiderman.PopupMenuPopup(Sender: TObject);
@@ -257,7 +265,7 @@ implementation
   begin
     FDedicatedStatement := BinarySearchStatement(X, Y, FMainBlock);
 
-    ClearAndRedraw(GetVisibleImageScreen);
+    Redraw(GetVisibleImageScreen);
 
     if FDedicatedStatement <> nil then
     begin
@@ -282,16 +290,11 @@ implementation
 
   end;
 
-  procedure TNassiShneiderman.tmRedrawingMovementsTimer(Sender: TObject);
-  var
-    VisibleImageRect: TVisibleImageRect;
+  procedure TNassiShneiderman.tmRedrawingTimer(Sender: TObject);
   begin
     tmRedrawingMovements.Enabled:= False;
 
-    VisibleImageRect := GetVisibleImageScreen;
-
-    ClearAndRedraw(VisibleImageRect);
-    FCarryBlock.DrawBlock(VisibleImageRect);
+    Redraw(GetVisibleImageScreen);
   end;
 
   procedure TNassiShneiderman.ImageMouseMove(Sender: TObject; Shift: TShiftState;
@@ -314,8 +317,6 @@ implementation
   begin
     if (Button = mbLeft) and FIsMouseDown then
     begin
-      ClearAndRedraw(GetVisibleImageScreen);
-
       FIsMouseDown := False;
       tmRedrawingMovements.Enabled := False;
 
@@ -324,6 +325,8 @@ implementation
         FCarryBlock.Destroy;
         FCarryBlock:= nil;
       end;
+
+      Redraw(GetVisibleImageScreen);
     end;
   end;
 
@@ -368,7 +371,7 @@ implementation
       for I := 0 to BufferBlock.Statements.Count - 1 do
         BufferBlock.Statements[I]:= BufferBlock.Statements[I].Clone;
 
-      ClearAndRedraw(GetVisibleImageScreen);
+      Redraw(GetVisibleImageScreen);
     end;
   end;
 
@@ -389,14 +392,14 @@ implementation
         FDedicatedStatement:= NewStatement;
       end;
 
-      ClearAndRedraw(GetVisibleImageScreen);
+      Redraw(GetVisibleImageScreen);
     end;
   end;
 
   procedure TNassiShneiderman.Sort(Sender: TObject);
   begin
     TCaseBranching(FDedicatedStatement).SortConditions(TComponent(Sender).Tag);
-    ClearAndRedraw(GetVisibleImageScreen);
+    Redraw(GetVisibleImageScreen);
   end;
 
   procedure TNassiShneiderman.AddAfter(Sender: TObject);
@@ -415,7 +418,7 @@ implementation
         FDedicatedStatement:= NewStatement;
       end;
 
-      ClearAndRedraw(GetVisibleImageScreen);
+      Redraw(GetVisibleImageScreen);
     end;
   end;
 
@@ -433,7 +436,7 @@ implementation
 
       FDedicatedStatement:= Block.Statements[Index];
 
-      ClearAndRedraw(GetVisibleImageScreen);
+      Redraw(GetVisibleImageScreen);
     end;
   end;
 
@@ -468,7 +471,7 @@ implementation
       end;
     end;
 
-    ClearAndRedraw(GetVisibleImageScreen);
+    Redraw(GetVisibleImageScreen);
   end;
 
   function TNassiShneiderman.CreateStatement(const AStatementClass: TStatementClass;
