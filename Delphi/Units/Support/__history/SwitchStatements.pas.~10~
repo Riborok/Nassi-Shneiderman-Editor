@@ -1,0 +1,122 @@
+unit SwitchStatements;
+
+interface
+uses Base;
+type
+  TDirection = (ForwardDir = 1, BackwardDir = -1);
+
+procedure SetHorizontalMovement(var ACurrStatement: TStatement; const AMainBlock: TBlock;
+                                const ADirection: TDirection);
+
+procedure SetVerticalMovement(var ACurrStatement: TStatement; const AMainBlock: TBlock;
+                                const ADirection: TDirection);
+
+implementation
+
+  procedure SetHorizontalMovement(var ACurrStatement: TStatement; const AMainBlock: TBlock;
+                                  const ADirection: TDirection);
+  var
+    LastBlock: Integer;
+    BlockIndex, StatementIndex : Integer;
+  begin
+    if (ACurrStatement = nil) or (ACurrStatement.BaseBlock.BaseOperator = nil) then
+      ACurrStatement:= AMainBlock.Statements[0]
+    else
+    begin
+      case ADirection of
+        BackwardDir: LastBlock:= 0;
+        ForwardDir:  LastBlock:= High(ACurrStatement.BaseBlock.BaseOperator.Blocks);
+      end;
+
+      BlockIndex:= ACurrStatement.BaseBlock.BaseOperator.
+                        FindBlockIndex(ACurrStatement.BaseBlock.XStart);
+      if BlockIndex = LastBlock then
+        ACurrStatement:= ACurrStatement.BaseBlock.BaseOperator
+      else
+      begin
+        StatementIndex:= ACurrStatement.BaseBlock.FindStatementIndex(
+                                                  ACurrStatement.YStart);
+
+        if ACurrStatement.BaseBlock.BaseOperator.Blocks[BlockIndex +
+                      Ord(ADirection)].Statements.Count < StatementIndex  then
+          StatementIndex:= ACurrStatement.BaseBlock.BaseOperator.
+                Blocks[BlockIndex + Ord(ADirection)].Statements.Count - 1;
+
+        ACurrStatement:= ACurrStatement.BaseBlock.
+          BaseOperator.Blocks[BlockIndex + Ord(ADirection)].Statements[StatementIndex];
+      end;
+    end;
+  end;
+
+  procedure SetVerticalMovement(var ACurrStatement: TStatement; const AMainBlock: TBlock;
+                                  const ADirection: TDirection);
+  var
+    BlockIndex, StatementIndex : Integer;
+    Blocks: TBlockArr;
+  begin
+    if ACurrStatement = nil then
+      ACurrStatement:= AMainBlock.Statements[0]
+    else
+    begin
+      StatementIndex:= ACurrStatement.BaseBlock.FindStatementIndex(
+                                                ACurrStatement.YStart);
+
+      case ADirection of
+        BackwardDir:
+        begin
+          if StatementIndex > 0 then
+          begin
+            ACurrStatement:= ACurrStatement.BaseBlock.Statements[StatementIndex + Ord(ADirection)];
+            if ACurrStatement is TOperator then
+            begin
+              Blocks:= TOperator(ACurrStatement).Blocks;
+              ACurrStatement:= Blocks[High(Blocks)].Statements.GetLast;
+            end;
+          end
+          else
+          begin
+            if ACurrStatement.BaseBlock.BaseOperator = nil then
+              ACurrStatement:= AMainBlock.Statements[0]
+            else
+            begin
+              StatementIndex:= ACurrStatement.BaseBlock.BaseOperator.BaseBlock.
+                 FindStatementIndex(ACurrStatement.BaseBlock.BaseOperator.YStart);
+              if StatementIndex = 0 then
+                ACurrStatement:= ACurrStatement.BaseBlock.BaseOperator
+              else
+              begin
+                ACurrStatement:= ACurrStatement.BaseBlock.BaseOperator.BaseBlock.
+                   Statements[StatementIndex + Ord(ADirection)];
+                if ACurrStatement is TOperator then
+                begin
+                  Blocks:= TOperator(ACurrStatement).Blocks;
+                  ACurrStatement:= Blocks[High(Blocks)].Statements.GetLast;
+                end;
+              end;
+            end;
+          end;
+        end;
+        ForwardDir:
+        begin
+          if ACurrStatement is TOperator then
+            ACurrStatement:= TOperator(ACurrStatement).Blocks[0].Statements[0]
+          else if StatementIndex < ACurrStatement.BaseBlock.Statements.Count - 1 then
+            ACurrStatement:= ACurrStatement.BaseBlock.Statements[StatementIndex + Ord(ADirection)]
+          else
+          begin
+            if ACurrStatement.BaseBlock.BaseOperator = nil then
+              ACurrStatement:= AMainBlock.Statements[0]
+            else
+            begin
+              StatementIndex:= ACurrStatement.BaseBlock.BaseOperator.BaseBlock.
+                 FindStatementIndex(ACurrStatement.BaseBlock.BaseOperator.YStart);
+              ACurrStatement:= ACurrStatement.BaseBlock.BaseOperator.BaseBlock.
+                 Statements[StatementIndex + Ord(ADirection)];
+            end;
+          end;
+        end;
+      end;
+    end;
+  end;
+
+end.

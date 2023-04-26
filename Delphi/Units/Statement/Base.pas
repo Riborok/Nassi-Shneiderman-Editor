@@ -112,8 +112,6 @@ type
 
     function GetOptimalWidthForBlock(const ABlock: TBlock): Integer; virtual; abstract;
 
-    function FindBlockIndex(const AXStart: Integer): Integer;
-
     function GetBlockYStart: Integer;
 
     procedure SetInitiaXLast; override;
@@ -130,6 +128,8 @@ type
     property Blocks: TBlockArr read FBlocks;
 
     function Clone: TStatement; override;
+
+    function FindBlockIndex(const AXStart: Integer): Integer;
   end;
 
   { TBlock }
@@ -149,8 +149,6 @@ type
     function FindOptimalXLast: Integer;
 
     function GetLastStatement: TStatement;
-
-    function FindStatementIndex(const AFYStart: Integer): Integer;
 
     function Clone(const ABaseOperator: TOperator): TBlock;
   public
@@ -187,6 +185,8 @@ type
     procedure Assign(const Source: TBlock);
 
     procedure RedefineSizes;
+
+    function FindStatementIndex(const AFYStart: Integer): Integer;
   end;
 
   var
@@ -403,7 +403,8 @@ implementation
     AInsertedStatement.FBaseBlock:= Self;
     FStatements.Insert(AInsertedStatement, Index);
 
-    if (AStatement.FAction = TStatement.UncertaintySymbol) and (AStatement.ClassType = DefaultBlock) then
+    if (AStatement.FAction = TStatement.UncertaintySymbol) and
+                    (AStatement.ClassType = DefaultBlock) then
       Self.RemoveStatementAt(Index + 1);
   end;
 
@@ -420,7 +421,8 @@ implementation
       AInsertedStatement.FBaseBlock:= Self;
       FStatements.Insert(AInsertedStatement, Index);
 
-      if (AStatement.FAction = TStatement.UncertaintySymbol) and (AStatement.ClassType = DefaultBlock) then
+      if (AStatement.FAction = TStatement.UncertaintySymbol) and
+                      (AStatement.ClassType = DefaultBlock) then
         Self.RemoveStatementAt(Index + 1);
     end
     else
@@ -441,7 +443,8 @@ implementation
       PrevStatement.SetYBottom(PrevStatement.GetMaxOptimalYBottom);
       AStatement.FYStart:= PrevStatement.GetYBottom;
 
-      if (PrevStatement.FAction = TStatement.UncertaintySymbol) and (PrevStatement.ClassType = DefaultBlock) then
+      if (PrevStatement.FAction = TStatement.UncertaintySymbol) and
+                      (PrevStatement.ClassType = DefaultBlock) then
       begin
         AStatement.FYStart:= PrevStatement.FYStart;
         Self.RemoveStatementAt(FStatements.Count - 2);
@@ -724,10 +727,15 @@ implementation
     function GetStatementMask(const ACurrStatement: TStatement;
           const AVisibleImageRect: TVisibleImageRect): Integer; inline;
     begin
-      Result := Ord(ACurrStatement.YStart >= AVisibleImageRect.FTopLeft.Y) shl 3 or
-                Ord(ACurrStatement.YLast <= AVisibleImageRect.FBottomRight.Y) shl 2 or
-                Ord(ACurrStatement.YStart <= AVisibleImageRect.FBottomRight.Y) shl 1 or
-                Ord(ACurrStatement.YLast >= AVisibleImageRect.FTopLeft.Y);
+      Result :=
+      {X--- : }
+        Ord(ACurrStatement.YStart >= AVisibleImageRect.FTopLeft.Y) shl 3 or
+      {-X-- : }
+        Ord(ACurrStatement.YLast <= AVisibleImageRect.FBottomRight.Y) shl 2 or
+      {--X- : }
+        Ord(ACurrStatement.YStart <= AVisibleImageRect.FBottomRight.Y) shl 1 or
+      {---X : }
+        Ord(ACurrStatement.YLast >= AVisibleImageRect.FTopLeft.Y);
     end;
   begin
     L := 0;
@@ -737,9 +745,9 @@ implementation
     begin
       M := (L + R) shr 1;
       case GetStatementMask(FStatements[M], AVisibleImageRect) of
-        $0F, $03, $07, $0B:
+        $0F {1111}, $03 {0011}, $07 {0111}, $0B {1011}:
           R := M;
-        $09:
+        $09 {1001}:
           R := M - 1;
         else
           L := M + 1;
@@ -757,7 +765,7 @@ implementation
         if CurrStatement is TOperator then
           TOperator(CurrStatement).DrawBlocks(AVisibleImageRect);
         case GetStatementMask(CurrStatement, AVisibleImageRect) of
-          $0F, $03, $07, $0B:
+          $0F {1111}, $03 {0011}, $07 {0111}, $0B {1011}:
             CurrStatement.Draw;
           else
             Break;
@@ -855,7 +863,8 @@ implementation
   var
     I: Integer;
   begin
-    for I := 0 to High(FBlocks) - 1 do
+    FBlocks[0].SetOptimalXLastBlock;
+    for I := 1 to High(FBlocks) - 1 do
       FBlocks[I].SetOptimalXLastBlock;
   end;
 
@@ -900,10 +909,15 @@ implementation
     function GetBlockMask(const ACurrBlock: TBlock;
           const AVisibleImageRect: TVisibleImageRect): Integer; inline;
     begin
-      Result := Ord(ACurrBlock.XStart >= AVisibleImageRect.FTopLeft.X) shl 3 or
-                Ord(ACurrBlock.XLast <= AVisibleImageRect.FBottomRight.X) shl 2 or
-                Ord(ACurrBlock.XStart <= AVisibleImageRect.FBottomRight.X) shl 1 or
-                Ord(ACurrBlock.XLast >= AVisibleImageRect.FTopLeft.X);
+      Result :=
+      {X--- : }
+        Ord(ACurrBlock.XStart >= AVisibleImageRect.FTopLeft.X) shl 3 or
+      {-X-- : }
+        Ord(ACurrBlock.XLast <= AVisibleImageRect.FBottomRight.X) shl 2 or
+      {--X- : }
+        Ord(ACurrBlock.XStart <= AVisibleImageRect.FBottomRight.X) shl 1 or
+      {---X : }
+        Ord(ACurrBlock.XLast >= AVisibleImageRect.FTopLeft.X);
     end;
   begin
     L := 0;
@@ -913,9 +927,9 @@ implementation
     begin
       M := (L + R) shr 1;
       case GetBlockMask(FBlocks[M], AVisibleImageRect) of
-        $0F, $03, $07, $0B:
+        $0F {1111}, $03 {0011}, $07 {0111}, $0B {1011}:
           R := M;
-        $09:
+        $09 {1001}:
           R := M - 1;
         else
           L := M + 1;
@@ -926,7 +940,7 @@ implementation
       for M := R to High(FBlocks) do
       begin
         case GetBlockMask(FBlocks[M], AVisibleImageRect) of
-          $0F, $03, $07, $0B:
+          $0F {1111}, $03 {0011}, $07 {0111}, $0B {1011}:
             FBlocks[M].DrawBlock(AVisibleImageRect);
           else
             Break;

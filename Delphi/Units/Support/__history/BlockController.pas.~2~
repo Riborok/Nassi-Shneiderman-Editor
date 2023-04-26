@@ -1,0 +1,60 @@
+unit BlockController;
+
+interface
+uses Base, GetAction, GetÑaseÑonditions, AdditionalTypes, System.Classes, CaseBranching,
+     FirstLoop, IfBranching, LastLoop, ProcessStatement, Vcl.Controls;
+
+function TryGetCond(var AInitialStr: TStringArr; const AOwner: TComponent): Boolean;
+function TryGetAction(var AAction: String; const AOwner: TComponent): Boolean;
+function ConvertToBlockType(const AIndex: Integer): TStatementClass;
+
+implementation
+
+  function TryGetCond(var AInitialStr: TStringArr; const AOwner: TComponent): Boolean;
+  var
+    WriteÑaseÑonditions: TWriteÑaseÑonditions;
+  begin
+    WriteÑaseÑonditions := TWriteÑaseÑonditions.Create(AOwner, AInitialStr);
+    WriteÑaseÑonditions.ShowModal;
+
+    if WriteÑaseÑonditions.ModalResult = mrOk then
+    begin
+      Result:= True;
+      AInitialStr:= WriteÑaseÑonditions.GetÑaseÑonditions;
+    end
+    else
+      Result:= False;
+
+    WriteÑaseÑonditions.Destroy;
+  end;
+
+  function TryGetAction(var AAction: String; const AOwner: TComponent): Boolean;
+  var
+    WriteActionForm: TWriteAction;
+  begin
+    WriteActionForm := TWriteAction.Create(AOwner, AAction);
+    WriteActionForm.ShowModal;
+
+    if WriteActionForm.ModalResult = mrOk then
+    begin
+      Result:= True;
+      AAction:= WriteActionForm.GetAction;
+    end
+    else
+      Result:= False;
+
+    WriteActionForm.Destroy;
+  end;
+
+  function ConvertToBlockType(const AIndex: Integer): TStatementClass;
+  begin
+    case AIndex of
+      0 : Result:= TProcessStatement;
+      1 : Result:= TIfBranching;
+      2 : Result:= TCaseBranching;
+      3 : Result:= TFirstLoop;
+      4 : Result:= TLastLoop;
+    end;
+  end;
+
+end.

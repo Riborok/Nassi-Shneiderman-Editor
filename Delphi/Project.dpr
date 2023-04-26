@@ -25,7 +25,9 @@ uses
   Get—ase—onditions in 'Units\Forms\Get—ase—onditions.pas' {Write—ase—onditions},
   AdditionalTypes in 'Units\Support\AdditionalTypes.pas',
   Constants in 'Units\Support\Constants.pas',
-  CaseBlockSorting in 'Units\Support\CaseBlockSorting.pas';
+  CaseBlockSorting in 'Units\Support\CaseBlockSorting.pas',
+  BlockController in 'Units\Support\BlockController.pas',
+  SwitchStatements in 'Units\Support\SwitchStatements.pas';
 
 {$R *.res}
 

@@ -3,11 +3,11 @@
 interface
 
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes,
-  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls, ProcessStatement,
+  Winapi.Windows, Winapi.Messages, System.Classes, Vcl.Graphics, Vcl.Controls,
+  Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls, ProcessStatement, BlockController,
   Base, FirstLoop, IfBranching, CaseBranching, LastLoop, StatementSearch, DrawShapes,
-  Vcl.StdCtrls, Vcl.Menus, System.Actions, Vcl.ActnList, Vcl.ToolWin, GetСaseСonditions,
-  Vcl.ComCtrls, Vcl.Buttons, System.ImageList, Vcl.ImgList, GetAction, AdditionalTypes,
+  Vcl.StdCtrls, Vcl.Menus, System.Actions, Vcl.ActnList, Vcl.ToolWin, SwitchStatements,
+  Vcl.ComCtrls, Vcl.Buttons, System.ImageList, Vcl.ImgList, AdditionalTypes,
   AdjustBorders, Types;
 
 type
@@ -73,6 +73,8 @@ type
     MIAscSort: TMenuItem;
     N2: TMenuItem;
     tmRedrawingMovements: TTimer;
+    actChangeAction: TAction;
+    actChangeAction1: TMenuItem;
 
     procedure FormCreate(Sender: TObject);
 
@@ -98,7 +100,8 @@ type
     procedure ImageMouseMove(Sender: TObject; Shift: TShiftState; X,
       Y: Integer);
     procedure tmRedrawingTimer(Sender: TObject);
-    { Private declarations }
+    procedure actChangeActionExecute(Sender: TObject);
+    procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
   private
     FMainBlock : TBlock;
     FDedicatedStatement: TStatement;
@@ -110,19 +113,12 @@ type
     FHighlightColor: TColor;
 
     procedure MyScroll(Sender: TObject);
-
-    function TryGetAction(var AAction: String): Boolean;
-    function TryGetCond(var AInitialStr: TStringArr): Boolean;
-    function CreateStatement(const AStatementClass: TStatementClass; const ABaseBlock: TBlock): TStatement;
-    class function ConvertToBlockType(const AIndex: Integer): TStatementClass;
     function GetVisibleImageScreen: TVisibleImageRect;
 
   private const
     SchemeInitialIndent = 10;
     SchemeInitialFontSize = 14;
     SchemeInitialFont = 'Times New Roman';
-  public
-    { Public declarations }
   end;
 
 var
@@ -137,25 +133,30 @@ implementation
   procedure TScrollBox.WMHScroll(var Message: TWMHScroll);
   begin
      inherited;
-     if Assigned(FOnScrollHorz) then  FOnScrollHorz(Self);
+     if Assigned(FOnScrollHorz) then
+      FOnScrollHorz(Self);
   end;
 
   procedure TScrollBox.WMVScroll(var Message: TWMVScroll);
   begin
      inherited;
-     if Assigned(FOnScrollVert) then  FOnScrollVert(Self);
+     if Assigned(FOnScrollVert) then
+      FOnScrollVert(Self);
   end;
 
   procedure TNassiShneiderman.MyScroll(Sender: TObject);
   begin
-    if not tmRedrawingMovements.Enabled and (GetKeyState(VK_LBUTTON) >= 0) then
-      tmRedrawingMovements.Enabled := True;
+    if GetKeyState(VK_LBUTTON) >= 0 then
+      Redraw(GetVisibleImageScreen);
   end;
 
   function TNassiShneiderman.GetVisibleImageScreen: TVisibleImageRect;
+  const
+    Stock = 420;
   begin
-    Result.FTopLeft := Image.ScreenToClient(ScrollBox.ClientToScreen(Point(0, 0)));
-    Result.FBottomRight := Image.ScreenToClient(ScrollBox.ClientToScreen(Point(ScrollBox.Width, ScrollBox.Height)));
+    Result.FTopLeft := Image.ScreenToClient(ScrollBox.ClientToScreen(Point(-Stock, -Stock)));
+    Result.FBottomRight := Image.ScreenToClient(
+          ScrollBox.ClientToScreen(Point(ScrollBox.Width + Stock, ScrollBox.Height + Stock)));
   end;
 
   procedure TNassiShneiderman.FormClose(Sender: TObject;
@@ -169,6 +170,7 @@ implementation
     NewStatement: TStatement;
   begin
     actDelete.ShortCut := ShortCut(VK_DELETE, []);
+    actChangeAction.ShortCut := ShortCut(VK_RETURN, []);
 
     ScrollBox.OnScrollVert := MyScroll;
     ScrollBox.OnScrollHorz := MyScroll;
@@ -181,7 +183,7 @@ implementation
 
     Base.DefaultBlock:= TProcessStatement;
 
-    Self.DoubleBuffered := true;
+    Self.DoubleBuffered := True;
 
     Image.Canvas.Font.Size := SchemeInitialFontSize;
 
@@ -198,6 +200,33 @@ implementation
     Redraw(GetVisibleImageScreen);
   end;
 
+  procedure TNassiShneiderman.FormKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+  begin
+    case Key of
+      VK_LEFT:
+      begin
+        SetHorizontalMovement(FDedicatedStatement, FMainBlock, SwitchStatements.BackwardDir);
+        Redraw(GetVisibleImageScreen);
+      end;
+      VK_RIGHT:
+      begin
+        SetHorizontalMovement(FDedicatedStatement, FMainBlock, SwitchStatements.ForwardDir);
+        Redraw(GetVisibleImageScreen);
+      end;
+      VK_UP:
+      begin
+        SetVerticalMovement(FDedicatedStatement, FMainBlock, SwitchStatements.BackwardDir);
+        Redraw(GetVisibleImageScreen);
+      end;
+      VK_DOWN:
+      begin
+        SetVerticalMovement(FDedicatedStatement, FMainBlock, SwitchStatements.ForwardDir);
+        Redraw(GetVisibleImageScreen);
+      end;
+    end;
+  end;
+
   procedure TNassiShneiderman.Redraw(const AVisibleImageRect: TVisibleImageRect);
   begin
     Clear(Image.Canvas, AVisibleImageRect);
@@ -205,14 +234,15 @@ implementation
     DefineBorders(FMainBlock.XLast, FMainBlock.Statements.GetLast.GetYBottom, Image);
 
     if FDedicatedStatement <> nil then
-      ColorizeRectangle(Image.Canvas, FDedicatedStatement.BaseBlock.XStart, FDedicatedStatement.BaseBlock.XLast,
-                      FDedicatedStatement.YStart, FDedicatedStatement.GetYBottom, FHighlightColor);
+      ColorizeRectangle(Image.Canvas, FDedicatedStatement.BaseBlock.XStart,
+                FDedicatedStatement.BaseBlock.XLast, FDedicatedStatement.YStart,
+                FDedicatedStatement.GetYBottom, FHighlightColor);
 
     if FCarryBlock <> nil then
       FCarryBlock.DrawBlock(AVisibleImageRect);
 
     FMainBlock.DrawBlock(AVisibleImageRect);
-    DrawCoordinates(Image.Canvas, 50);
+    //DrawCoordinates(Image.Canvas, 50);
   end;
 
   procedure TNassiShneiderman.ScrollBoxMouseWheel(Sender: TObject;
@@ -379,7 +409,7 @@ implementation
     if FDedicatedStatement <> nil then
     begin
       NewStatement:= CreateStatement(ConvertToBlockType(TComponent(Sender).Tag),
-                                                 FDedicatedStatement.BaseBlock);
+                                     FDedicatedStatement.BaseBlock, Self);
 
       if NewStatement <> nil then
       begin
@@ -405,7 +435,8 @@ implementation
 
     if FDedicatedStatement <> nil then
     begin
-      NewStatement:= CreateStatement(ConvertToBlockType(TComponent(Sender).Tag), FDedicatedStatement.BaseBlock);
+      NewStatement:= CreateStatement(ConvertToBlockType(TComponent(Sender).Tag),
+                                     FDedicatedStatement.BaseBlock, Self);
 
       if NewStatement <> nil then
       begin
@@ -440,104 +471,24 @@ implementation
   var
     MousePos: TPoint;
     Statement: TStatement;
-    Action: String;
-    Cond: TStringArr;
-    CaseBranching: TCaseBranching;
   begin
     MousePos := Image.ScreenToClient(Mouse.CursorPos);
 
     Statement := BinarySearchStatement(MousePos.X, MousePos.Y, FMainBlock);
 
     if Statement <> nil then
-    begin
-      Action := Statement.Action;
-
-      if TryGetAction(Action) then
-      begin
-        if Statement is TCaseBranching then
-        begin
-          CaseBranching:= TCaseBranching(Statement);
-          Cond:= CaseBranching.Conds;
-          if TryGetCond(Cond) then
-            CaseBranching.ChangeActionWithConds(Action, Cond);
-        end
-        else
-          Statement.ChangeAction(Action);
-
-      end;
-    end;
+      TryChangeContent(Statement, Self);
 
     Redraw(GetVisibleImageScreen);
   end;
 
-  function TNassiShneiderman.CreateStatement(const AStatementClass: TStatementClass;
-                                             const ABaseBlock: TBlock): TStatement;
-  var
-    Action: String;
-    Cond: TStringArr;
+  procedure TNassiShneiderman.actChangeActionExecute(Sender: TObject);
   begin
-    Result:= nil;
-    Action := '';
-
-    if TryGetAction(Action) then
+    if FDedicatedStatement <> nil then
     begin
-
-      if AStatementClass = TCaseBranching then
-      begin
-        Cond:= nil;
-        if TryGetCond(Cond) then
-          Result:= TCaseBranching.Create(Action, Cond, ABaseBlock);
-      end
-      else
-        Result:= AStatementClass.Create(Action, ABaseBlock);
+      TryChangeContent(FDedicatedStatement, Self);
+      Redraw(GetVisibleImageScreen);
     end;
-  end;
-
-  class function TNassiShneiderman.ConvertToBlockType(const AIndex: Integer): TStatementClass;
-  begin
-    case AIndex of
-      0 : Result:= TProcessStatement;
-      1 : Result:= TIfBranching;
-      2 : Result:= TCaseBranching;
-      3 : Result:= TFirstLoop;
-      4 : Result:= TLastLoop;
-    end;
-  end;
-
-  function TNassiShneiderman.TryGetCond(var AInitialStr: TStringArr): Boolean;
-  var
-    WriteСaseСonditions: TWriteСaseСonditions;
-  begin
-    WriteСaseСonditions := TWriteСaseСonditions.Create(Self, AInitialStr);
-    WriteСaseСonditions.ShowModal;
-
-    if WriteСaseСonditions.ModalResult = mrOk then
-    begin
-      Result:= True;
-      AInitialStr:= WriteСaseСonditions.GetСaseСonditions;
-    end
-    else
-      Result:= False;
-
-    WriteСaseСonditions.Destroy;
-  end;
-
-  function TNassiShneiderman.TryGetAction(var AAction: String): Boolean;
-  var
-    WriteActionForm: TWriteAction;
-  begin
-    WriteActionForm := TWriteAction.Create(Self, AAction);
-    WriteActionForm.ShowModal;
-
-    if WriteActionForm.ModalResult = mrOk then
-    begin
-      Result:= True;
-      AAction:= WriteActionForm.GetAction;
-    end
-    else
-      Result:= False;
-
-    WriteActionForm.Destroy;
   end;
 
   initialization

@@ -33,7 +33,7 @@ implementation
 
   function TWriteAction.GetAction: String;
   begin
-    Result:= MemoAction.Lines.Text
+    Result:= MemoAction.Lines.Text;
   end;
 
   constructor TWriteAction.Create(AOwner: TComponent; ACurrAction: String);

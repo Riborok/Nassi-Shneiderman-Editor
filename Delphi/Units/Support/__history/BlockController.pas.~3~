@@ -1,0 +1,106 @@
+﻿unit BlockController;
+
+interface
+uses Base, GetAction, GetСaseСonditions, AdditionalTypes, System.Classes, CaseBranching,
+     FirstLoop, IfBranching, LastLoop, ProcessStatement, Vcl.Controls;
+
+function ConvertToBlockType(const AIndex: Integer): TStatementClass;
+function CreateStatement(const AStatementClass: TStatementClass;
+         const ABaseBlock: TBlock; const AOwner: TComponent): TStatement;
+procedure TryChangeContenr(const Statement: TStatement; const AOwner: TComponent);
+
+implementation
+
+  function TryGetCond(var AInitialStr: TStringArr; const AOwner: TComponent): Boolean;
+  var
+    WriteСaseСonditions: TWriteСaseСonditions;
+  begin
+    WriteСaseСonditions := TWriteСaseСonditions.Create(AOwner, AInitialStr);
+    WriteСaseСonditions.ShowModal;
+
+    if WriteСaseСonditions.ModalResult = mrOk then
+    begin
+      Result:= True;
+      AInitialStr:= WriteСaseСonditions.GetСaseСonditions;
+    end
+    else
+      Result:= False;
+
+    WriteСaseСonditions.Destroy;
+  end;
+
+  function TryGetAction(var AAction: String; const AOwner: TComponent): Boolean;
+  var
+    WriteActionForm: TWriteAction;
+  begin
+    WriteActionForm := TWriteAction.Create(AOwner, AAction);
+    WriteActionForm.ShowModal;
+
+    if WriteActionForm.ModalResult = mrOk then
+    begin
+      Result:= True;
+      AAction:= WriteActionForm.GetAction;
+    end
+    else
+      Result:= False;
+
+    WriteActionForm.Destroy;
+  end;
+
+  function ConvertToBlockType(const AIndex: Integer): TStatementClass;
+  begin
+    case AIndex of
+      0 : Result:= TProcessStatement;
+      1 : Result:= TIfBranching;
+      2 : Result:= TCaseBranching;
+      3 : Result:= TFirstLoop;
+      4 : Result:= TLastLoop;
+    end;
+  end;
+
+  function CreateStatement(const AStatementClass: TStatementClass;
+                          const ABaseBlock: TBlock; const AOwner: TComponent): TStatement;
+  var
+    Action: String;
+    Cond: TStringArr;
+  begin
+    Result:= nil;
+    Action := '';
+
+    if TryGetAction(Action, AOwner) then
+    begin
+
+      if AStatementClass = TCaseBranching then
+      begin
+        Cond:= nil;
+        if TryGetCond(Cond, AOwner) then
+          Result:= TCaseBranching.Create(Action, Cond, ABaseBlock);
+      end
+      else
+        Result:= AStatementClass.Create(Action, ABaseBlock);
+    end;
+  end;
+
+  procedure TryChangeContenr(const Statement: TStatement; const AOwner: TComponent);
+  var
+    Action: String;
+    Cond: TStringArr;
+    CaseBranching: TCaseBranching;
+  begin
+    Action := Statement.Action;
+
+    if TryGetAction(Action, AOwner) then
+    begin
+      if Statement is TCaseBranching then
+      begin
+        CaseBranching:= TCaseBranching(Statement);
+        Cond:= CaseBranching.Conds;
+        if TryGetCond(Cond, AOwner) then
+          CaseBranching.ChangeActionWithConds(Action, Cond);
+      end
+      else
+        Statement.ChangeAction(Action);
+    end;
+  end;
+
+end.
