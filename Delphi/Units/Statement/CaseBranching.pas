@@ -146,7 +146,8 @@ implementation
       for I := Length(PrevCond) to High(FConds) do
       begin
         SetCondSize(I);
-        FBlocks[I].Statements[0].Install;
+
+        FBlocks[I].Install(0);
       end;
     end;
 

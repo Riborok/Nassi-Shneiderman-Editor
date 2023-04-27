@@ -12,7 +12,7 @@ type
   // UncertaintySymbol is a constant field used to represent an unknown value
   // in the statement
   TStatement = class abstract
-  public const
+  private const
     UncertaintySymbol = '';
   protected
 
@@ -22,7 +22,6 @@ type
     // FAction stores the text of the statement
     FAction: String;
     FActionSize: TSize;
-
 
     FYIndentText, FXMinIndentText: Integer;
 
@@ -47,15 +46,11 @@ type
     // Returns the optimal block width
     function GetOptimaWidth: Integer; virtual; abstract;
 
-    procedure RedefineStatement;
+    procedure RedefineStatement; virtual;
 
     // This method is abstract and will be implemented by subclasses to determine
     // the size of the statement
     procedure SetInitiaXLast; virtual;
-
-    // After changing the Y coordinate, need to call the procedure in order to
-    // change the Y coordinates of others
-    procedure FixYStatementsPosition;
 
     procedure SetTextSize; virtual;
     procedure SetActionSizes;
@@ -87,10 +82,6 @@ type
     // Set the optimal Y last
     procedure SetOptimalYLast;
 
-    // Set the dimensions after adding and if this statement is the last one,
-    // it asks the previous to set the optimal height
-    procedure Install;
-
     function Clone: TStatement; virtual;
   end;
 
@@ -118,6 +109,10 @@ type
     procedure SetInitiaXLast; override;
 
     procedure DrawBlocks(const AVisibleImageRect: TVisibleImageRect);
+
+    procedure AlignBlocks;
+
+    procedure RedefineStatement; override;
   public
     constructor Create(const AAction : String; const ABaseBlock: TBlock); override;
     destructor Destroy; override;
@@ -152,6 +147,7 @@ type
     function GetLastStatement: TStatement;
 
     function Clone(const ABaseOperator: TOperator): TBlock;
+
   public
     constructor Create(const AXStart, AXLast: Integer; const ABaseOperator: TOperator;
                        const ACanvas: TCanvas);
@@ -163,9 +159,10 @@ type
     property BaseOperator: TOperator read FBaseOperator;
     property Statements: TArrayList<TStatement> read FStatements;
 
-    procedure AddStatementBefore(const AStatement: TStatement; const AInsertedStatement: TStatement);
-    procedure AddStatementAfter(const AStatement: TStatement; const AInsertedStatement: TStatement);
-    procedure AddStatementLast(const AStatement: TStatement);
+    procedure AddStatementBefore(const AStatement: TStatement; const AInsertedStatement: TStatement; const isInstalling: Boolean = True);
+    procedure AddStatementAfter(const AStatement: TStatement; const AInsertedStatement: TStatement; const isInstalling: Boolean = True);
+    procedure AddStatementLast(const AStatement: TStatement; const isInstalling: Boolean = True);
+
     procedure AddFirstStatement(const AStatement: TStatement; const AYStart: Integer); overload;
     procedure AddFirstStatement(const AStatement: TStatement); overload;
 
@@ -188,6 +185,14 @@ type
     procedure RedefineSizes;
 
     function FindStatementIndex(const AFYStart: Integer): Integer;
+
+    // Set the dimensions after adding and if this statement is the last one,
+    // it asks the previous to set the optimal height
+    procedure Install(const Index: Integer);
+
+    // After changing the Y coordinate, need to call the procedure in order to
+    // change the Y coordinates of others
+    procedure FixYStatementsPosition(const Index: Integer);
   end;
 
   var
@@ -230,18 +235,9 @@ implementation
   end;
 
   procedure TStatement.RedefineStatement;
-  var
-    I: Integer;
-    Blocks: TBlockArr;
   begin
     SetTextSize;
     SetOptimalYLast;
-    if Self is TOperator then
-    begin
-      Blocks:= TOperator(Self).FBlocks;
-      for I := 0 to High(Blocks) do
-        Blocks[I].RedefineSizes;
-    end;
   end;
 
   function TStatement.HasOptimalYLast : Boolean;
@@ -256,7 +252,7 @@ implementation
 
     BaseBlock.SetOptimalXLastBlock;
     SetOptimalYLast;
-    FixYStatementsPosition;
+    BaseBlock.FixYStatementsPosition(BaseBlock.FindStatementIndex(YStart));
   end;
 
   procedure TStatement.SetInitiaXLast;
@@ -279,58 +275,6 @@ implementation
     Result:= GetOptimalYLast;
   end;
 
-  procedure TStatement.FixYStatementsPosition;
-  var
-    Index: Integer;
-    CurrBlock: TBlock;
-    CurrOperator: TOperator;
-    procedure AlignBlocks(const ABlockArr: TBlockArr);
-    var
-      I, MaxYLast, CurrYLast: Integer;
-    begin
-
-      MaxYLast := ABlockArr[0].GetLastStatement.GetMaxOptimalYBottom;
-      for I := 1 to High(ABlockArr) do
-      begin
-        CurrYLast := ABlockArr[I].GetLastStatement.GetMaxOptimalYBottom;;
-        if MaxYLast < CurrYLast then
-          MaxYLast := CurrYLast;
-      end;
-
-      for I := 0 to High(ABlockArr) do
-        if ABlockArr[I].GetLastStatement.GetYBottom <> MaxYLast then
-          ABlockArr[I].GetLastStatement.SetYBottom(MaxYLast);
-    end;
-  begin
-
-    // Find the statement index in the block
-    Index := BaseBlock.FindStatementIndex(Self.FYStart);
-
-    // Shift all statements after and childrens
-    BaseBlock.ChangeYStatement(Index);
-
-    if Self is TOperator then
-    begin
-      CurrOperator:= TOperator(Self);
-      if Length(CurrOperator.FBlocks) > 1 then
-        AlignBlocks(CurrOperator.FBlocks);
-    end;
-
-    // Next, shift the statements in all basic blocks
-    CurrBlock:= BaseBlock;
-    while CurrBlock.BaseOperator <> nil do
-    begin
-      CurrOperator:= CurrBlock.BaseOperator;
-      CurrBlock:= CurrBlock.BaseOperator.BaseBlock;
-
-      if Length(CurrOperator.FBlocks) > 1 then
-        AlignBlocks(CurrOperator.FBlocks);
-
-      Index := CurrBlock.FindStatementIndex(CurrOperator.FYStart);
-      CurrBlock.ChangeYStatement(Index + 1);
-    end;
-  end;
-
   procedure TStatement.SetOptimalYLast;
   begin
     FYLast := GetOptimalYLast;
@@ -340,13 +284,6 @@ implementation
   begin
     Inc(FYStart, AOffset);
     Inc(FYLast, AOffset);
-  end;
-
-  procedure TStatement.Install;
-  begin
-    SetOptimalYLast;
-    SetInitiaXLast;
-    FixYStatementsPosition;
   end;
 
   function TStatement.Clone: TStatement;
@@ -396,11 +333,12 @@ implementation
   begin
     for I := 0 to FStatements.Count - 1 do
       FStatements[I].RedefineStatement;
+
     SetOptimalXLastBlock;
   end;
 
   procedure TBlock.AddStatementBefore(const AStatement: TStatement;
-            const AInsertedStatement: TStatement);
+            const AInsertedStatement: TStatement; const isInstalling: Boolean = True);
   var
     Index: Integer;
   begin
@@ -413,10 +351,13 @@ implementation
     if (AStatement.FAction = TStatement.UncertaintySymbol) and
                     (AStatement.ClassType = DefaultBlock) then
       Self.RemoveStatementAt(Index + 1);
+
+    if isInstalling then
+      Install(Index);
   end;
 
   procedure TBlock.AddStatementAfter(const AStatement: TStatement;
-            const AInsertedStatement: TStatement);
+            const AInsertedStatement: TStatement; const isInstalling: Boolean = True);
   var
     Index: Integer;
   begin
@@ -431,16 +372,20 @@ implementation
       if (AStatement.FAction = TStatement.UncertaintySymbol) and
                       (AStatement.ClassType = DefaultBlock) then
         Self.RemoveStatementAt(Index + 1);
+
+      if isInstalling then
+        Install(Index);
     end
     else
-      AddStatementLast(AInsertedStatement);
+      AddStatementLast(AInsertedStatement, isInstalling);
   end;
 
-  procedure TBlock.AddStatementLast(const AStatement: TStatement);
+  procedure TBlock.AddStatementLast(const AStatement: TStatement; const isInstalling: Boolean = True);
   var
     PrevStatement: TStatement;
   begin
     FStatements.Add(AStatement);
+    AStatement.FBaseBlock:= Self;
 
     if FStatements.Count = 1 then
       AStatement.FYStart:= BaseOperator.FYLast
@@ -458,7 +403,8 @@ implementation
       end;
     end;
 
-    AStatement.FBaseBlock:= Self;
+    if isInstalling then
+      Install(FStatements.Count - 1);
   end;
 
   procedure TBlock.AddFirstStatement(const AStatement: TStatement; const AYStart: Integer);
@@ -466,6 +412,7 @@ implementation
     FStatements.Add(AStatement);
     AStatement.FYStart:= AYStart;
     AStatement.FBaseBlock:= Self;
+    Install(0);
   end;
 
   procedure TBlock.AddFirstStatement(const AStatement: TStatement);
@@ -481,7 +428,7 @@ implementation
   begin
     Offset:= Self.XStart - AInsertedBlock.XStart;
 
-    Self.AddStatementAfter(AStatement, AInsertedBlock.FStatements[0]);
+    AddStatementAfter(AStatement, AInsertedBlock.FStatements[0], False);
 
     if AInsertedBlock.FStatements[0] is TOperator then
     begin
@@ -493,7 +440,7 @@ implementation
 
     for I := 1 to AInsertedBlock.FStatements.Count - 1 do
     begin
-      Self.AddStatementAfter(AInsertedBlock.FStatements[I - 1], AInsertedBlock.FStatements[I]);
+      Self.AddStatementAfter(AInsertedBlock.FStatements[I - 1], AInsertedBlock.FStatements[I], False);
 
       if AInsertedBlock.FStatements[I] is TOperator then
       begin
@@ -503,6 +450,9 @@ implementation
         Blocks[High(Blocks)].ChangeXLastBlock(XLast);
       end;
     end;
+
+    RedefineSizes;
+    FixYStatementsPosition(0);
   end;
 
   function TBlock.Remove(const AStatement: TStatement): Integer;
@@ -725,6 +675,38 @@ implementation
         R := M - 1;
     end;
 
+  end;
+
+  procedure TBlock.FixYStatementsPosition(const Index: Integer);
+  var
+    CurrBlock: TBlock;
+    CurrOperator: TOperator;
+  begin
+
+    // Shift all statements after and childrens
+    ChangeYStatement(Index);
+
+    if FStatements[Index] is TOperator then
+      TOperator(FStatements[Index]).AlignBlocks;
+
+    // Next, shift the statements in all basic blocks
+    CurrBlock:= Self;
+    while CurrBlock.BaseOperator <> nil do
+    begin
+      CurrOperator:= CurrBlock.BaseOperator;
+      CurrBlock:= CurrOperator.BaseBlock;
+
+      CurrOperator.AlignBlocks;
+
+      CurrBlock.ChangeYStatement(CurrBlock.FindStatementIndex(CurrOperator.FYStart) + 1);
+    end;
+  end;
+
+  procedure TBlock.Install(const Index: Integer);
+  begin
+    FStatements[Index].SetOptimalYLast;
+    FStatements[Index].SetInitiaXLast;
+    FixYStatementsPosition(Index);
   end;
 
   function GetStatementMask(const ACurrStatement: TStatement;
@@ -955,6 +937,37 @@ implementation
             Break;
         end;
       end;
+  end;
+
+  procedure TOperator.AlignBlocks;
+  var
+    I, MaxYLast, CurrYLast: Integer;
+  begin
+    if Length(FBlocks) > 1 then
+    begin
+      MaxYLast := FBlocks[0].GetLastStatement.GetMaxOptimalYBottom;
+      for I := 1 to High(FBlocks) do
+      begin
+        CurrYLast := FBlocks[I].GetLastStatement.GetMaxOptimalYBottom;;
+        if MaxYLast < CurrYLast then
+          MaxYLast := CurrYLast;
+      end;
+
+      for I := 0 to High(FBlocks) do
+        if FBlocks[I].GetLastStatement.GetYBottom <> MaxYLast then
+          FBlocks[I].GetLastStatement.SetYBottom(MaxYLast);
+    end;
+  end;
+
+  procedure TOperator.RedefineStatement;
+  var
+    I: Integer;
+  begin
+    inherited;
+    for I := 0 to High(FBlocks) do
+      FBlocks[I].RedefineSizes;
+
+    AlignBlocks;
   end;
 
   function TOperator.Clone: TStatement;

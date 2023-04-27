@@ -167,8 +167,6 @@ implementation
   end;
 
   procedure TNassiShneiderman.FormCreate(Sender: TObject);
-  var
-    NewStatement: TStatement;
   begin
     actDelete.ShortCut := ShortCut(VK_DELETE, []);
     actChangeAction.ShortCut := ShortCut(VK_RETURN, []);
@@ -197,9 +195,8 @@ implementation
 
     FMainBlock:= TBlock.Create(SchemeInitialIndent, 0, nil, Image.Canvas);
 
-    NewStatement:= TProcessStatement.CreateUncertainty(FMainBlock);
-    FMainBlock.AddFirstStatement(NewStatement, SchemeInitialIndent);
-    NewStatement.Install;
+    FMainBlock.AddFirstStatement(Base.DefaultBlock.CreateUncertainty(FMainBlock),
+                                                            SchemeInitialIndent);
 
     Redraw(GetVisibleImageScreen);
   end;
@@ -286,7 +283,7 @@ implementation
   Shift: TShiftState; WheelDelta: Integer; MousePos: TPoint;
     var Handled: Boolean);
   const
-    ScrotStep = 42;
+    ScrotStep = 42 shl 1;
   begin
     if ssShift in Shift then
     begin
@@ -426,9 +423,6 @@ implementation
     begin
       FDedicatedStatement.BaseBlock.AddBlockAfter(FDedicatedStatement, FBufferBlock);
 
-      for I := 0 to FBufferBlock.Statements.Count - 1 do
-        FBufferBlock.Statements[I].Install;
-
       FBufferBlock.Assign(FDedicatedStatement.BaseBlock);
       FDedicatedStatement:= FBufferBlock.Statements.GetLast;
       for I := 0 to FBufferBlock.Statements.Count - 1 do
@@ -451,7 +445,6 @@ implementation
       if NewStatement <> nil then
       begin
         FDedicatedStatement.BaseBlock.AddStatementBefore(FDedicatedStatement, NewStatement);
-        NewStatement.Install;
         FDedicatedStatement:= NewStatement;
       end;
 
@@ -478,7 +471,6 @@ implementation
       if NewStatement <> nil then
       begin
         FDedicatedStatement.BaseBlock.AddStatementAfter(FDedicatedStatement, NewStatement);
-        NewStatement.Install;
         FDedicatedStatement:= NewStatement;
       end;
 
@@ -496,7 +488,7 @@ implementation
       Block:= FDedicatedStatement.BaseBlock;
       Index:= Block.Remove(FDedicatedStatement);
 
-      Block.Statements[Index].Install;
+      Block.Install(Index);
 
       FDedicatedStatement:= Block.Statements[Index];
 
