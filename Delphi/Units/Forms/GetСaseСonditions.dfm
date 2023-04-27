@@ -2128,6 +2128,7 @@
   OldCreateOrder = False
   OnCreate = FormCreate
   OnKeyDown = FormKeyDown
+  OnShow = FormShow
   PixelsPerInch = 96
   TextHeight = 13
   object Panel: TPanel
@@ -2218,8 +2219,8 @@
       Height = 44
       Align = alBottom
       Caption = 'OK'
+      ModalResult = 1
       TabOrder = 3
-      OnClick = btnOKClick
     end
   end
 end

@@ -3,25 +3,24 @@ unit GetAction;
 interface
 
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls;
+  Winapi.Windows, System.Classes,
+  Vcl.Controls, Vcl.Forms, Vcl.StdCtrls, Vcl.ExtCtrls;
 
 type
   TWriteAction = class(TForm)
     Panel: TPanel;
     MemoAction: TMemo;
     btnOK: TButton;
-    constructor Create(AOwner: TComponent; ACurrAction: String);
-    procedure btnOKClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
 
     procedure MemoActionKeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
+    procedure FormShow(Sender: TObject);
   private
     { Private declarations }
   public
     { Public declarations }
-    function GetAction: String;
+    function TryGetAction(const AOwner: TForm; var AAction: String): Boolean;
   end;
 
 var
@@ -31,32 +30,24 @@ implementation
 
   {$R *.dfm}
 
-  function TWriteAction.GetAction: String;
+  function TWriteAction.TryGetAction(const AOwner: TForm; var AAction: String): Boolean;
   begin
-    Result:= MemoAction.Lines.Text;
-  end;
+    Left := AOwner.Left + (AOwner.Width - Width) shr 1;
+    Top := AOwner.Top + (AOwner.Height - Height) shr 1;
 
-  constructor TWriteAction.Create(AOwner: TComponent; ACurrAction: String);
-  var
-    OwnerControl: TControl;
-  begin
-    inherited Create(AOwner);
-
-    if AOwner is TControl then
-    begin
-      OwnerControl := TControl(AOwner);
-      Left := OwnerControl.Left + (OwnerControl.Width - Width) shr 1;
-      Top := OwnerControl.Top + (OwnerControl.Height - Height) shr 1;
-    end
-    else
-    begin
-      Left := (Screen.Width - Width) shr 1;
-      Top := (Screen.Height - Height) shr 1;
-    end;
-
-    MemoAction.Text := ACurrAction;
+    MemoAction.Text := AAction;
     MemoAction.SelStart := 0;
     MemoAction.SelLength := Length(MemoAction.Text);
+
+    ShowModal;
+
+    if Self.ModalResult = MrOk then
+    begin
+      Result:= True;
+      AAction:= MemoAction.Lines.Text;
+    end
+    else
+      Result:= False;
   end;
 
   procedure TWriteAction.FormCreate(Sender: TObject);
@@ -65,16 +56,16 @@ implementation
     Constraints.MinHeight := 250;
   end;
 
+  procedure TWriteAction.FormShow(Sender: TObject);
+  begin
+    MemoAction.SetFocus;
+  end;
+
   procedure TWriteAction.MemoActionKeyDown(Sender: TObject; var Key: Word;
     Shift: TShiftState);
   begin
     if (Key = VK_RETURN) and not (ssShift in Shift) then
       ModalResult := mrOk;
-  end;
-
-  procedure TWriteAction.btnOKClick(Sender: TObject);
-  begin
-    ModalResult := mrOk;
   end;
 
 end.

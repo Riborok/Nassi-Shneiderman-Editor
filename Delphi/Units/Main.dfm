@@ -2127,7 +2127,6 @@ object NassiShneiderman: TNassiShneiderman
     FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF}
   OldCreateOrder = False
   WindowState = wsMaximized
-  OnClose = FormClose
   OnCreate = FormCreate
   OnKeyDown = FormKeyDown
   PixelsPerInch = 96
@@ -2161,20 +2160,20 @@ object NassiShneiderman: TNassiShneiderman
       Top = 0
       Action = actAfterIfBranch
     end
-    object tbMultBranch: TToolButton
+    object tbLoop: TToolButton
       Left = 74
       Top = 0
-      Action = actAfterMultBranch
+      Action = actAfterLoop
     end
     object tbRevLoop: TToolButton
       Left = 111
       Top = 0
       Action = actAfterRevLoop
     end
-    object tbLoop: TToolButton
+    object tbMultBranch: TToolButton
       Left = 148
       Top = 0
-      Action = actAfterLoop
+      Action = actAfterMultBranch
     end
   end
   object ScrollBox: TScrollBox

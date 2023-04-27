@@ -16,8 +16,6 @@ type
     Label1: TLabel;
     btnDelete: TButton;
     Panel: TPanel;
-    constructor Create(AOwner: TComponent; const ACond: TStringArr);
-    procedure btnOKClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure btnAddClick(Sender: TObject);
     procedure ScrollBoxMouseWheel(Sender: TObject; Shift: TShiftState;
@@ -25,6 +23,7 @@ type
     procedure btnDeleteClick(Sender: TObject);
     destructor Destroy;
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+    procedure FormShow(Sender: TObject);
   private
     { Private declarations }
     FMemoStack: TStack<TMemo>;
@@ -32,7 +31,7 @@ type
     procedure CreateMemo(const AText: string = '');
   public
     { Public declarations }
-    function GetÑaseÑonditions: TStringArr;
+    function TryGetCond(const AOwner: TForm; var ACond: TStringArr): Boolean;
   private const
     MinCond = 2;
     MaxCond = 100;
@@ -44,44 +43,14 @@ var
 implementation
 
 {$R *.dfm}
-
-  function TWriteÑaseÑonditions.GetÑaseÑonditions: TStringArr;
+  function TWriteÑaseÑonditions.TryGetCond(const AOwner: TForm; var ACond: TStringArr): Boolean;
   var
     I: Integer;
     Memo: TMemo;
+    LabelCaption: TLabel;
   begin
-    SetLength(Result, FMemoStack.Count);
-
-    for I := FMemoStack.Count - 1 downto 0 do
-    begin
-      Memo:= FMemoStack.Pop;
-      Result[I]:= Memo.Lines.Text;
-      Memo.Destroy;
-    end;
-  end;
-
-  constructor TWriteÑaseÑonditions.Create(AOwner: TComponent; const ACond: TStringArr);
-  var
-    OwnerControl: TControl;
-    I: Integer;
-  begin
-
-    inherited Create(AOwner);
-
-    FMemoStack:= TStack<TMemo>.Create;
-    FLabelStack:= TStack<TLabel>.Create;
-
-    if AOwner is TControl then
-    begin
-      OwnerControl := TControl(AOwner);
-      Left := OwnerControl.Left + (OwnerControl.Width - Width) shr 1;
-      Top := OwnerControl.Top + (OwnerControl.Height - Height) shr 1;
-    end
-    else
-    begin
-      Left := (Screen.Width - Width) shr 1;
-      Top := (Screen.Height - Height) shr 1;
-    end;
+    Left := AOwner.Left + (AOwner.Width - Width) shr 1;
+    Top := AOwner.Top + (AOwner.Height - Height) shr 1;
 
     for I := 0 to High(ACond) do
       CreateMemo(ACond[i]);
@@ -91,14 +60,25 @@ implementation
 
     FMemoStack.Peek.SelStart := 0;
     FMemoStack.Peek.SelLength := Length(FMemoStack.Peek.Text);
-  end;
 
-  destructor TWriteÑaseÑonditions.Destroy;
-  var
-    I: Integer;
-    Memo: TMemo;
-    LabelCaption: TLabel;
-  begin
+    ShowModal;
+
+    if Self.ModalResult = MrOk then
+    begin
+      Result:= True;
+
+      SetLength(ACond, FMemoStack.Count);
+
+      for I := FMemoStack.Count - 1 downto 0 do
+      begin
+        Memo:= FMemoStack.Pop;
+        ACond[I]:= Memo.Lines.Text;
+        Memo.Destroy;
+      end;
+    end
+    else
+      Result:= False;
+
     for I:= FMemoStack.Count - 1 downto 0 do
     begin
       Memo:= FMemoStack.Pop;
@@ -111,6 +91,10 @@ implementation
       LabelCaption.Destroy;
     end;
 
+  end;
+
+  destructor TWriteÑaseÑonditions.Destroy;
+  begin
     FMemoStack.Destroy;
     FLabelStack.Destroy;
 
@@ -139,11 +123,6 @@ implementation
       Memo.Destroy;
       LabelCaption.Destroy;
     end;
-  end;
-
-  procedure TWriteÑaseÑonditions.btnOKClick(Sender: TObject);
-  begin
-    ModalResult := mrOk;
   end;
 
   procedure TWriteÑaseÑonditions.CreateMemo(const AText: string = '');
@@ -185,6 +164,8 @@ implementation
   begin
     Constraints.MinWidth := 550;
     Constraints.MinHeight := 700;
+    FMemoStack:= TStack<TMemo>.Create;
+    FLabelStack:= TStack<TLabel>.Create;
   end;
 
   procedure TWriteÑaseÑonditions.FormKeyDown(Sender: TObject; var Key: Word;
@@ -192,6 +173,11 @@ implementation
   begin
     if (Key = VK_RETURN) and not (ssShift in Shift) then
       ModalResult := mrOk;
+  end;
+
+  procedure TWriteÑaseÑonditions.FormShow(Sender: TObject);
+  begin
+    FMemoStack.Peek.SetFocus;
   end;
 
   procedure TWriteÑaseÑonditions.ScrollBoxMouseWheel(Sender: TObject;

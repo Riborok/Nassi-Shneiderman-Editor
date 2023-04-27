@@ -2,51 +2,16 @@ unit BlockController;
 
 interface
 uses Base, GetAction, GetÑaseÑonditions, AdditionalTypes, System.Classes, CaseBranching,
-     FirstLoop, IfBranching, LastLoop, ProcessStatement, Vcl.Controls;
+     FirstLoop, IfBranching, LastLoop, ProcessStatement, Vcl.Controls, VCL.Forms;
 
 function ConvertToBlockType(const AIndex: Integer): TStatementClass;
 
 function CreateStatement(const AStatementClass: TStatementClass;
-         const ABaseBlock: TBlock; const AOwner: TComponent): TStatement;
-procedure TryChangeContent(const AStatement: TStatement; const AOwner: TComponent);
+         const ABaseBlock: TBlock; const AOwner: TForm): TStatement;
+
+procedure TryChangeContent(const AStatement: TStatement; const AOwner: TForm);
 
 implementation
-
-  function TryGetCond(var AInitialStr: TStringArr; const AOwner: TComponent): Boolean;
-  var
-    WriteÑaseÑonditions: TWriteÑaseÑonditions;
-  begin
-    WriteÑaseÑonditions := TWriteÑaseÑonditions.Create(AOwner, AInitialStr);
-    WriteÑaseÑonditions.ShowModal;
-
-    if WriteÑaseÑonditions.ModalResult = mrOk then
-    begin
-      Result:= True;
-      AInitialStr:= WriteÑaseÑonditions.GetÑaseÑonditions;
-    end
-    else
-      Result:= False;
-
-    WriteÑaseÑonditions.Destroy;
-  end;
-
-  function TryGetAction(var AAction: String; const AOwner: TComponent): Boolean;
-  var
-    WriteActionForm: TWriteAction;
-  begin
-    WriteActionForm := TWriteAction.Create(AOwner, AAction);
-    WriteActionForm.ShowModal;
-
-    if WriteActionForm.ModalResult = mrOk then
-    begin
-      Result:= True;
-      AAction:= WriteActionForm.GetAction;
-    end
-    else
-      Result:= False;
-
-    WriteActionForm.Destroy;
-  end;
 
   function ConvertToBlockType(const AIndex: Integer): TStatementClass;
   begin
@@ -60,7 +25,7 @@ implementation
   end;
 
   function CreateStatement(const AStatementClass: TStatementClass;
-                          const ABaseBlock: TBlock; const AOwner: TComponent): TStatement;
+                          const ABaseBlock: TBlock; const AOwner: TForm): TStatement;
   var
     Action: String;
     Cond: TStringArr;
@@ -68,13 +33,13 @@ implementation
     Result:= nil;
     Action := '';
 
-    if TryGetAction(Action, AOwner) then
+    if WriteAction.TryGetAction(AOwner, Action) then
     begin
 
       if AStatementClass = TCaseBranching then
       begin
         Cond:= nil;
-        if TryGetCond(Cond, AOwner) then
+        if WriteÑaseÑonditions.TryGetCond(AOwner, Cond) then
           Result:= TCaseBranching.Create(Action, Cond, ABaseBlock);
       end
       else
@@ -82,7 +47,7 @@ implementation
     end;
   end;
 
-  procedure TryChangeContent(const AStatement: TStatement; const AOwner: TComponent);
+  procedure TryChangeContent(const AStatement: TStatement; const AOwner: TForm);
   var
     Action: String;
     Cond: TStringArr;
@@ -90,13 +55,13 @@ implementation
   begin
     Action := AStatement.Action;
 
-    if TryGetAction(Action, AOwner) then
+    if WriteAction.TryGetAction(AOwner, Action) then
     begin
       if AStatement is TCaseBranching then
       begin
         CaseBranching:= TCaseBranching(AStatement);
         Cond:= CaseBranching.Conds;
-        if TryGetCond(Cond, AOwner) then
+        if WriteÑaseÑonditions.TryGetCond(AOwner, Cond) then
           CaseBranching.ChangeActionWithConds(Action, Cond);
       end
       else

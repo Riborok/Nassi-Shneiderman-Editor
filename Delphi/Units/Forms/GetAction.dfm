@@ -2128,6 +2128,7 @@ object WriteAction: TWriteAction
     FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF}
   OldCreateOrder = False
   OnCreate = FormCreate
+  OnShow = FormShow
   PixelsPerInch = 96
   TextHeight = 13
   object Panel: TPanel
@@ -2164,8 +2165,8 @@ object WriteAction: TWriteAction
       Height = 41
       Align = alBottom
       Caption = 'OK'
+      ModalResult = 1
       TabOrder = 1
-      OnClick = btnOKClick
     end
   end
 end

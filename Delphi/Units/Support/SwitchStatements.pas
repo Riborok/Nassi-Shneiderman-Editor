@@ -1,7 +1,7 @@
 unit SwitchStatements;
 
 interface
-uses Base;
+uses Base, AdditionalTypes;
 type
   TDirection = (ForwardDir = 1, BackwardDir = -1);
 
@@ -86,19 +86,21 @@ implementation
             AStatement:= AStatement.BaseBlock.Statements[StatementIndex + Ord(ADirection)]
           else
           begin
-            CurrStatement := AStatement;
-            while CurrStatement.BaseBlock.BaseOperator <> nil do
+            if AStatement.BaseBlock.BaseOperator <> nil then
             begin
-              CurrStatement := CurrStatement.BaseBlock.BaseOperator;
-              StatementIndex := CurrStatement.BaseBlock.FindStatementIndex(
-                                CurrStatement.YStart);
-              if StatementIndex < CurrStatement.BaseBlock.Statements.Count - 1 then
-              begin
-                AStatement := CurrStatement.BaseBlock.Statements[StatementIndex + Ord(ADirection)];
-                Exit;
-              end;
+              CurrStatement := AStatement;
+              repeat
+                CurrStatement := CurrStatement.BaseBlock.BaseOperator;
+                StatementIndex := CurrStatement.BaseBlock.FindStatementIndex(
+                                  CurrStatement.YStart);
+                if StatementIndex < CurrStatement.BaseBlock.Statements.Count - 1 then
+                begin
+                  AStatement := CurrStatement.BaseBlock.Statements[StatementIndex + Ord(ADirection)];
+                  Exit;
+                end;
+              until CurrStatement.BaseBlock.BaseOperator = nil;
+              AStatement := AStatement.BaseBlock.BaseOperator;
             end;
-            AStatement := AStatement.BaseBlock.BaseOperator;
           end;
         end;
       end;
