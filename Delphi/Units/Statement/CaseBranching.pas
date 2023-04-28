@@ -253,7 +253,7 @@ implementation
     YTriangleHeight:= FYStart + FActionSize.Height + FYIndentText shl 1;
 
     // Drawing the main block
-    DrawRectangle(BaseBlock.XStart, BaseBlock.XLast, FYStart, FYLast, BaseBlock.Canvas);
+    DrawRect(BaseBlock.XStart, BaseBlock.XLast, FYStart, FYLast, BaseBlock.Canvas);
 
     // Drawing a triangle
     DrawInvertedTriangle(BaseBlock.XStart, FBlocks[High(FBlocks)].XStart,

@@ -26,11 +26,11 @@ implementation
 
   procedure TFirstLoop.Draw;
   begin
-    DrawRectangle(BaseBlock.XStart, BaseBlock.XLast, FYStart, FYLast, BaseBlock.Canvas);
+    DrawUnfinishedVertRectForLoop(BaseBlock.XStart, BaseBlock.XLast, FYStart,
+                                          FYLast, GetYBottom, BaseBlock.Canvas);
 
-    DrawRectangle(BaseBlock.XStart, GetXLastStrip, FYLast, GetYBottom, BaseBlock.Canvas);
-
-    EraseLine(BaseBlock.XStart +  1, GetXLastStrip, FYLast, FYLast, BaseBlock.Canvas);
+    DrawUnfinishedHorRectForLoop(BaseBlock.XStart, Blocks[0].XStart,
+                         BaseBlock.XLast, FYStart, FYLast, BaseBlock.Canvas);
 
     DrawText(BaseBlock.Canvas, BaseBlock.XStart + ((BaseBlock.XLast - BaseBlock.XStart) shr 1)
       - (FActionSize.Width shr 1), FYStart + FYIndentText, Action);

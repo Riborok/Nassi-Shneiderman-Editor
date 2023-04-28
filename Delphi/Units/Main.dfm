@@ -2183,23 +2183,28 @@ object NassiShneiderman: TNassiShneiderman
     Width = 971
     Height = 570
     Align = alClient
-    Color = cl3DLight
+    Color = clWindow
     ParentColor = False
     TabOrder = 1
-    OnDblClick = ImageDblClick
-    OnMouseDown = ImageMouseDown
+    OnDblClick = DblClick
+    OnMouseDown = MouseDown
     OnMouseWheel = ScrollBoxMouseWheel
-    object Image: TImage
-      Left = -2
-      Top = -2
+    object PaintBox: TPaintBox
+      Left = 0
+      Top = 0
       Width = 958
-      Height = 556
-      AutoSize = True
-      Proportional = True
-      OnDblClick = ImageDblClick
-      OnMouseDown = ImageMouseDown
-      OnMouseMove = ImageMouseMove
-      OnMouseUp = ImageMouseUp
+      Height = 552
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -19
+      Font.Name = 'Times New Roman'
+      Font.Style = []
+      ParentFont = False
+      OnDblClick = DblClick
+      OnMouseDown = MouseDown
+      OnMouseMove = MouseMove
+      OnMouseUp = MouseUp
+      OnPaint = PaintBoxPaint
     end
   end
   object ilIcons: TImageList

@@ -8,7 +8,7 @@ uses
   Base, FirstLoop, IfBranching, CaseBranching, LastLoop, StatementSearch, DrawShapes,
   Vcl.StdCtrls, Vcl.Menus, System.Actions, Vcl.ActnList, Vcl.ToolWin, SwitchStatements,
   Vcl.ComCtrls, Vcl.Buttons, System.ImageList, Vcl.ImgList, AdditionalTypes,
-  AdjustBorders, Types;
+  Types;
 
 type
   TScrollBox= Class(VCL.Forms.TScrollBox)
@@ -26,7 +26,6 @@ type
     tbSelectFigType: TToolBar;
     ilIcons: TImageList;
     ScrollBox: TScrollBox;
-    Image: TImage;
     PopupMenu: TPopupMenu;
     MIAdd: TMenuItem;
     MIAfter: TMenuItem;
@@ -75,12 +74,13 @@ type
     tmRedrawingMovements: TTimer;
     actChangeAction: TAction;
     actChangeAction1: TMenuItem;
+    PaintBox: TPaintBox;
 
     procedure FormCreate(Sender: TObject);
 
-    procedure ImageMouseDown(Sender: TObject; Button: TMouseButton;
+    procedure MouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
-    procedure ImageDblClick(Sender: TObject);
+    procedure DblClick(Sender: TObject);
 
     procedure AddBefore(Sender: TObject);
     procedure AddAfter(Sender: TObject);
@@ -92,13 +92,14 @@ type
     procedure DeleteStatement(Sender: TObject);
     procedure Sort(Sender: TObject);
     procedure PopupMenuPopup(Sender: TObject);
-    procedure ImageMouseUp(Sender: TObject; Button: TMouseButton;
+    procedure MouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
-    procedure ImageMouseMove(Sender: TObject; Shift: TShiftState; X,
+    procedure MouseMove(Sender: TObject; Shift: TShiftState; X,
       Y: Integer);
     procedure tmRedrawingTimer(Sender: TObject);
     procedure actChangeActionExecute(Sender: TObject);
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+    procedure PaintBoxPaint(Sender: TObject);
   private
     FMainBlock : TBlock;
     FDedicatedStatement: TStatement;
@@ -111,7 +112,8 @@ type
 
     FHighlightColor: TColor;
 
-    procedure Redraw(const AVisibleImageRect: TVisibleImageRect);
+    FPen: TPen;
+    FFont: TFont;
 
     procedure MyScroll(Sender: TObject);
     function GetVisibleImageScreen: TVisibleImageRect;
@@ -119,8 +121,9 @@ type
 
   private const
     SchemeInitialIndent = 10;
-    SchemeInitialFontSize = 14;
-    SchemeInitialFont = 'Times New Roman';
+    SchemeInitialFontSize = 13;
+    SchemeInitialPenWidth = 2;
+    SchemeInitialFont = 'Courier new';
   public
     destructor Destroy;
   end;
@@ -149,13 +152,13 @@ implementation
   procedure TNassiShneiderman.MyScroll(Sender: TObject);
   begin
     if GetKeyState(VK_LBUTTON) >= 0 then
-      Redraw(GetVisibleImageScreen);
+      PaintBox.Invalidate;
   end;
 
   function TNassiShneiderman.GetVisibleImageScreen: TVisibleImageRect;
   begin
-    Result.FTopLeft := Image.ScreenToClient(ScrollBox.ClientToScreen(Point(0, 0)));
-    Result.FBottomRight := Image.ScreenToClient(
+    Result.FTopLeft := PaintBox.ScreenToClient(ScrollBox.ClientToScreen(Point(0, 0)));
+    Result.FBottomRight := PaintBox.ScreenToClient(
           ScrollBox.ClientToScreen(Point(ScrollBox.Width, ScrollBox.Height)));
   end;
 
@@ -163,47 +166,59 @@ implementation
   begin
     FMainBlock.Destroy;
     FBufferBlock.Destroy;
+
+    FPen.Destroy;
+    FFont.Destroy;
     inherited;
   end;
 
   procedure TNassiShneiderman.FormCreate(Sender: TObject);
   begin
-    actDelete.ShortCut := ShortCut(VK_DELETE, []);
-    actChangeAction.ShortCut := ShortCut(VK_RETURN, []);
+    Self.DoubleBuffered := True;
+    Constraints.MinWidth := 960;
+    Constraints.MinHeight := 540;
 
     ScrollBox.OnScrollVert := MyScroll;
     ScrollBox.OnScrollHorz := MyScroll;
 
-    FDedicatedStatement:= nil;
-    FCarryBlock:= nil;
-
-    Constraints.MinWidth := 960;
-    Constraints.MinHeight := 540;
-
-    Self.DoubleBuffered := True;
-
-    Image.Canvas.Font.Size := SchemeInitialFontSize;
-
-    Image.Canvas.Font.Name := SchemeInitialFont;
+    actDelete.ShortCut := ShortCut(VK_DELETE, []);
+    actChangeAction.ShortCut := ShortCut(VK_RETURN, []);
 
     FHighlightColor:= clYellow;
 
+    FPen:= TPen.Create;
+    FFont:= TFont.Create;
+
+    FFont.Size := SchemeInitialFontSize;
+    FFont.Name := SchemeInitialFont;
+    FFont.Color := clBlack;
+    FFont.Style := [];
+
+    FPen.Color := clBlack;
+    FPen.Width := SchemeInitialPenWidth;
+    FPen.Style := psSolid;
+
+    PaintBox.Canvas.Font := FFont;
+    PaintBox.Canvas.Pen := FPen;
+
+    FDedicatedStatement:= nil;
+    FCarryBlock:= nil;
+
     Base.DefaultBlock:= TProcessStatement;
 
-    FBufferBlock:= TBlock.Create(0, 0, nil, Image.Canvas);
+    FBufferBlock:= TBlock.Create(0, 0, nil, PaintBox.Canvas);
     FBufferBlock.AddFirstStatement(Base.DefaultBlock.CreateUncertainty(FBufferBlock));
 
-    FMainBlock:= TBlock.Create(SchemeInitialIndent, 0, nil, Image.Canvas);
-
+    FMainBlock:= TBlock.Create(SchemeInitialIndent, 0, nil, PaintBox.Canvas);
     FMainBlock.AddFirstStatement(Base.DefaultBlock.CreateUncertainty(FMainBlock),
                                                             SchemeInitialIndent);
-
-    Redraw(GetVisibleImageScreen);
+    FIsMouseDown:= False;
+    PaintBox.Invalidate;
   end;
 
   procedure TNassiShneiderman.SetScrollPos(const AStatement: TStatement);
   const
-    Stock = 50;
+    Stock = 42;
   var
     VisibleImageScreen: TVisibleImageRect;
   begin
@@ -216,7 +231,7 @@ implementation
       $06 {1100}:
          ScrollBox.HorzScrollBar.Position:= AStatement.BaseBlock.XStart - Stock;
     end;
-    var a: Integer:= GetStatementMask(AStatement, VisibleImageScreen);
+
     case GetStatementMask(AStatement, VisibleImageScreen) of
       $09 {1001}:
          ScrollBox.VertScrollBar.Position := ScrollBox.VertScrollBar.Position +
@@ -234,49 +249,54 @@ implementation
       begin
         SetHorizontalMovement(FDedicatedStatement, FMainBlock, SwitchStatements.BackwardDir);
         SetScrollPos(FDedicatedStatement);
-        Redraw(GetVisibleImageScreen);
+        PaintBox.Invalidate;
       end;
       VK_RIGHT:
       begin
         SetHorizontalMovement(FDedicatedStatement, FMainBlock, SwitchStatements.ForwardDir);
         SetScrollPos(FDedicatedStatement);
-        Redraw(GetVisibleImageScreen);
+        PaintBox.Invalidate;
       end;
       VK_UP:
       begin
         SetVerticalMovement(FDedicatedStatement, FMainBlock, SwitchStatements.BackwardDir);
         SetScrollPos(FDedicatedStatement);
-        Redraw(GetVisibleImageScreen);
+        PaintBox.Invalidate;
       end;
       VK_DOWN:
       begin
         SetVerticalMovement(FDedicatedStatement, FMainBlock, SwitchStatements.ForwardDir);
         SetScrollPos(FDedicatedStatement);
-        Redraw(GetVisibleImageScreen);
+        PaintBox.Invalidate;
       end;
     end;
   end;
 
-  procedure TNassiShneiderman.Redraw(const AVisibleImageRect: TVisibleImageRect);
+  procedure TNassiShneiderman.PaintBoxPaint(Sender: TObject);
   const
     Stock = 420;
+  var
+    VisibleImageRect: TVisibleImageRect;
   begin
-    AVisibleImageRect.Expand(Stock);
+    PaintBox.Canvas.Font := FFont;
+    PaintBox.Canvas.Pen := FPen;
 
-    Clear(Image.Canvas, AVisibleImageRect);
+    VisibleImageRect:= GetVisibleImageScreen;
+    VisibleImageRect.Expand(Stock);
 
-    DefineBorders(FMainBlock.XLast, FMainBlock.Statements.GetLast.GetYBottom, Image);
+    PaintBox.Width := FMainBlock.XLast + Stock;
+    PaintBox.Height := FMainBlock.Statements.GetLast.GetYBottom + Stock;
 
     if FDedicatedStatement <> nil then
-      ColorizeRectangle(Image.Canvas, FDedicatedStatement.BaseBlock.XStart,
+      ColorizeRect(PaintBox.Canvas, FDedicatedStatement.BaseBlock.XStart,
                 FDedicatedStatement.BaseBlock.XLast, FDedicatedStatement.YStart,
                 FDedicatedStatement.GetYBottom, FHighlightColor);
 
     if FCarryBlock <> nil then
-      FCarryBlock.DrawBlock(AVisibleImageRect);
+      FCarryBlock.DrawBlock(VisibleImageRect);
 
-    FMainBlock.DrawBlock(AVisibleImageRect);
-    DrawCoordinates(Image.Canvas, 50);
+    FMainBlock.DrawBlock(VisibleImageRect);
+    //DrawCoordinates(PaintBox.Canvas, 50);
   end;
 
   procedure TNassiShneiderman.ScrollBoxMouseWheel(Sender: TObject;
@@ -299,11 +319,12 @@ implementation
       else
         ScrollBox.VertScrollBar.Position := ScrollBox.VertScrollBar.Position + ScrotStep;
     end;
+
     if not tmRedrawingMovements.Enabled then
       tmRedrawingMovements.Enabled := True;
 
-    MousePos:= Image.ScreenToClient(Mouse.CursorPos);
-    ImageMouseMove(Sender, Shift, MousePos.X, MousePos.Y);
+    MousePos:= PaintBox.ScreenToClient(Mouse.CursorPos);
+    MouseMove(Sender, Shift, MousePos.X, MousePos.Y);
   end;
 
   procedure TNassiShneiderman.PopupMenuPopup(Sender: TObject);
@@ -320,22 +341,25 @@ implementation
     end;
   end;
 
-  procedure TNassiShneiderman.ImageMouseDown(Sender: TObject;
+  procedure TNassiShneiderman.MouseDown(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
   begin
     FDedicatedStatement := BinarySearchStatement(X, Y, FMainBlock);
 
-    Redraw(GetVisibleImageScreen);
+    PaintBox.Invalidate;
 
     if FDedicatedStatement <> nil then
     begin
       if (Button = mbLeft) and (ssAlt in Shift) then
       begin
+        if FIsMouseDown then
+          FCarryBlock.Destroy;
+
         FCarryBlock:= TBlock.Create(
           FDedicatedStatement.BaseBlock.XStart,
           FDedicatedStatement.BaseBlock.XLast,
           nil,
-          Image.Canvas
+          FDedicatedStatement.BaseBlock.Canvas
         );
 
         FCarryBlock.AddFirstStatement(FDedicatedStatement.Clone);
@@ -354,10 +378,10 @@ implementation
   begin
     tmRedrawingMovements.Enabled:= False;
 
-    Redraw(GetVisibleImageScreen);
+    PaintBox.Invalidate;
   end;
 
-  procedure TNassiShneiderman.ImageMouseMove(Sender: TObject; Shift: TShiftState;
+  procedure TNassiShneiderman.MouseMove(Sender: TObject; Shift: TShiftState;
   X, Y: Integer);
   begin
     if FIsMouseDown and (ssLeft in Shift) then
@@ -372,13 +396,12 @@ implementation
     end;
   end;
 
-  procedure TNassiShneiderman.ImageMouseUp(Sender: TObject; Button: TMouseButton;
+  procedure TNassiShneiderman.MouseUp(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);
   begin
     if (Button = mbLeft) and FIsMouseDown then
     begin
       FIsMouseDown := False;
-      tmRedrawingMovements.Enabled := False;
 
       if FCarryBlock <> nil then
       begin
@@ -386,7 +409,7 @@ implementation
         FCarryBlock:= nil;
       end;
 
-      Redraw(GetVisibleImageScreen);
+      PaintBox.Invalidate;
     end;
   end;
 
@@ -428,7 +451,7 @@ implementation
       for I := 0 to FBufferBlock.Statements.Count - 1 do
         FBufferBlock.Statements[I]:= FBufferBlock.Statements[I].Clone;
 
-      Redraw(GetVisibleImageScreen);
+      PaintBox.Invalidate;
     end;
   end;
 
@@ -448,14 +471,14 @@ implementation
         FDedicatedStatement:= NewStatement;
       end;
 
-      Redraw(GetVisibleImageScreen);
+      PaintBox.Invalidate;
     end;
   end;
 
   procedure TNassiShneiderman.Sort(Sender: TObject);
   begin
     TCaseBranching(FDedicatedStatement).SortConditions(TComponent(Sender).Tag);
-    Redraw(GetVisibleImageScreen);
+    PaintBox.Invalidate;
   end;
 
   procedure TNassiShneiderman.AddAfter(Sender: TObject);
@@ -474,7 +497,7 @@ implementation
         FDedicatedStatement:= NewStatement;
       end;
 
-      Redraw(GetVisibleImageScreen);
+      PaintBox.Invalidate;
     end;
   end;
 
@@ -492,23 +515,23 @@ implementation
 
       FDedicatedStatement:= Block.Statements[Index];
 
-      Redraw(GetVisibleImageScreen);
+      PaintBox.Invalidate;
     end;
   end;
 
-  procedure TNassiShneiderman.ImageDblClick(Sender: TObject);
+  procedure TNassiShneiderman.DblClick(Sender: TObject);
   var
     MousePos: TPoint;
     Statement: TStatement;
   begin
-    MousePos := Image.ScreenToClient(Mouse.CursorPos);
+    MousePos := PaintBox.ScreenToClient(Mouse.CursorPos);
 
     Statement := BinarySearchStatement(MousePos.X, MousePos.Y, FMainBlock);
 
     if Statement <> nil then
       TryChangeContent(Statement, Self);
 
-    Redraw(GetVisibleImageScreen);
+    PaintBox.Invalidate;
   end;
 
   procedure TNassiShneiderman.actChangeActionExecute(Sender: TObject);
@@ -516,7 +539,7 @@ implementation
     if FDedicatedStatement <> nil then
     begin
       TryChangeContent(FDedicatedStatement, Self);
-      Redraw(GetVisibleImageScreen);
+      PaintBox.Invalidate;
     end;
   end;
 

@@ -20,7 +20,7 @@ implementation
 
   procedure TProcessStatement.Draw;
   begin
-    DrawRectangle(BaseBlock.XStart, BaseBlock.XLast, FYStart, FYLast, BaseBlock.Canvas);
+    DrawRect(BaseBlock.XStart, BaseBlock.XLast, FYStart, FYLast, BaseBlock.Canvas);
 
     DrawText(BaseBlock.Canvas, BaseBlock.XStart + ((BaseBlock.XLast - BaseBlock.XStart) shr 1)
       - (FActionSize.Width shr 1), FYStart + FYIndentText, Action);

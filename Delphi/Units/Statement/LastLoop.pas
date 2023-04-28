@@ -23,12 +23,11 @@ implementation
 
   procedure TLastLoop.Draw;
   begin
-    DrawRectangle(BaseBlock.XStart, BaseBlock.XLast, GetBlockYBottom, FYLast, BaseBlock.Canvas);
+    DrawUnfinishedVertRectForLoop(BaseBlock.XStart, BaseBlock.XLast, FYLast,
+                                         GetYBottom, FYStart, BaseBlock.Canvas);
 
-    DrawRectangle(BaseBlock.XStart, GetXLastStrip, FBlocks[0].Statements[0].YStart,
-                                                              GetBlockYBottom, BaseBlock.Canvas);
-
-    EraseLine(BaseBlock.XStart +  1, GetXLastStrip, GetBlockYBottom, GetBlockYBottom, BaseBlock.Canvas);
+    DrawUnfinishedHorRectForLoop(BaseBlock.XStart, Blocks[0].XStart,
+                         BaseBlock.XLast, FYLast, FYStart, BaseBlock.Canvas);
 
     DrawText(BaseBlock.Canvas, BaseBlock.XStart + ((BaseBlock.XLast - BaseBlock.XStart) shr 1)
       - (FActionSize.Width shr 1), GetBlockYBottom + FYIndentText, Action);
