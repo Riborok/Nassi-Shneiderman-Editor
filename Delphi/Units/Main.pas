@@ -384,30 +384,27 @@ implementation
   procedure TNassiShneiderman.MouseMove(Sender: TObject; Shift: TShiftState;
   X, Y: Integer);
   begin
-    if FIsMouseDown and (ssLeft in Shift) then
+    if FIsMouseDown then
     begin
-      if not tmRedrawingMovements.Enabled then
-        tmRedrawingMovements.Enabled := True;
-
       FCarryBlock.MoveRight(X - FPrevMousePos.X);
       FCarryBlock.MoveDown(Y - FPrevMousePos.Y);
 
       FPrevMousePos := Point(X, Y);
+
+      if not tmRedrawingMovements.Enabled then
+        tmRedrawingMovements.Enabled := True;
     end;
   end;
 
   procedure TNassiShneiderman.MouseUp(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);
   begin
-    if (Button = mbLeft) and FIsMouseDown then
+    if FIsMouseDown then
     begin
       FIsMouseDown := False;
 
-      if FCarryBlock <> nil then
-      begin
-        FCarryBlock.Destroy;
-        FCarryBlock:= nil;
-      end;
+      FCarryBlock.Destroy;
+      FCarryBlock:= nil;
 
       PaintBox.Invalidate;
     end;

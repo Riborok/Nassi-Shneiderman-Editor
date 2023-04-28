@@ -121,8 +121,8 @@ type
 
   private const
     SchemeInitialIndent = 10;
-    SchemeInitialFontSize = 24;
-    SchemeInitialPenWidth = 1;
+    SchemeInitialFontSize = 13;
+    SchemeInitialPenWidth = 2;
     SchemeInitialFont = 'Courier new';
   public
     destructor Destroy;
@@ -166,6 +166,7 @@ implementation
   begin
     FMainBlock.Destroy;
     FBufferBlock.Destroy;
+
     FPen.Destroy;
     FFont.Destroy;
     inherited;
@@ -173,34 +174,35 @@ implementation
 
   procedure TNassiShneiderman.FormCreate(Sender: TObject);
   begin
-    //FPenColor:= clBlack;
+    Self.DoubleBuffered := True;
+    Constraints.MinWidth := 960;
+    Constraints.MinHeight := 540;
+
+    ScrollBox.OnScrollVert := MyScroll;
+    ScrollBox.OnScrollHorz := MyScroll;
+
+    actDelete.ShortCut := ShortCut(VK_DELETE, []);
+    actChangeAction.ShortCut := ShortCut(VK_RETURN, []);
+
+    FHighlightColor:= clYellow;
+
     FPen:= TPen.Create;
     FFont:= TFont.Create;
 
     FFont.Size := SchemeInitialFontSize;
     FFont.Name := SchemeInitialFont;
+    FFont.Color := clBlack;
+    FFont.Style := [];
 
     FPen.Color := clBlack;
     FPen.Width := SchemeInitialPenWidth;
+    FPen.Style := psSolid;
 
     PaintBox.Canvas.Font := FFont;
     PaintBox.Canvas.Pen := FPen;
 
-    actDelete.ShortCut := ShortCut(VK_DELETE, []);
-    actChangeAction.ShortCut := ShortCut(VK_RETURN, []);
-
-    ScrollBox.OnScrollVert := MyScroll;
-    ScrollBox.OnScrollHorz := MyScroll;
-
     FDedicatedStatement:= nil;
     FCarryBlock:= nil;
-
-    Constraints.MinWidth := 960;
-    Constraints.MinHeight := 540;
-
-    Self.DoubleBuffered := True;
-
-    FHighlightColor:= clYellow;
 
     Base.DefaultBlock:= TProcessStatement;
 
@@ -208,16 +210,15 @@ implementation
     FBufferBlock.AddFirstStatement(Base.DefaultBlock.CreateUncertainty(FBufferBlock));
 
     FMainBlock:= TBlock.Create(SchemeInitialIndent, 0, nil, PaintBox.Canvas);
-
     FMainBlock.AddFirstStatement(Base.DefaultBlock.CreateUncertainty(FMainBlock),
                                                             SchemeInitialIndent);
-
+    FIsMouseDown:= False;
     PaintBox.Invalidate;
   end;
 
   procedure TNassiShneiderman.SetScrollPos(const AStatement: TStatement);
   const
-    Stock = 50;
+    Stock = 42;
   var
     VisibleImageScreen: TVisibleImageRect;
   begin
@@ -230,7 +231,7 @@ implementation
       $06 {1100}:
          ScrollBox.HorzScrollBar.Position:= AStatement.BaseBlock.XStart - Stock;
     end;
-    var a: Integer:= GetStatementMask(AStatement, VisibleImageScreen);
+
     case GetStatementMask(AStatement, VisibleImageScreen) of
       $09 {1001}:
          ScrollBox.VertScrollBar.Position := ScrollBox.VertScrollBar.Position +
@@ -287,7 +288,7 @@ implementation
     PaintBox.Height := FMainBlock.Statements.GetLast.GetYBottom + Stock;
 
     if FDedicatedStatement <> nil then
-      ColorizeRectangle(PaintBox.Canvas, FDedicatedStatement.BaseBlock.XStart,
+      ColorizeRect(PaintBox.Canvas, FDedicatedStatement.BaseBlock.XStart,
                 FDedicatedStatement.BaseBlock.XLast, FDedicatedStatement.YStart,
                 FDedicatedStatement.GetYBottom, FHighlightColor);
 
@@ -351,11 +352,14 @@ implementation
     begin
       if (Button = mbLeft) and (ssAlt in Shift) then
       begin
+        if FIsMouseDown then
+          FCarryBlock.Destroy;
+
         FCarryBlock:= TBlock.Create(
           FDedicatedStatement.BaseBlock.XStart,
           FDedicatedStatement.BaseBlock.XLast,
           nil,
-          PaintBox.Canvas
+          FDedicatedStatement.BaseBlock.Canvas
         );
 
         FCarryBlock.AddFirstStatement(FDedicatedStatement.Clone);
@@ -380,7 +384,7 @@ implementation
   procedure TNassiShneiderman.MouseMove(Sender: TObject; Shift: TShiftState;
   X, Y: Integer);
   begin
-    if FIsMouseDown and (ssLeft in Shift) then
+    if FIsMouseDown then
     begin
       if not tmRedrawingMovements.Enabled then
         tmRedrawingMovements.Enabled := True;
@@ -395,16 +399,12 @@ implementation
   procedure TNassiShneiderman.MouseUp(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);
   begin
-    if (Button = mbLeft) and FIsMouseDown then
+    if FIsMouseDown then
     begin
       FIsMouseDown := False;
-      tmRedrawingMovements.Enabled := False;
 
-      if FCarryBlock <> nil then
-      begin
-        FCarryBlock.Destroy;
-        FCarryBlock:= nil;
-      end;
+      FCarryBlock.Destroy;
+      FCarryBlock:= nil;
 
       PaintBox.Invalidate;
     end;

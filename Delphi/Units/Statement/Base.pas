@@ -223,10 +223,12 @@ implementation
   end;
 
   procedure TStatement.SetTextSize;
+  const
+    Stock = 5;
   begin
     SetActionSizes;
-    FYIndentText:= BaseBlock.FCanvas.Font.Size + BaseBlock.FCanvas.Pen.Width + 3;
-    FXMinIndentText:= BaseBlock.FCanvas.Font.Size + BaseBlock.FCanvas.Pen.Width + 5;
+    FYIndentText:= BaseBlock.FCanvas.Font.Size + BaseBlock.FCanvas.Pen.Width + Stock;
+    FXMinIndentText:= BaseBlock.FCanvas.Font.Size + BaseBlock.FCanvas.Pen.Width + Stock;
   end;
 
   procedure TStatement.SetActionSizes;
