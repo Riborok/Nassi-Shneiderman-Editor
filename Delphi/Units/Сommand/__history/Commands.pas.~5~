@@ -1,0 +1,92 @@
+unit Commands;
+
+interface
+uses AdditionalTypes, Base, Stack, CaseBranching;
+type
+
+  TCommand = interface
+    procedure Execute;
+    procedure Undo;
+  end;
+
+  { TCommnadChangeContent }
+  TCommnadChangeContent = class(TInterfacedObject, TCommand)
+  private
+    FAction: string;
+    FConds: TStringArr;
+    FStatement: TStatement;
+  public
+    constructor Create(const AStatement: TStatement; const AAct: String;
+                       const AConds: TStringArr);
+    procedure Execute;
+    procedure Undo;
+  End;
+
+  { TCommandCreate }
+  TCommandAdd = class(TInterfacedObject, TCommand)
+  private
+    FNewStatement, FExistingStatement: TStatement;
+    FDirection : TBlock.TDirection;
+  public
+    constructor Create(const AExistingStatement: TStatement; const ADirection : TBlock.TDirection;
+                       const ANewStatement: TStatement);
+    procedure Execute;
+    procedure Undo;
+  End;
+
+implementation
+
+  { TChangeContent }
+  constructor TCommnadChangeContent.Create(const AStatement: TStatement; const AAct: String;
+                       const AConds: TStringArr);
+  var
+    CaseBranching: TCaseBranching;
+  begin
+    FAction:= AAct;
+    FConds:= AConds;
+    FStatement:= AStatement;
+  end;
+
+  procedure TCommnadChangeContent.Execute;
+  var
+    PrevAction: string;
+  begin
+    PrevAction:= FStatement.Action;
+    if FConds = nil then
+      FStatement.ChangeAction(FAction)
+    else
+    begin
+      var CaseBranching: TCaseBranching:= TCaseBranching(FStatement);
+      var FPrevConds: TStringArr := CaseBranching.Conds;
+      CaseBranching.ChangeActionWithConds(FAction, FConds);
+      FConds:= FPrevConds;
+    end;
+    FAction:= PrevAction;
+  end;
+
+  procedure TCommnadChangeContent.Undo;
+  begin
+    Execute;
+  end;
+
+  { TCommandCreate }
+  constructor TCommandAdd.Create(const AExistingStatement: TStatement;
+         const ADirection : TBlock.TDirection; const ANewStatement: TStatement);
+  begin
+    FNewStatement:= ANewStatement;
+    FDirection:= ADirection;
+    FExistingStatement:= AExistingStatement;
+  end;
+
+  procedure TCommandAdd.Execute;
+  begin
+    FExistingStatement.BaseBlock.AddStatement(FExistingStatement, FDirection,
+                                 FNewStatement)
+  end;
+
+  procedure TCommandAdd.Undo;
+  begin
+
+  end;
+
+end.

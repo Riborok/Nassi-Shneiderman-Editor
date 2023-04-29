@@ -1,0 +1,53 @@
+﻿unit Commands;
+
+interface
+uses AdditionalTypes, Base, Stack, CaseBranching;
+type
+
+  TCommand = interface
+    procedure Execute;
+    procedure Undo;
+  end;
+
+  TChangeContent = class(TInterfacedObject, TCommand)
+  private
+    FAction: String;
+    FConds: TStringArr;
+  public
+    constructor Create(const AStatement: TStatement; const AAct: String;
+                       const ACond: TStringArr);
+    procedure Execute;
+    procedure Undo;
+  End;
+
+  var
+    UndoStack, RedoStack: TStack<TCommand>;
+
+implementation
+
+  constructor TChangeContent.Create(const AStatement: TStatement; const AAct: String;
+                       const ACond: TStringArr);
+  var
+    CaseBranching: TCaseBranching;
+  begin
+    FAction:= AStatement.Action;
+    if ACond = nil then
+    begin
+      FConds:= nil;
+      AStatement.ChangeAction(AAct);
+    end
+    else
+    begin
+      CaseBranching:= TCaseBranching(AStatement);
+      FConds:= CaseBranching.Conds;
+      CaseBranching.ChangeActionWithConds(AAct, ACond);
+    end;
+  end;
+
+
+
+
+  initialization
+  UndoStack:= TStack<TCommand>.Create;
+  RedoStack:= TStack<TCommand>.Create;
+end.

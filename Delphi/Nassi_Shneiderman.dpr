@@ -23,10 +23,10 @@ uses
   AdditionalTypes in 'Units\Support\AdditionalTypes.pas',
   Constants in 'Units\Support\Constants.pas',
   CaseBlockSorting in 'Units\Support\CaseBlockSorting.pas',
-  BlockController in 'Units\Support\BlockController.pas',
   SwitchStatements in 'Units\Support\SwitchStatements.pas',
   DetermineDimensions in 'Units\Shapes\DetermineDimensions.pas',
-  DrawShapes in 'Units\Shapes\DrawShapes.pas';
+  DrawShapes in 'Units\Shapes\DrawShapes.pas',
+  Commands in 'Units\Ñommand\Commands.pas';
 
 {$R *.res}
 

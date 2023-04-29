@@ -17,6 +17,7 @@ type
     constructor Create;
     destructor Destroy; override;
     procedure Push(const AItem: T);
+    procedure Clear;
     function Pop: T;
     function Peek: T;
     property Count: Integer read FCount;
@@ -31,12 +32,17 @@ implementation
   end;
 
   destructor TStack<T>.Destroy;
+  begin
+    Clear;
+    inherited;
+  end;
+
+  procedure TStack<T>.Clear;
   var
     I: Integer;
   begin
     for I := FCount - 1 downto 0 do
       Pop;
-    inherited;
   end;
 
   procedure TStack<T>.Push(const AItem: T);

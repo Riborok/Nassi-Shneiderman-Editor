@@ -1,0 +1,93 @@
+unit Commands;
+
+interface
+uses AdditionalTypes, Base, Stack, CaseBranching;
+type
+
+  TCommand = interface
+    procedure Execute;
+    procedure Undo;
+  end;
+
+  { TCommnadChangeContent }
+  TCommnadChangeContent = class(TInterfacedObject, TCommand)
+  private
+    FAction: string;
+    FConds: TStringArr;
+    FStatement: TStatement;
+  public
+    constructor Create(const AStatement: TStatement; const AAct: String;
+                       const AConds: TStringArr);
+    procedure Execute;
+    procedure Undo;
+  End;
+
+  { TCommandCreate }
+  TCommandCreate = class(TInterfacedObject, TCommand)
+  private
+    FStatement: TStatement;
+  public
+    constructor Create(const AStatement: TStatement);
+    procedure Execute;
+    procedure Undo;
+  End;
+
+implementation
+
+  { TChangeContent }
+  constructor TCommnadChangeContent.Create(const AStatement: TStatement; const AAct: String;
+                       const AConds: TStringArr);
+  var
+    CaseBranching: TCaseBranching;
+  begin
+    FAction:= AAct;
+    FConds:= AConds;
+    FStatement:= AStatement;
+  end;
+
+  procedure TCommnadChangeContent.Execute;
+  var
+    PrevAction: string;
+  begin
+    PrevAction:= FStatement.Action;
+    if FConds = nil then
+      FStatement.ChangeAction(FAction)
+    else
+    begin
+      var CaseBranching: TCaseBranching:= TCaseBranching(FStatement);
+      var FPrevConds: TStringArr := CaseBranching.Conds;
+      CaseBranching.ChangeActionWithConds(FAction, FConds);
+      FConds:= FPrevConds;
+    end;
+    FAction:= PrevAction;
+  end;
+
+  procedure TCommnadChangeContent.Undo;
+  begin
+    Execute;
+  end;
+
+  { TCommandCreate }
+  constructor TCommandCreate.Create(const AStatement: TStatement);
+  begin
+    FStatement:= AStatement;
+  end;
+
+  procedure TCommandCreate.Execute;
+  var
+    PrevAction: string;
+  begin
+    PrevAction:= FStatement.Action;
+    if FConds = nil then
+      FStatement.ChangeAction(FAction)
+    else
+    begin
+      var CaseBranching: TCaseBranching:= TCaseBranching(FStatement);
+      var FPrevConds: TStringArr := CaseBranching.Conds;
+      CaseBranching.ChangeActionWithConds(FAction, FConds);
+      FConds:= FPrevConds;
+    end;
+    FAction:= PrevAction;
+  end;
+
+end.

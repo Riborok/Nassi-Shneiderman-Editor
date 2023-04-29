@@ -148,6 +148,7 @@ type
 
     function Clone(const ABaseOperator: TOperator): TBlock;
 
+    function ExtractStatementAt(const AIndex: Integer) : TStatement;
   public
     constructor Create(const AXStart, AXLast: Integer; const ABaseOperator: TOperator;
                        const ACanvas: TCanvas);
@@ -159,16 +160,17 @@ type
     property BaseOperator: TOperator read FBaseOperator;
     property Statements: TArrayList<TStatement> read FStatements;
 
-    procedure AddStatementBefore(const AStatement: TStatement; const AInsertedStatement: TStatement; const isInstalling: Boolean = True);
-    procedure AddStatementAfter(const AStatement: TStatement; const AInsertedStatement: TStatement; const isInstalling: Boolean = True);
-    procedure AddStatementLast(const AStatement: TStatement; const isInstalling: Boolean = True);
+    procedure AddStatement(const Index: Integer;const AInsertedStatement: TStatement;
+                                                 const isInstalling: Boolean = True);
+
+    procedure AddStatementToEnd(const AStatement: TStatement; const isInstalling: Boolean = True);
 
     procedure AddFirstStatement(const AStatement: TStatement; const AYStart: Integer); overload;
     procedure AddFirstStatement(const AStatement: TStatement); overload;
 
     procedure AddBlockAfter(const AStatement: TStatement; const AInsertedBlock: TBlock);
 
-    function Remove(const AStatement: TStatement): Integer;
+    function ExtractWithResizing(const AStatement: TStatement): Integer;
     procedure RemoveStatementAt(const Index: Integer);
 
     procedure SetOptimalXLastBlock;
@@ -198,6 +200,7 @@ type
   var
     DefaultBlock: TStatementClass = nil;
 
+  { Masks }
   function GetBlockMask(const ACurrBlock: TBlock;
         const AVisibleImageRect: TVisibleImageRect): Integer; inline;
 
@@ -339,50 +342,27 @@ implementation
     SetOptimalXLastBlock;
   end;
 
-  procedure TBlock.AddStatementBefore(const AStatement: TStatement;
-            const AInsertedStatement: TStatement; const isInstalling: Boolean = True);
-  var
-    Index: Integer;
+  procedure TBlock.AddStatement(const Index: Integer;const AInsertedStatement: TStatement;
+                                                     const isInstalling: Boolean = True);
   begin
-    Index:= FindStatementIndex(AStatement.FYStart);
-
-    AInsertedStatement.FYStart:= AStatement.FYStart;
-    AInsertedStatement.FBaseBlock:= Self;
-    FStatements.Insert(AInsertedStatement, Index);
-
-    if (AStatement.FAction = TStatement.UncertaintySymbol) and
-                    (AStatement.ClassType = DefaultBlock) then
-      Self.RemoveStatementAt(Index + 1);
-
-    if isInstalling then
-      Install(Index);
-  end;
-
-  procedure TBlock.AddStatementAfter(const AStatement: TStatement;
-            const AInsertedStatement: TStatement; const isInstalling: Boolean = True);
-  var
-    Index: Integer;
-  begin
-    Index:= FindStatementIndex(AStatement.FYStart) + 1;
-
-    if Index <> FStatements.Count then
+    if Index = FStatements.Count then
+      AddStatementToEnd(AInsertedStatement, isInstalling)
+    else
     begin
-      AInsertedStatement.FYStart:= AStatement.GetYBottom;
+      AInsertedStatement.FYStart:= Statements[Index].FYStart;
       AInsertedStatement.FBaseBlock:= Self;
       FStatements.Insert(AInsertedStatement, Index);
 
-      if (AStatement.FAction = TStatement.UncertaintySymbol) and
-                      (AStatement.ClassType = DefaultBlock) then
+      if (Statements[Index + 1].FAction = TStatement.UncertaintySymbol) and
+                      (Statements[Index + 1].ClassType = DefaultBlock) then
         Self.RemoveStatementAt(Index + 1);
 
       if isInstalling then
         Install(Index);
-    end
-    else
-      AddStatementLast(AInsertedStatement, isInstalling);
+    end;
   end;
 
-  procedure TBlock.AddStatementLast(const AStatement: TStatement; const isInstalling: Boolean = True);
+  procedure TBlock.AddStatementToEnd(const AStatement: TStatement; const isInstalling: Boolean = True);
   var
     PrevStatement: TStatement;
   begin
@@ -430,7 +410,7 @@ implementation
   begin
     Offset:= Self.XStart - AInsertedBlock.XStart;
 
-    AddStatementAfter(AStatement, AInsertedBlock.FStatements[0], False);
+    AddStatement(FindStatementIndex(AStatement.FYStart) + 1, AInsertedBlock.FStatements[0], False);
 
     if AInsertedBlock.FStatements[0] is TOperator then
     begin
@@ -442,7 +422,8 @@ implementation
 
     for I := 1 to AInsertedBlock.FStatements.Count - 1 do
     begin
-      Self.AddStatementAfter(AInsertedBlock.FStatements[I - 1], AInsertedBlock.FStatements[I], False);
+      Self.AddStatement(FindStatementIndex(AInsertedBlock.FStatements[I - 1].FYStart) + 1,
+                                        AInsertedBlock.FStatements[I], False);
 
       if AInsertedBlock.FStatements[I] is TOperator then
       begin
@@ -457,29 +438,34 @@ implementation
     FixYStatementsPosition(0);
   end;
 
-  function TBlock.Remove(const AStatement: TStatement): Integer;
+  function TBlock.ExtractWithResizing(const AStatement: TStatement): Integer;
   begin
     Result:= FindStatementIndex(AStatement.FYStart);
-    RemoveStatementAt(Result);
+
+    ExtractStatementAt(Result);
 
     if Result = FStatements.Count then
       Dec(Result);
+
+    Install(Result);
   end;
 
-  procedure TBlock.RemoveStatementAt(const Index: Integer);
-  var
-    Statement: TStatement;
+  function TBlock.ExtractStatementAt(const AIndex: Integer) : TStatement;
   begin
-    Statement:= FStatements[Index];
-    FStatements.Delete(Index);
+    Result:= FStatements[AIndex];
+    FStatements.Delete(AIndex);
     if FStatements.Count = 0 then
     begin
       FStatements.Add(DefaultBlock.CreateUncertainty(Self));
-      FStatements[0].FYStart:= Statement.FYStart;
+      FStatements[0].FYStart:= Result.FYStart;
     end
-    else if (Statement.BaseBlock.BaseOperator = nil) and (Index = 0) then
-      FStatements[0].FYStart:= Statement.FYStart;
-    Statement.Destroy;
+    else if (Result.BaseBlock.BaseOperator = nil) and (AIndex = 0) then
+      FStatements[0].FYStart:= Result.FYStart;
+  end;
+
+  procedure TBlock.RemoveStatementAt(const Index: Integer);
+  begin
+    ExtractStatementAt(Index).Destroy;
   end;
 
   procedure TBlock.ChangeYStatement(AIndex: Integer = 0);
@@ -651,7 +637,6 @@ implementation
       Blocks[I].MoveRightExceptXLast(Blocks[I - 1].FXLast - Blocks[I].FXStart);
       Blocks[I].SetOptimalXLastBlock;
     end;
-
   end;
 
   function TBlock.FindStatementIndex(const AFYStart: Integer): Integer;
@@ -861,8 +846,6 @@ implementation
   end;
 
   function TOperator.GetYBottom: Integer;
-  var
-    I: Integer;
   begin
     case IsPreсOperator of
       True: Result:= FBlocks[0].FStatements.GetLast.GetYBottom;

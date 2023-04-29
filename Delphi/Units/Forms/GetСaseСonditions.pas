@@ -31,7 +31,7 @@ type
     procedure CreateMemo(const AText: string = '');
   public
     { Public declarations }
-    function TryGetCond(const AOwner: TForm; var ACond: TStringArr): Boolean;
+    function TryGetCond(var ACond: TStringArr): Boolean;
   private const
     MinCond = 2;
     MaxCond = 100;
@@ -43,15 +43,12 @@ var
 implementation
 
 {$R *.dfm}
-  function TWrite—ase—onditions.TryGetCond(const AOwner: TForm; var ACond: TStringArr): Boolean;
+  function TWrite—ase—onditions.TryGetCond(var ACond: TStringArr): Boolean;
   var
     I: Integer;
     Memo: TMemo;
     LabelCaption: TLabel;
   begin
-    Left := AOwner.Left + (AOwner.Width - Width) shr 1;
-    Top := AOwner.Top + (AOwner.Height - Height) shr 1;
-
     for I := 0 to High(ACond) do
       CreateMemo(ACond[i]);
 
@@ -164,6 +161,10 @@ implementation
   begin
     Constraints.MinWidth := 550;
     Constraints.MinHeight := 700;
+
+    Left := (Screen.Width - Width) shr 1;
+    Top := (Screen.Height - Height) shr 1;
+
     FMemoStack:= TStack<TMemo>.Create;
     FLabelStack:= TStack<TLabel>.Create;
   end;

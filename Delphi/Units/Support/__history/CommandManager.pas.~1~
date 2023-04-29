@@ -1,0 +1,35 @@
+unit BlockController;
+
+interface
+uses Base, GetAction, Get—ase—onditions, AdditionalTypes, System.Classes, CaseBranching,
+     FirstLoop, IfBranching, LastLoop, ProcessStatement, Vcl.Controls, VCL.Forms;
+
+function CreateStatement(const AStatementClass: TStatementClass;
+         const ABaseBlock: TBlock): TStatement;
+
+implementation
+
+  function CreateStatement(const AStatementClass: TStatementClass;
+                          const ABaseBlock: TBlock): TStatement;
+  var
+    Action: String;
+    Cond: TStringArr;
+  begin
+    Result:= nil;
+    Action := '';
+
+    if WriteAction.TryGetAction(Action) then
+    begin
+
+      if AStatementClass = TCaseBranching then
+      begin
+        Cond:= nil;
+        if Write—ase—onditions.TryGetCond(Cond) then
+          Result:= TCaseBranching.Create(Action, Cond, ABaseBlock);
+      end
+      else
+        Result:= AStatementClass.Create(Action, ABaseBlock);
+    end;
+  end;
+
+end.

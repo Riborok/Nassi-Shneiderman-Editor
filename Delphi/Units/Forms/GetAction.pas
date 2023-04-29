@@ -20,7 +20,7 @@ type
     { Private declarations }
   public
     { Public declarations }
-    function TryGetAction(const AOwner: TForm; var AAction: String): Boolean;
+    function TryGetAction(var AAction: String): Boolean;
   end;
 
 var
@@ -30,11 +30,8 @@ implementation
 
   {$R *.dfm}
 
-  function TWriteAction.TryGetAction(const AOwner: TForm; var AAction: String): Boolean;
+  function TWriteAction.TryGetAction(var AAction: String): Boolean;
   begin
-    Left := AOwner.Left + (AOwner.Width - Width) shr 1;
-    Top := AOwner.Top + (AOwner.Height - Height) shr 1;
-
     MemoAction.Text := AAction;
     MemoAction.SelStart := 0;
     MemoAction.SelLength := Length(MemoAction.Text);
@@ -54,6 +51,9 @@ implementation
   begin
     Constraints.MinWidth := 350;
     Constraints.MinHeight := 250;
+
+    Left := (Screen.Width - Width) shr 1;
+    Top := (Screen.Height - Height) shr 1;
   end;
 
   procedure TWriteAction.FormShow(Sender: TObject);
