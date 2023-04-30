@@ -161,7 +161,7 @@ type
     property BaseOperator: TOperator read FBaseOperator;
     property Statements: TArrayList<TStatement> read FStatements;
 
-    procedure AddStatement(const AIndex: Integer;const AInsertedStatement: TStatement;
+    procedure InsertStatement(const AIndex: Integer;const AInsertedStatement: TStatement;
                                                  const isInstalling: Boolean = True);
 
     procedure AddStatementToEnd(const AStatement: TStatement; const isInstalling: Boolean = True);
@@ -357,7 +357,7 @@ implementation
     SetOptimalXLastBlock;
   end;
 
-  procedure TBlock.AddStatement(const AIndex: Integer; const AInsertedStatement: TStatement;
+  procedure TBlock.InsertStatement(const AIndex: Integer; const AInsertedStatement: TStatement;
                                                      const isInstalling: Boolean = True);
   begin
     if AIndex = FStatements.Count then
@@ -366,6 +366,7 @@ implementation
     begin
       AInsertedStatement.FYStart:= Statements[AIndex].FYStart;
       AInsertedStatement.FBaseBlock:= Self;
+      AInsertedStatement.SetTextSize;
       FStatements.Insert(AInsertedStatement, AIndex);
 
       if (Statements[AIndex + 1].FAction = TStatement.UncertaintySymbol) and
@@ -376,6 +377,7 @@ implementation
       begin
         var Blocks : TBlockArr:= TOperator(AInsertedStatement).Blocks;
         Blocks[High(Blocks)].ChangeXLastBlock(Self.XLast);
+        Blocks[0].ChangeXStartBlock(Self.XStart);
       end;
 
       if isInstalling then
@@ -388,8 +390,9 @@ implementation
   var
     PrevStatement: TStatement;
   begin
-    FStatements.Add(AStatement);
     AStatement.FBaseBlock:= Self;
+    AStatement.SetTextSize;
+    FStatements.Add(AStatement);
 
     if FStatements.Count = 1 then
       AStatement.FYStart:= BaseOperator.FYLast
@@ -411,6 +414,7 @@ implementation
     begin
       var Blocks : TBlockArr:= TOperator(AStatement).Blocks;
       Blocks[High(Blocks)].ChangeXLastBlock(Self.XLast);
+      Blocks[0].ChangeXStartBlock(Self.XStart);
     end;
 
     if isInstalling then
@@ -422,10 +426,12 @@ implementation
     FStatements.Add(AStatement);
     AStatement.FYStart:= AYStart;
     AStatement.FBaseBlock:= Self;
+    AStatement.SetTextSize;
     if AStatement is TOperator then
     begin
       var Blocks : TBlockArr:= TOperator(AStatement).Blocks;
       Blocks[High(Blocks)].ChangeXLastBlock(Self.XLast);
+      Blocks[0].ChangeXStartBlock(Self.XStart);
     end;
     Install(0);
   end;
@@ -434,19 +440,31 @@ implementation
   begin
     FStatements.Add(AStatement);
     AStatement.FBaseBlock:= Self;
+    AStatement.SetTextSize;
   end;
 
   procedure TBlock.AddBlock(const AIndex: Integer; const AInsertedBlock: TBlock);
   var
     Offset, I, J: Integer;
     Blocks: TBlockArr;
+
+    procedure InstallCanvas(const ABlocks: TBlockArr);
+    var
+      I, J: Integer;
+    begin
+      for I := 0 to High(ABlocks) do
+      begin
+        ABlocks[I].FCanvas:= Self.FCanvas;
+        for J := 0 to ABlocks[I].FStatements.Count - 1 do
+          if ABlocks[I].FStatements[J] is TOperator then
+            InstallCanvas(TOperator(ABlocks[I].FStatements[J]).Blocks);
+      end;
+    end;
   begin
     Offset:= Self.XStart - AInsertedBlock.XStart;
 
     for I := 0 to AInsertedBlock.FStatements.Count - 1 do
     begin
-      Self.AddStatement(AIndex + I, AInsertedBlock.FStatements[I], False);
-
       if AInsertedBlock.FStatements[I] is TOperator then
       begin
         Blocks:= TOperator(AInsertedBlock.FStatements[I]).Blocks;
@@ -454,6 +472,7 @@ implementation
           Blocks[J].MoveRight(Offset);
         Blocks[High(Blocks)].ChangeXLastBlock(XLast);
       end;
+      Self.InsertStatement(AIndex + I, AInsertedBlock.FStatements[I], False);
     end;
 
     RedefineSizes;

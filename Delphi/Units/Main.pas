@@ -4,14 +4,14 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.Classes, Vcl.Graphics, Vcl.Controls,
-  Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls, ProcessStatement,
+  Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls, ProcessStatement, Vcl.StdCtrls, Vcl.Menus,
   Base, FirstLoop, IfBranching, CaseBranching, LastLoop, StatementSearch, DrawShapes,
-  Vcl.StdCtrls, Vcl.Menus, System.Actions, Vcl.ActnList, Vcl.ToolWin, SwitchStatements,
+  System.Actions, Vcl.ActnList, Vcl.ToolWin, SwitchStatements, Commands, Stack, Types,
   Vcl.ComCtrls, Vcl.Buttons, System.ImageList, Vcl.ImgList, AdditionalTypes,
-  Types, Commands, Stack, GetAction, GetСaseСonditions;
+  GetAction, GetСaseСonditions;
 
 type
-  TScrollBox= Class(VCL.Forms.TScrollBox)
+  TScrollBox= class(VCL.Forms.TScrollBox)
     procedure WMHScroll(var Message: TWMHScroll); message WM_HSCROLL;
     procedure WMVScroll(var Message: TWMVScroll); message WM_VSCROLL;
   private
@@ -80,6 +80,20 @@ type
     N4: TMenuItem;
     MIUndo: TMenuItem;
     MIRedo: TMenuItem;
+    MainMenu: TMainMenu;
+    mnFile: TMenuItem;
+    mnNew: TMenuItem;
+    mnOpen: TMenuItem;
+    mnSave: TMenuItem;
+    mnSaveAs: TMenuItem;
+    mnExport: TMenuItem;
+    mnPrefer: TMenuItem;
+    mnFont: TMenuItem;
+    mnPen: TMenuItem;
+    actChngFont: TAction;
+    actChngPen: TAction;
+    FontDialog: TFontDialog;
+    ColorDialog: TColorDialog;
 
     procedure FormCreate(Sender: TObject);
 
@@ -107,6 +121,7 @@ type
     procedure PaintBoxPaint(Sender: TObject);
     procedure actUndoExecute(Sender: TObject);
     procedure actRedoExecute(Sender: TObject);
+    procedure actChngFontExecute(Sender: TObject);
   private
     FMainBlock : TBlock;
     FDedicatedStatement: TStatement;
@@ -196,7 +211,7 @@ implementation
     FHighlightColor:= clYellow;
 
     FPen:= TPen.Create;
-    FFont:= TFont.Create;
+    FFont:= FontDialog.Font;
 
     FFont.Size := SchemeInitialFontSize;
     FFont.Name := SchemeInitialFont;
@@ -474,6 +489,18 @@ implementation
     PaintBox.Invalidate;
   end;
 
+  procedure TNassiShneiderman.actChngFontExecute(Sender: TObject);
+  begin
+    if FontDialog.Execute then
+    begin
+      PaintBox.Canvas.Font:= FFont;
+      FMainBlock.RedefineSizes;
+      FMainBlock.FixYStatementsPosition(0);
+
+      PaintBox.Invalidate;
+    end;
+  end;
+
   procedure TNassiShneiderman.actRedoExecute(Sender: TObject);
   var
     Commamd: ICommand;
@@ -576,7 +603,6 @@ implementation
     FBufferBlock.Destroy;
 
     FPen.Destroy;
-    FFont.Destroy;
 
     FUndoStack.Destroy;
     FRedoStack.Destroy;
