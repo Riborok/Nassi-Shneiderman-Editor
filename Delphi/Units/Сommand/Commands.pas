@@ -22,11 +22,10 @@ type
     procedure Undo;
   End;
 
-  { TCommandCreate }
-  TCommandAdd = class(TInterfacedObject, TCommand)
+  { TCommandAddStatement }
+  TCommandAddStatement = class(TInterfacedObject, TCommand)
   private
     FNewStatement: TStatement;
-    FBlocks: TBlockArr;
     FBaseBlock: TBlock;
     FIndex : Integer;
   public
@@ -38,24 +37,46 @@ type
   End;
 
   { TCommandDel }
-  TCommandDel = class(TInterfacedObject, TCommand)
+  TCommandDelStatement = class(TInterfacedObject, TCommand)
   private
     FStatement: TStatement;
     FIndex : Integer;
-    FBlocks: TBlockArr;
   public
     constructor Create(const AStatement: TStatement);
     procedure Execute;
     procedure Undo;
   End;
 
+  { TCommandAddBlock }
+  TCommandAddBlock = class(TInterfacedObject, TCommand)
+  private
+    FInsertedBlock, FBaseBlock: TBlock;
+    FIndex: Integer;
+    WasDefaultStatementRemoved: Boolean;
+  public
+    constructor Create(const ABaseBlock: TBlock; const AIndex : Integer;
+                       const AInsertedBlock: TBlock);
+    procedure Execute;
+    procedure Undo;
+    destructor Destroy; override;
+  End;
+
+  { TCommandCaseSort }
+  {TCommandCaseSort = class(TInterfacedObject, TCommand)
+  private
+    FCaseBranching : TCaseBranching;
+  public
+    constructor Create(const ABaseBlock: TBlock; const AIndex : Integer;
+                       const AInsertedBlock: TBlock);
+    procedure Execute;
+    procedure Undo;
+  End;}
+
 implementation
 
   { TChangeContent }
   constructor TCommnadChangeContent.Create(const AStatement: TStatement; const AAct: String;
                        const AConds: TStringArr);
-  var
-    CaseBranching: TCaseBranching;
   begin
     FAction:= AAct;
     FConds:= AConds;
@@ -85,57 +106,89 @@ implementation
   end;
 
   { TCommandAdd }
-  destructor TCommandAdd.Destroy;
+  destructor TCommandAddStatement.Destroy;
   begin
     FNewStatement.Destroy;
     inherited;
   end;
 
-  constructor TCommandAdd.Create(const ABaseBlock: TBlock; const AIndex : Integer;
+  constructor TCommandAddStatement.Create(const ABaseBlock: TBlock; const AIndex : Integer;
                        const ANewStatement: TStatement);
   begin
     FNewStatement:= ANewStatement;
     FIndex:= AIndex;
     FBaseBlock:= ABaseBlock;
-    if FNewStatement is TOperator then
-      FBlocks := TOperator(FNewStatement).Blocks
-    else
-      FBlocks := nil;
   end;
 
-  procedure TCommandAdd.Execute;
+  procedure TCommandAddStatement.Execute;
   begin
-    if FBlocks <> nil then
-      FBlocks[High(FBlocks)].ChangeXLastBlock(FBaseBlock.XLast);
     FBaseBlock.AddStatement(FIndex, FNewStatement);
   end;
 
-  procedure TCommandAdd.Undo;
+  procedure TCommandAddStatement.Undo;
   begin
-    FIndex:= FBaseBlock.ExtractWithResizing(FNewStatement);
+    FIndex:= FBaseBlock.ExtractWithResizing(FNewStatement) + 1;
   end;
 
   { TCommandDel }
-  constructor TCommandDel.Create(const AStatement: TStatement);
-
+  constructor TCommandDelStatement.Create(const AStatement: TStatement);
   begin
     FStatement:= AStatement;
-    if FStatement is TOperator then
-      FBlocks := TOperator(FStatement).Blocks
-    else
-      FBlocks := nil;
   end;
 
-  procedure TCommandDel.Execute;
+  procedure TCommandDelStatement.Execute;
   begin
-    FIndex:= FStatement.BaseBlock.ExtractWithResizing(FStatement);
+    FIndex:= FStatement.BaseBlock.ExtractWithResizing(FStatement) + 1;
   end;
 
-  procedure TCommandDel.Undo;
+  procedure TCommandDelStatement.Undo;
   begin
-    if FBlocks <> nil then
-      FBlocks[High(FBlocks)].ChangeXLastBlock(FStatement.BaseBlock.XLast);
     FStatement.BaseBlock.AddStatement(FIndex, FStatement);
   end;
+
+  { TCommandAddBlock }
+  destructor TCommandAddBlock.Destroy;
+  begin
+    FInsertedBlock.Destroy;
+    inherited;
+  end;
+
+  constructor TCommandAddBlock.Create(const ABaseBlock: TBlock; const AIndex : Integer;
+                     const AInsertedBlock: TBlock);
+  begin
+    FBaseBlock:= ABaseBlock;
+    FIndex:= AIndex;
+    FInsertedBlock:= AInsertedBlock;
+  end;
+
+  procedure TCommandAddBlock.Execute;
+  begin
+    FBaseBlock.AddBlock(FIndex, FInsertedBlock);
+    WasDefaultStatementRemoved:= FIndex >= FBaseBlock.Statements.Count;
+  end;
+
+  procedure TCommandAddBlock.Undo;
+  var
+    Offset, I, J: Integer;
+    Blocks: TBlockArr;
+  begin
+    Dec(FIndex, Ord(WasDefaultStatementRemoved));
+
+    Offset:= FInsertedBlock.XStart - FBaseBlock.XStart;
+    for I := 0 to FInsertedBlock.Statements.Count - 1 do
+      if FBaseBlock.ExtractStatementAt(FIndex + I) is TOperator then
+      begin
+        Blocks:= TOperator(FInsertedBlock.Statements[I]).Blocks;
+        for J := 0 to High(Blocks) do
+          Blocks[J].MoveRight(Offset);
+        Blocks[High(Blocks)].ChangeXLastBlock(FBaseBlock.XLast);
+      end;
+
+    FBaseBlock.Install(FIndex);
+
+    Inc(FIndex, Ord(WasDefaultStatementRemoved));
+  end;
+
+  { TCommandCaseSort }
 
 end.

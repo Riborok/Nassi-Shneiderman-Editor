@@ -26,7 +26,7 @@ implementation
   procedure TLoop.CreateBlock;
   begin
     SetLength(FBlocks, FBlockCount);
-    FBlocks[0] := TBlock.Create(GetXLastStrip, FBaseBlock.XLast, Self, BaseBlock.Canvas);
+    FBlocks[0] := TBlock.Create(GetXLastStrip, BaseBlock.XLast, Self, BaseBlock.Canvas);
   end;
 
   procedure TLoop.SetTextSize;
@@ -39,7 +39,7 @@ implementation
   var
     NewStatement: TStatement;
   begin
-    NewStatement:= DefaultBlock.CreateUncertainty(FBlocks[0]);
+    NewStatement:= DefaultStatement.CreateUncertainty(FBlocks[0]);
     FBlocks[0].Statements.Add(NewStatement);
     NewStatement.SetOptimalYLast;
   end;

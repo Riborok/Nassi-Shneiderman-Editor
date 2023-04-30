@@ -2816,8 +2816,17 @@ object NassiShneiderman: TNassiShneiderman
     object MIDel: TMenuItem
       Action = actDelete
     end
-    object actChangeAction1: TMenuItem
+    object MIChangeAction: TMenuItem
       Action = actChangeAction
+    end
+    object N4: TMenuItem
+      Caption = '-'
+    end
+    object MIUndo: TMenuItem
+      Action = actUndo
+    end
+    object MIRedo: TMenuItem
+      Action = actRedo
     end
     object N2: TMenuItem
       Caption = '-'
@@ -2944,12 +2953,12 @@ object NassiShneiderman: TNassiShneiderman
       OnExecute = actChangeActionExecute
     end
     object actUndo: TAction
-      Caption = 'actUndo'
+      Caption = 'Undo the last action'
       ImageIndex = 12
       OnExecute = actUndoExecute
     end
     object actRedo: TAction
-      Caption = 'actRedo'
+      Caption = 'Redo the last action'
       ImageIndex = 13
       OnExecute = actRedoExecute
     end

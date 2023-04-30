@@ -57,7 +57,8 @@ implementation
 
   function TIfBranching.GetOptimalYLast: Integer;
   begin
-    Result := FYStart + Max(FTrueSize.Height, FFalseSize.Height) + FActionSize.Height + 3 * FYIndentText;
+    Result := FYStart + Max(FTrueSize.Height, FFalseSize.Height) +
+              FActionSize.Height + 3 * FYIndentText;
   end;
 
   function TIfBranching.IsPreсOperator: Boolean;
@@ -70,20 +71,22 @@ implementation
     SetLength(FBlocks, FBlockCount);
 
     FBlocks[0]:= TBlock.Create(FBaseBlock.XStart,
-                       (FBaseBlock.XStart + FBaseBlock.XLast) shr 1, Self, BaseBlock.Canvas);
+                 (FBaseBlock.XStart + FBaseBlock.XLast) shr 1,
+                 Self, BaseBlock.Canvas);
 
-    FBlocks[1]:= TBlock.Create(FBlocks[0].XLast, FBaseBlock.XLast, Self, BaseBlock.Canvas);
+    FBlocks[1]:= TBlock.Create(FBlocks[0].XLast, FBaseBlock.XLast, Self,
+                 BaseBlock.Canvas);
   end;
 
   procedure TIfBranching.InitializeBlock;
   var
     NewStatement: TStatement;
   begin
-    NewStatement:= DefaultBlock.CreateUncertainty(FBlocks[0]);
+    NewStatement:= DefaultStatement.CreateUncertainty(FBlocks[0]);
     FBlocks[0].Statements.Add(NewStatement);
     NewStatement.SetOptimalYLast;
 
-    NewStatement:= DefaultBlock.CreateUncertainty(FBlocks[1]);
+    NewStatement:= DefaultStatement.CreateUncertainty(FBlocks[1]);
     FBlocks[1].Statements.Add(NewStatement);
     NewStatement.SetOptimalYLast;
   end;
@@ -107,12 +110,10 @@ implementation
   end;
 
   function TIfBranching.GetOptimalWidthForBlock(const ABlock: TBlock): Integer;
-  var
-    I: Integer;
   begin
     if ABlock = FBlocks[0] then
       Result:= GetMinValidPartWidth(FTrueSize.Height, FTrueSize.Width)
-    else if ABlock = FBlocks[1] then
+    else
       Result:= GetMinValidPartWidth(FFalseSize.Height, FFalseSize.Width);
   end;
 

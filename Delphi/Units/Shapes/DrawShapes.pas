@@ -3,11 +3,14 @@ unit DrawShapes;
 interface
 uses Vcl.graphics, System.Types, System.SysUtils, Constants, AdditionalTypes;
 
-procedure DrawRect(const AXStart, AXLast, AYStart, AYLast : Integer; const ACanvas: TCanvas);
+procedure DrawRect(const AXStart, AXLast, AYStart, AYLast : Integer;
+                   const ACanvas: TCanvas);
 
-procedure DrawInvertedTriangle(const AXStart, AXMiddle, AXLast, AYStart, AYLast : Integer; const ACanvas: TCanvas);
+procedure DrawInvertedTriangle(const AXStart, AXMiddle, AXLast, AYStart,
+                               AYLast : Integer; const ACanvas: TCanvas);
 
-procedure ColorizeRect(const ACanvas: TCanvas; const AXStart, AXLast, AYStart, AYLast: Integer; const AColor: TColor);
+procedure ColorizeRect(const ACanvas: TCanvas; const AXStart, AXLast, AYStart,
+                       AYLast: Integer; const AColor: TColor);
 
 procedure DrawUnfinishedVertRectForLoop(const AXStart, AXLast, AYStart, AYMiddle,
                 AYLast: Integer; const ACanvas: TCanvas);
@@ -41,13 +44,15 @@ implementation
     ACanvas.LineTo(AXMiddle, AYLast);
   end;
 
-  procedure DrawLine(const AXStart, AXLast, AYStart, AYLast : Integer; const ACanvas: TCanvas);
+  procedure DrawLine(const AXStart, AXLast, AYStart, AYLast : Integer;
+                     const ACanvas: TCanvas);
   begin
     ACanvas.MoveTo(AXStart, AYStart);
     ACanvas.LineTo(AXLast, AYLast);
   end;
 
-  procedure DrawRect(const AXStart, AXLast, AYStart, AYLast : Integer; const ACanvas: TCanvas);
+  procedure DrawRect(const AXStart, AXLast, AYStart, AYLast : Integer;
+                     const ACanvas: TCanvas);
   begin
     ACanvas.MoveTo(AXStart, AYStart);
     ACanvas.LineTo(AXLast, AYStart);
@@ -56,14 +61,16 @@ implementation
     ACanvas.LineTo(AXStart, AYStart);
   end;
 
-  procedure DrawInvertedTriangle(const AXStart, AXMiddle, AXLast, AYStart, AYLast : Integer; const ACanvas: TCanvas);
+  procedure DrawInvertedTriangle(const AXStart, AXMiddle, AXLast, AYStart,
+                                 AYLast : Integer; const ACanvas: TCanvas);
   begin
     ACanvas.MoveTo(AXStart, AYStart);
     ACanvas.LineTo(AXMiddle, AYLast);
     ACanvas.LineTo(AXLast, AYStart);
   end;
 
-  procedure ColorizeRect(const ACanvas: TCanvas; const AXStart, AXLast, AYStart, AYLast: Integer; const AColor: TColor);
+  procedure ColorizeRect(const ACanvas: TCanvas; const AXStart, AXLast, AYStart,
+                         AYLast: Integer; const AColor: TColor);
   var
     SavedColor: TColor;
   begin

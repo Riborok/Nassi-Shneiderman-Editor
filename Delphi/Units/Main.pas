@@ -73,10 +73,13 @@ type
     N2: TMenuItem;
     tmRedrawingMovements: TTimer;
     actChangeAction: TAction;
-    actChangeAction1: TMenuItem;
+    MIChangeAction: TMenuItem;
     PaintBox: TPaintBox;
     actUndo: TAction;
     actRedo: TAction;
+    N4: TMenuItem;
+    MIUndo: TMenuItem;
+    MIRedo: TMenuItem;
 
     procedure FormCreate(Sender: TObject);
 
@@ -210,13 +213,13 @@ implementation
     FDedicatedStatement:= nil;
     FCarryBlock:= nil;
 
-    Base.DefaultBlock:= TProcessStatement;
+    Base.DefaultStatement:= TProcessStatement;
 
-    FBufferBlock:= TBlock.Create(0, 0, nil, PaintBox.Canvas);
-    FBufferBlock.AddFirstStatement(Base.DefaultBlock.CreateUncertainty(FBufferBlock));
+    FBufferBlock:= TBlock.Create(0, nil, PaintBox.Canvas);
+    FBufferBlock.AddFirstStatement(Base.DefaultStatement.CreateUncertainty(FBufferBlock));
 
-    FMainBlock:= TBlock.Create(SchemeInitialIndent, 0, nil, PaintBox.Canvas);
-    FMainBlock.AddFirstStatement(Base.DefaultBlock.CreateUncertainty(FMainBlock),
+    FMainBlock:= TBlock.Create(SchemeInitialIndent, nil, PaintBox.Canvas);
+    FMainBlock.AddFirstStatement(Base.DefaultStatement.CreateUncertainty(FMainBlock),
                                                             SchemeInitialIndent);
     FIsMouseDown:= False;
     PaintBox.Invalidate;
@@ -277,7 +280,7 @@ implementation
       FCarryBlock.DrawBlock(VisibleImageRect);
 
     FMainBlock.DrawBlock(VisibleImageRect);
-    //DrawCoordinates(PaintBox.Canvas, 50);
+    DrawCoordinates(PaintBox.Canvas, 50);
   end;
 
   procedure TNassiShneiderman.ScrollBoxMouseWheel(Sender: TObject;
@@ -320,6 +323,8 @@ implementation
       MIAscSort.Visible:= False;
       MIDescSort.Visible:= False;
     end;
+    MIUndo.Enabled:= Self.FUndoStack.Count <> 0;
+    MIRedo.Enabled:= Self.FRedoStack.Count <> 0;
   end;
 
   procedure TNassiShneiderman.MouseDown(Sender: TObject;
@@ -336,12 +341,7 @@ implementation
         if FIsMouseDown then
           FCarryBlock.Destroy;
 
-        FCarryBlock:= TBlock.Create(
-          FDedicatedStatement.BaseBlock.XStart,
-          FDedicatedStatement.BaseBlock.XLast,
-          nil,
-          FDedicatedStatement.BaseBlock.Canvas
-        );
+        FCarryBlock:= TBlock.Create(FDedicatedStatement.BaseBlock);
 
         FCarryBlock.AddFirstStatement(FDedicatedStatement.Clone);
 
@@ -392,17 +392,14 @@ implementation
   end;
 
   procedure TNassiShneiderman.MICopyClick(Sender: TObject);
-  var
-    I: Integer;
   begin
     if FDedicatedStatement <> nil then
     begin
-      for I := 0 to FBufferBlock.Statements.Count - 1 do
-        FBufferBlock.RemoveStatementAt(I);
+      FBufferBlock.Destroy;
 
-      FBufferBlock.Assign(FDedicatedStatement.BaseBlock);
+      FBufferBlock := TBlock.Create(FDedicatedStatement.BaseBlock);
 
-      FBufferBlock.AddStatementToEnd(FDedicatedStatement.Clone);
+      FBufferBlock.AddFirstStatement(FDedicatedStatement.Clone);
     end;
   end;
 
@@ -418,16 +415,23 @@ implementation
 
   procedure TNassiShneiderman.MIInsetClick(Sender: TObject);
   var
-    I: Integer;
+    BaseBlock: TBlock;
   begin
     if (FBufferBlock.Statements.Count <> 0) and (FDedicatedStatement <> nil) then
     begin
-      FDedicatedStatement.BaseBlock.AddBlockAfter(FDedicatedStatement, FBufferBlock);
+      FRedoStack.Clear;
 
-      FBufferBlock.Assign(FDedicatedStatement.BaseBlock);
+      BaseBlock:= FDedicatedStatement.BaseBlock;
+
+      FUndoStack.Push(TCommandAddBlock.Create(BaseBlock,
+                      BaseBlock.FindStatementIndex(FDedicatedStatement.YStart) + 1,
+                      FBufferBlock));
+      FUndoStack.Peek.Execute;
+
       FDedicatedStatement:= FBufferBlock.Statements.GetLast;
-      for I := 0 to FBufferBlock.Statements.Count - 1 do
-        FBufferBlock.Statements[I]:= FBufferBlock.Statements[I].Clone;
+
+      FBufferBlock := TBlock.Create(FDedicatedStatement.BaseBlock);
+      FBufferBlock.AddFirstStatement(FDedicatedStatement.Clone);
 
       PaintBox.Invalidate;
     end;
@@ -447,7 +451,8 @@ implementation
       begin
         FRedoStack.Clear;
         var Block: TBlock:= FDedicatedStatement.BaseBlock;
-        FUndoStack.Push(TCommandAdd.Create(Block, Block.FindStatementIndex(FDedicatedStatement.YStart),
+        FUndoStack.Push(TCommandAddStatement.Create(Block,
+                        Block.FindStatementIndex(FDedicatedStatement.YStart),
                         NewStatement));
         FUndoStack.Peek.Execute;
 
@@ -510,7 +515,8 @@ implementation
       begin
         FRedoStack.Clear;
         var Block: TBlock:= FDedicatedStatement.BaseBlock;
-        FUndoStack.Push(TCommandAdd.Create(Block, Block.FindStatementIndex(FDedicatedStatement.YStart) + 1,
+        FUndoStack.Push(TCommandAddStatement.Create(Block,
+                        Block.FindStatementIndex(FDedicatedStatement.YStart) + 1,
                         NewStatement));
         FUndoStack.Peek.Execute;
 
@@ -526,7 +532,7 @@ implementation
     if FDedicatedStatement <> nil then
     begin
       FRedoStack.Clear;
-      FUndoStack.Push(TCommandDel.Create(FDedicatedStatement));
+      FUndoStack.Push(TCommandDelStatement.Create(FDedicatedStatement));
       FUndoStack.Peek.Execute;
 
       FDedicatedStatement:= nil;
@@ -550,8 +556,6 @@ implementation
   end;
 
   procedure TNassiShneiderman.actChangeActionExecute(Sender: TObject);
-  var
-    Action: String;
   begin
     if FDedicatedStatement <> nil then
     begin
