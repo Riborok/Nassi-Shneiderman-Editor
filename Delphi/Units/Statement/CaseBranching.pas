@@ -10,7 +10,7 @@ type
     FCondsSizes: TSizeArr;
     function GetMaxHeightOfConds: Integer;
     procedure SetCondSize(const AIndex: Integer);
-    procedure RepositionBlocksByX;
+    procedure RestoreBlocksAfterRearrangement;
   protected
     procedure SetTextSize; override;
     procedure CreateBlock; override;
@@ -33,8 +33,10 @@ type
     function Clone: TStatement; override;
 
     procedure SortConditions(const SortNumber: Integer);
+    procedure RestoreСonditions(const AConds: TStringArr; const ABlocks: TBlockArr);
 
     property Conds: TStringArr read FConds;
+    property CondsSizes: TSizeArr read FCondsSizes;
   end;
 
 implementation
@@ -50,6 +52,31 @@ implementation
   procedure TCaseBranching.SetCondSize(const AIndex: Integer);
   begin
     FCondsSizes[AIndex] := GetTextSize(BaseBlock.Canvas, FConds[AIndex]);
+  end;
+
+  procedure TCaseBranching.RestoreСonditions(const AConds: TStringArr; const ABlocks: TBlockArr);
+  var
+    LastBlock: TBlock;
+  begin
+    // Finding the last block before sorting
+    LastBlock:= FBlocks[High(FBlocks)];
+
+    // Decrease the last x by 1 to untie it from the base block
+    LastBlock.ChangeXLastBlock(LastBlock.XLast - 1);
+
+    // Set old values
+    FConds:= AConds;
+    FBlocks:= ABlocks;
+
+    // Move the blocks in a new order
+    RestoreBlocksAfterRearrangement;
+
+    // Set the optimal length for the last block before sorting
+    LastBlock.SetOptimalXLastBlock;
+
+    // Stretch the new last block to the base
+    LastBlock:= FBlocks[High(FBlocks)];
+    LastBlock.ChangeXLastBlock(FBaseBlock.XLast);
   end;
 
   procedure TCaseBranching.SortConditions(const SortNumber: Integer);
@@ -69,10 +96,10 @@ implementation
     LastBlock.ChangeXLastBlock(LastBlock.XLast - 1);
 
     // Sorting blocks
-    QuickSort(FConds, FCondsSizes, FBlocks, Compare);
+    QuickSort(FConds, FBlocks, Compare);
 
     // Move the blocks in a new order
-    RepositionBlocksByX;
+    RestoreBlocksAfterRearrangement;
 
     // Set the optimal length for the last block before sorting
     LastBlock.SetOptimalXLastBlock;
@@ -82,14 +109,18 @@ implementation
     LastBlock.ChangeXLastBlock(FBaseBlock.XLast);
   end;
 
-  procedure TCaseBranching.RepositionBlocksByX;
+  procedure TCaseBranching.RestoreBlocksAfterRearrangement;
   var
     I: Integer;
   begin
     FBlocks[0].MoveRight(BaseBlock.XStart - FBlocks[0].XStart);
+    SetCondSize(0);
 
     for I := 1 to High(FBlocks) do
+    begin
       FBlocks[I].MoveRight(FBlocks[I - 1].XLast - FBlocks[I].XStart);
+      SetCondSize(I);
+    end;
   end;
 
   procedure TCaseBranching.SetTextSize;
@@ -164,9 +195,9 @@ implementation
 
     ResultCase:= TCaseBranching(Result);
 
-    ResultCase.FConds:= Self.FConds;
+    ResultCase.FConds:= Copy(Self.FConds);
 
-    ResultCase.FCondsSizes:= Self.FCondsSizes;
+    ResultCase.FCondsSizes:= Copy(Self.FCondsSizes);
   end;
 
   function TCaseBranching.GetMaxHeightOfConds: Integer;

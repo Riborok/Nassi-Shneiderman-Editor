@@ -6,14 +6,14 @@ uses AdditionalTypes, Stack, Base;
 type
   TCompareFunction = function(const AFirstStr, ASecondStr: String): Boolean;
 
-procedure QuickSort(const AStr: TStringArr; const ACondsSizes: TSizeArr; const ABlocks : TBlockArr;
+procedure QuickSort(const AStr: TStringArr; const ABlocks : TBlockArr;
                     const ACompare: TCompareFunction);
 
 function CompareStrAsc(const AFirstStr, ASecondStr: string): Boolean;
 function CompareStrDesc(const AFirstStr, ASecondStr: string): Boolean;
 implementation
 
-  procedure QuickSort(const AStr: TStringArr; const ACondsSizes: TSizeArr; const ABlocks : TBlockArr;
+  procedure QuickSort(const AStr: TStringArr; const ABlocks : TBlockArr;
                       const ACompare: TCompareFunction);
   type
     TIndexRange = record
@@ -24,7 +24,6 @@ implementation
     I, J: Integer;
     Pivot: string;
     TempStr: string;
-    TempSize: TSize;
     TempBlock: TBlock;
     Stack: TStack<TIndexRange>;
     IndexRange: TIndexRange;
@@ -56,10 +55,6 @@ implementation
           TempStr := AStr[I];
           AStr[I] := AStr[J];
           AStr[J] := TempStr;
-
-          TempSize := ACondsSizes[I];
-          ACondsSizes[I] := ACondsSizes[J];
-          ACondsSizes[J] := TempSize;
 
           TempBlock := ABlocks[I];
           ABlocks[I] := ABlocks[J];

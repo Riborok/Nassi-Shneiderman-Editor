@@ -122,7 +122,7 @@ type
     FPen: TPen;
     FFont: TFont;
 
-    FUndoStack, FRedoStack: TStack<TCommand>;
+    FUndoStack, FRedoStack: TStack<ICommand>;
 
     procedure MyScroll(Sender: TObject);
 
@@ -190,8 +190,8 @@ implementation
     actUndo.ShortCut := ShortCut(VK_Z, [ssCtrl]);
     actRedo.ShortCut := ShortCut(VK_Z, [ssCtrl, ssShift]);
 
-    FUndoStack := TStack<TCommand>.Create;
-    FRedoStack := TStack<TCommand>.Create;
+    FUndoStack := TStack<ICommand>.Create;
+    FRedoStack := TStack<ICommand>.Create;
 
     FHighlightColor:= clYellow;
 
@@ -280,7 +280,7 @@ implementation
       FCarryBlock.DrawBlock(VisibleImageRect);
 
     FMainBlock.DrawBlock(VisibleImageRect);
-    DrawCoordinates(PaintBox.Canvas, 50);
+    //DrawCoordinates(PaintBox.Canvas, 50);
   end;
 
   procedure TNassiShneiderman.ScrollBoxMouseWheel(Sender: TObject;
@@ -465,13 +465,18 @@ implementation
 
   procedure TNassiShneiderman.Sort(Sender: TObject);
   begin
-    TCaseBranching(FDedicatedStatement).SortConditions(TComponent(Sender).Tag);
+    FRedoStack.Clear;
+
+    FUndoStack.Push(TCommandCaseSort.Create(TCaseBranching(FDedicatedStatement),
+                    TComponent(Sender).Tag));
+    FUndoStack.Peek.Execute;
+
     PaintBox.Invalidate;
   end;
 
   procedure TNassiShneiderman.actRedoExecute(Sender: TObject);
   var
-    Commamd: TCommand;
+    Commamd: ICommand;
   begin
     if FRedoStack.Count <> 0 then
     begin
@@ -487,7 +492,7 @@ implementation
 
   procedure TNassiShneiderman.actUndoExecute(Sender: TObject);
   var
-    Commamd: TCommand;
+    Commamd: ICommand;
   begin
     if FUndoStack.Count <> 0 then
     begin

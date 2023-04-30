@@ -4,13 +4,13 @@ interface
 uses AdditionalTypes, Base, Stack, CaseBranching;
 type
 
-  TCommand = interface
+  ICommand = interface
     procedure Execute;
     procedure Undo;
   end;
 
   { TCommnadChangeContent }
-  TCommnadChangeContent = class(TInterfacedObject, TCommand)
+  TCommnadChangeContent = class(TInterfacedObject, ICommand)
   private
     FAction: string;
     FConds: TStringArr;
@@ -23,7 +23,7 @@ type
   End;
 
   { TCommandAddStatement }
-  TCommandAddStatement = class(TInterfacedObject, TCommand)
+  TCommandAddStatement = class(TInterfacedObject, ICommand)
   private
     FNewStatement: TStatement;
     FBaseBlock: TBlock;
@@ -37,7 +37,7 @@ type
   End;
 
   { TCommandDel }
-  TCommandDelStatement = class(TInterfacedObject, TCommand)
+  TCommandDelStatement = class(TInterfacedObject, ICommand)
   private
     FStatement: TStatement;
     FIndex : Integer;
@@ -48,7 +48,7 @@ type
   End;
 
   { TCommandAddBlock }
-  TCommandAddBlock = class(TInterfacedObject, TCommand)
+  TCommandAddBlock = class(TInterfacedObject, ICommand)
   private
     FInsertedBlock, FBaseBlock: TBlock;
     FIndex: Integer;
@@ -62,15 +62,17 @@ type
   End;
 
   { TCommandCaseSort }
-  {TCommandCaseSort = class(TInterfacedObject, TCommand)
+  TCommandCaseSort = class(TInterfacedObject, ICommand)
   private
     FCaseBranching : TCaseBranching;
+    FSortNumber: Integer;
+    FPrevConds: TStringArr;
+    FPrevBlocks: TBlockArr;
   public
-    constructor Create(const ABaseBlock: TBlock; const AIndex : Integer;
-                       const AInsertedBlock: TBlock);
+    constructor Create(const ACaseBranching: TCaseBranching; const ASortNumber : Integer);
     procedure Execute;
     procedure Undo;
-  End;}
+  End;
 
 implementation
 
@@ -190,5 +192,24 @@ implementation
   end;
 
   { TCommandCaseSort }
+
+  constructor TCommandCaseSort.Create(const ACaseBranching: TCaseBranching; const ASortNumber : Integer);
+  begin
+    FCaseBranching:= ACaseBranching;
+    FSortNumber:= ASortNumber;
+  end;
+
+  procedure TCommandCaseSort.Execute;
+  begin
+    FPrevConds:= Copy(FCaseBranching.Conds);
+    FPrevBlocks:= Copy(FCaseBranching.Blocks);
+
+    FCaseBranching.SortConditions(FSortNumber);
+  end;
+
+  procedure TCommandCaseSort.Undo;
+  begin
+    FCaseBranching.Restore—onditions(FPrevConds, FPrevBlocks);
+  end;
 
 end.

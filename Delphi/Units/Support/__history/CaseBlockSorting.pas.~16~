@@ -1,20 +1,20 @@
-unit CaseBlockSorting;
+﻿unit CaseBlockSorting;
 
 interface
-uses Types, Stack, Base;
+uses AdditionalTypes, Stack, Base;
 
 type
   TCompareFunction = function(const AFirstStr, ASecondStr: String): Boolean;
 
-procedure QuickSort(var AStr: TStringArr; var ABlocks : TBlockArr;
-                    const AL, AR: Integer; const ACompare: TCompareFunction);
+procedure QuickSort(const AStr: TStringArr; const ACondsSizes: TSizeArr; const ABlocks : TBlockArr;
+                    const ACompare: TCompareFunction);
 
 function CompareStrAsc(const AFirstStr, ASecondStr: string): Boolean;
 function CompareStrDesc(const AFirstStr, ASecondStr: string): Boolean;
 implementation
 
-  procedure QuickSort(var AStr: TStringArr; var ABlocks : TBlockArr;
-                      const AL, AR: Integer; const ACompare: TCompareFunction);
+  procedure QuickSort(const AStr: TStringArr; const ACondsSizes: TSizeArr; const ABlocks : TBlockArr;
+                      const ACompare: TCompareFunction);
   type
     TIndexRange = record
       LeftIndex: Integer;
@@ -22,22 +22,24 @@ implementation
     end;
   var
     I, J: Integer;
-    Pivot, TempStr: string;
+    Pivot: string;
+    TempStr: string;
+    TempSize: TSize;
     TempBlock: TBlock;
     Stack: TStack<TIndexRange>;
     IndexRange: TIndexRange;
   begin
     Stack := TStack<TIndexRange>.Create;
 
-    IndexRange.LeftIndex := AL;
-    IndexRange.RightIndex := AR;
+    IndexRange.LeftIndex := Low(AStr);
+    IndexRange.RightIndex := High(AStr);
     Stack.Push(IndexRange);
 
     while Stack.Count > 0 do
     begin
       IndexRange := Stack.Pop;
 
-      Pivot := AStr[(IndexRange.LeftIndex + IndexRange.RightIndex) div 2];
+      Pivot := AStr[(IndexRange.LeftIndex + IndexRange.RightIndex) shr 1];
 
       I := IndexRange.LeftIndex;
       J := IndexRange.RightIndex;
@@ -55,9 +57,13 @@ implementation
           AStr[I] := AStr[J];
           AStr[J] := TempStr;
 
-          TempBlock:= ABlocks[I];
-          ABlocks[I]:= ABlocks[J];
-          ABlocks[J]:= TempBlock;
+          TempSize := ACondsSizes[I];
+          ACondsSizes[I] := ACondsSizes[J];
+          ACondsSizes[J] := TempSize;
+
+          TempBlock := ABlocks[I];
+          ABlocks[I] := ABlocks[J];
+          ABlocks[J] := TempBlock;
 
           Inc(I);
           Dec(J);
@@ -84,11 +90,17 @@ implementation
 
   function CompareStrAsc(const AFirstStr, ASecondStr: string): Boolean;
   begin
-    Result := AFirstStr < ASecondStr;
+    if Length(AFirstStr) = Length(ASecondStr) then
+      Result := AFirstStr < ASecondStr
+    else
+      Result := Length(AFirstStr) < Length(ASecondStr);
   end;
 
   function CompareStrDesc(const AFirstStr, ASecondStr: string): Boolean;
   begin
-    Result := AFirstStr > ASecondStr;
+    if Length(AFirstStr) = Length(ASecondStr) then
+      Result := AFirstStr > ASecondStr
+    else
+      Result := Length(AFirstStr) > Length(ASecondStr);
   end;
 end.
