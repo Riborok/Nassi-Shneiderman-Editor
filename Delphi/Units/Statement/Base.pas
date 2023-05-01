@@ -343,6 +343,8 @@ implementation
     for I := 0 to FStatements.Count - 1 do
       FStatements[I].RedefineStatement;
 
+    FixYStatementsPosition(0);
+
     SetOptimalXLastBlock;
   end;
 
@@ -429,8 +431,7 @@ implementation
       Self.InsertStatement(AIndex + I, AInsertedBlock.FStatements[I]);
     end;
 
-    RedefineSizes;
-    FixYStatementsPosition(AIndex - 1);
+    AInsertedBlock.RedefineSizes;
   end;
 
   function TBlock.ExtractWithResizing(const AStatement: TStatement): Integer;
@@ -1021,8 +1022,6 @@ implementation
     inherited;
     for I := 0 to High(FBlocks) do
       FBlocks[I].RedefineSizes;
-
-    AlignBlocks;
   end;
 
   function TOperator.Clone: TStatement;

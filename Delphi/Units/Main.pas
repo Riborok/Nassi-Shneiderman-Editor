@@ -583,7 +583,6 @@ implementation
     begin
       PaintBox.Canvas.Font:= FFont;
       FMainBlock.RedefineSizes;
-      FMainBlock.FixYStatementsPosition(0);
 
       PaintBox.Invalidate;
     end;

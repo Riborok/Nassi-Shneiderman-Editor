@@ -231,10 +231,10 @@ implementation
     Base.DefaultStatement:= TProcessStatement;
 
     FBufferBlock:= TBlock.Create(0, PaintBox.Canvas);
-    FBufferBlock.AddFirstStatement(Base.DefaultStatement.CreateUncertainty(FBufferBlock));
+    FBufferBlock.AddStatement(Base.DefaultStatement.CreateUncertainty(FBufferBlock));
 
     FMainBlock:= TBlock.Create(SchemeInitialIndent, PaintBox.Canvas);
-    FMainBlock.AddFirstStatement(Base.DefaultStatement.CreateUncertainty(FMainBlock),
+    FMainBlock.AddUnknownStatement(Base.DefaultStatement.CreateUncertainty(FMainBlock),
                                                             SchemeInitialIndent);
     FIsMouseDown:= False;
     PaintBox.Invalidate;
@@ -295,7 +295,7 @@ implementation
       FCarryBlock.DrawBlock(VisibleImageRect);
 
     FMainBlock.DrawBlock(VisibleImageRect);
-    //DrawCoordinates(PaintBox.Canvas, 50);
+    DrawCoordinates(PaintBox.Canvas, 50);
   end;
 
   procedure TNassiShneiderman.ScrollBoxMouseWheel(Sender: TObject;
@@ -342,6 +342,12 @@ implementation
     MIRedo.Enabled:= Self.FRedoStack.Count <> 0;
   end;
 
+  procedure TNassiShneiderman.DblClick(Sender: TObject);
+  begin
+    if FDedicatedStatement <> nil then
+      TryChangeCond(FDedicatedStatement);
+  end;
+
   procedure TNassiShneiderman.MouseDown(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
   begin
@@ -356,9 +362,10 @@ implementation
         if FIsMouseDown then
           FCarryBlock.Destroy;
 
-        FCarryBlock:= TBlock.Create(FDedicatedStatement.BaseBlock);
+        FCarryBlock:= TBlock.Create(nil);
+        FCarryBlock.Assign(FDedicatedStatement.BaseBlock);
 
-        FCarryBlock.AddFirstStatement(FDedicatedStatement.Clone);
+        FCarryBlock.AddStatement(FDedicatedStatement.Clone);
 
         FIsMouseDown := True;
         FPrevMousePos.X := X;
@@ -367,7 +374,6 @@ implementation
       else if Button = mbRight then
         PopupMenu.Popup(Mouse.CursorPos.X, Mouse.CursorPos.Y);
     end;
-
   end;
 
   procedure TNassiShneiderman.tmRedrawingTimer(Sender: TObject);
@@ -412,9 +418,10 @@ implementation
     begin
       FBufferBlock.Destroy;
 
-      FBufferBlock := TBlock.Create(FDedicatedStatement.BaseBlock);
+      FBufferBlock := TBlock.Create(nil);
+      FBufferBlock.Assign(FDedicatedStatement.BaseBlock);
 
-      FBufferBlock.AddFirstStatement(FDedicatedStatement.Clone);
+      FBufferBlock.AddStatement(FDedicatedStatement.Clone);
     end;
   end;
 
@@ -445,8 +452,9 @@ implementation
 
       FDedicatedStatement:= FBufferBlock.Statements.GetLast;
 
-      FBufferBlock := TBlock.Create(FDedicatedStatement.BaseBlock);
-      FBufferBlock.AddFirstStatement(FDedicatedStatement.Clone);
+      FBufferBlock := TBlock.Create(nil);
+      FBufferBlock.Assign(FDedicatedStatement.BaseBlock);
+      FBufferBlock.AddStatement(FDedicatedStatement.Clone);
 
       PaintBox.Invalidate;
     end;
@@ -487,18 +495,6 @@ implementation
     FUndoStack.Peek.Execute;
 
     PaintBox.Invalidate;
-  end;
-
-  procedure TNassiShneiderman.actChngFontExecute(Sender: TObject);
-  begin
-    if FontDialog.Execute then
-    begin
-      PaintBox.Canvas.Font:= FFont;
-      FMainBlock.RedefineSizes;
-      FMainBlock.FixYStatementsPosition(0);
-
-      PaintBox.Invalidate;
-    end;
   end;
 
   procedure TNassiShneiderman.actRedoExecute(Sender: TObject);
@@ -572,26 +568,23 @@ implementation
     end;
   end;
 
-  procedure TNassiShneiderman.DblClick(Sender: TObject);
-  var
-    MousePos: TPoint;
-    Statement: TStatement;
-  begin
-    MousePos := PaintBox.ScreenToClient(Mouse.CursorPos);
-
-    Statement := BinarySearchStatement(MousePos.X, MousePos.Y, FMainBlock);
-
-    if Statement <> nil then
-      TryChangeCond(Statement);
-
-    PaintBox.Invalidate;
-  end;
-
   procedure TNassiShneiderman.actChangeActionExecute(Sender: TObject);
   begin
     if FDedicatedStatement <> nil then
     begin
       TryChangeCond(FDedicatedStatement);
+      PaintBox.Invalidate;
+    end;
+  end;
+
+  procedure TNassiShneiderman.actChngFontExecute(Sender: TObject);
+  begin
+    if FontDialog.Execute then
+    begin
+      PaintBox.Canvas.Font:= FFont;
+      FMainBlock.RedefineSizes;
+      FMainBlock.FixYStatementsPosition(0);
+
       PaintBox.Invalidate;
     end;
   end;
@@ -688,7 +681,7 @@ implementation
          ScrollBox.HorzScrollBar.Position:= AStatement.BaseBlock.XStart - Stock;
     end;
 
-    case GetStatementMask(AStatement, VisibleImageScreen) of
+    case GetStatementMask(AStatement, VisibleImageScreen, AStatement is TOperator) of
       $09 {1001}:
          ScrollBox.VertScrollBar.Position := ScrollBox.VertScrollBar.Position +
          AStatement.GetYBottom - VisibleImageScreen.FBottomRight.Y + Stock;
