@@ -4,13 +4,13 @@ interface
 uses AdditionalTypes, Base, Stack, CaseBranching;
 type
 
-  TCommand = interface
+  ICommand = interface
     procedure Execute;
     procedure Undo;
   end;
 
   { TCommnadChangeContent }
-  TCommnadChangeContent = class(TInterfacedObject, TCommand)
+  TCommnadChangeContent = class(TInterfacedObject, ICommand)
   private
     FAction: string;
     FConds: TStringArr;
@@ -23,11 +23,12 @@ type
   End;
 
   { TCommandAddStatement }
-  TCommandAddStatement = class(TInterfacedObject, TCommand)
+  TCommandAddStatement = class(TInterfacedObject, ICommand)
   private
     FNewStatement: TStatement;
     FBaseBlock: TBlock;
     FIndex : Integer;
+    WasDefaultStatementRemoved: Boolean;
   public
     constructor Create(const ABaseBlock: TBlock; const AIndex : Integer;
                        const ANewStatement: TStatement);
@@ -37,7 +38,7 @@ type
   End;
 
   { TCommandDel }
-  TCommandDelStatement = class(TInterfacedObject, TCommand)
+  TCommandDelStatement = class(TInterfacedObject, ICommand)
   private
     FStatement: TStatement;
     FIndex : Integer;
@@ -48,10 +49,11 @@ type
   End;
 
   { TCommandAddBlock }
-  TCommandAddBlock = class(TInterfacedObject, TCommand)
+  TCommandAddBlock = class(TInterfacedObject, ICommand)
   private
     FInsertedBlock, FBaseBlock: TBlock;
     FIndex: Integer;
+    WasDefaultStatementRemoved: Boolean;
   public
     constructor Create(const ABaseBlock: TBlock; const AIndex : Integer;
                        const AInsertedBlock: TBlock);
@@ -61,15 +63,17 @@ type
   End;
 
   { TCommandCaseSort }
-  {TCommandCaseSort = class(TInterfacedObject, TCommand)
+  TCommandCaseSort = class(TInterfacedObject, ICommand)
   private
     FCaseBranching : TCaseBranching;
+    FSortNumber: Integer;
+    FPrevConds: TStringArr;
+    FPrevBlocks: TBlockArr;
   public
-    constructor Create(const ABaseBlock: TBlock; const AIndex : Integer;
-                       const AInsertedBlock: TBlock);
+    constructor Create(const ACaseBranching: TCaseBranching; const ASortNumber : Integer);
     procedure Execute;
     procedure Undo;
-  End;}
+  End;
 
 implementation
 
@@ -121,12 +125,16 @@ implementation
 
   procedure TCommandAddStatement.Execute;
   begin
-    FBaseBlock.AddStatement(FIndex, FNewStatement);
+    FBaseBlock.InsertUnknownStatement(FIndex, FNewStatement);
+    WasDefaultStatementRemoved:= FIndex >= FBaseBlock.Statements.Count;;
   end;
 
   procedure TCommandAddStatement.Undo;
   begin
-    FIndex:= FBaseBlock.ExtractWithResizing(FNewStatement) + 1;
+    Dec(FIndex, Ord(WasDefaultStatementRemoved));
+    FBaseBlock.ExtractStatementAt(FIndex);
+    FBaseBlock.Install(FIndex);
+    Inc(FIndex, Ord(WasDefaultStatementRemoved));
   end;
 
   { TCommandDel }
@@ -142,7 +150,7 @@ implementation
 
   procedure TCommandDelStatement.Undo;
   begin
-    FStatement.BaseBlock.AddStatement(FIndex, FStatement);
+    FStatement.BaseBlock.InsertUnknownStatement(FIndex, FStatement);
   end;
 
   { TCommandAddBlock }
@@ -156,33 +164,46 @@ implementation
                      const AInsertedBlock: TBlock);
   begin
     FBaseBlock:= ABaseBlock;
-    FIndex:= AIndex + 1;
+    FIndex:= AIndex;
     FInsertedBlock:= AInsertedBlock;
   end;
 
   procedure TCommandAddBlock.Execute;
   begin
     FBaseBlock.AddBlock(FIndex, FInsertedBlock);
+    WasDefaultStatementRemoved:= FIndex >= FBaseBlock.Statements.Count;
   end;
 
   procedure TCommandAddBlock.Undo;
   var
-    Offset, I, J: Integer;
-    Blocks: TBlockArr;
+    I: Integer;
   begin
-    Offset:= FInsertedBlock.XStart - FBaseBlock.XStart;
+    Dec(FIndex, Ord(WasDefaultStatementRemoved));
     for I := 0 to FInsertedBlock.Statements.Count - 1 do
-      if FBaseBlock.ExtractStatementAt(FIndex + I) is TOperator then
-      begin
-        Blocks:= TOperator(FInsertedBlock.Statements[I]).Blocks;
-        for J := 0 to High(Blocks) do
-          Blocks[J].MoveRight(Offset);
-        Blocks[High(Blocks)].ChangeXLastBlock(FBaseBlock.XLast);
-      end;
-
+      FBaseBlock.ExtractStatementAt(FIndex + I);
     FBaseBlock.Install(FIndex);
+    Inc(FIndex, Ord(WasDefaultStatementRemoved));
   end;
 
   { TCommandCaseSort }
+
+  constructor TCommandCaseSort.Create(const ACaseBranching: TCaseBranching; const ASortNumber : Integer);
+  begin
+    FCaseBranching:= ACaseBranching;
+    FSortNumber:= ASortNumber;
+  end;
+
+  procedure TCommandCaseSort.Execute;
+  begin
+    FPrevConds:= Copy(FCaseBranching.Conds);
+    FPrevBlocks:= Copy(FCaseBranching.Blocks);
+
+    FCaseBranching.SortConditions(FSortNumber);
+  end;
+
+  procedure TCommandCaseSort.Undo;
+  begin
+    FCaseBranching.Restore—onditions(FPrevConds, FPrevBlocks);
+  end;
 
 end.

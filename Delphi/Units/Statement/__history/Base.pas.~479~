@@ -150,7 +150,7 @@ type
   public
     constructor Create(const ABaseOperator: TOperator); overload;
     constructor Create(const AXStart: Integer; const ACanvas: TCanvas); overload;
-    constructor Create(const ABlock: TBlock); overload;
+    constructor Create(const AXStart: Integer; const ABaseOperator: TOperator); overload;
     destructor Destroy; override;
 
     property XStart: Integer read FXStart;
@@ -329,11 +329,11 @@ implementation
     FXStart := AXStart;
   end;
 
-  constructor TBlock.Create(const ABlock: TBlock);
+  constructor TBlock.Create(const AXStart: Integer; const ABaseOperator: TOperator);
   begin
     FStatements := TArrayList<TStatement>.Create(14);
-    Self.Assign(ABlock);
-    FBaseOperator := nil;
+    FXStart := AXStart;
+    FBaseOperator := ABaseOperator;
   end;
 
   procedure TBlock.RedefineSizes;
@@ -342,6 +342,8 @@ implementation
   begin
     for I := 0 to FStatements.Count - 1 do
       FStatements[I].RedefineStatement;
+
+    FixYStatementsPosition(0);
 
     SetOptimalXLastBlock;
   end;
@@ -398,9 +400,7 @@ implementation
 
   procedure TBlock.AddBlock(const AIndex: Integer; const AInsertedBlock: TBlock);
   var
-    Offset, I, J: Integer;
-    Blocks: TBlockArr;
-
+    I: Integer;
     procedure InstallCanvas(const ABlocks: TBlockArr);
     var
       I, J: Integer;
@@ -414,22 +414,19 @@ implementation
       end;
     end;
   begin
-    Offset:= Self.XStart - AInsertedBlock.XStart;
+    AInsertedBlock.FCanvas:= Self.FCanvas;
+
+    AInsertedBlock.MoveRight(Self.XStart - AInsertedBlock.XStart);
+    AInsertedBlock.ChangeXLastBlock(Self.XLast);
 
     for I := 0 to AInsertedBlock.FStatements.Count - 1 do
     begin
-      if AInsertedBlock.FStatements[I] is TOperator then
-      begin
-        Blocks:= TOperator(AInsertedBlock.FStatements[I]).Blocks;
-        InstallCanvas(Blocks);
-        for J := 0 to High(Blocks) do
-          Blocks[J].MoveRight(Offset);
-        Blocks[High(Blocks)].ChangeXLastBlock(XLast);
-      end;
       Self.InsertStatement(AIndex + I, AInsertedBlock.FStatements[I]);
+      if AInsertedBlock.FStatements[I] is TOperator then
+        InstallCanvas(TOperator(AInsertedBlock.FStatements[I]).Blocks);
     end;
 
-    RedefineSizes;
+    AInsertedBlock.RedefineSizes;
     FixYStatementsPosition(AIndex - 1);
   end;
 
@@ -718,7 +715,7 @@ implementation
     if isTOperator and (TOperator(ACurrStatement).GetOffsetFromXStart <> 0) then
       YLast := ACurrStatement.GetYBottom
     else
-      YLast:= ACurrStatement.FYStart;
+      YLast:= ACurrStatement.FYLast;
 
     Result :=
     {X--- : }
@@ -1021,8 +1018,6 @@ implementation
     inherited;
     for I := 0 to High(FBlocks) do
       FBlocks[I].RedefineSizes;
-
-    AlignBlocks;
   end;
 
   function TOperator.Clone: TStatement;

@@ -150,7 +150,7 @@ type
   public
     constructor Create(const ABaseOperator: TOperator); overload;
     constructor Create(const AXStart: Integer; const ACanvas: TCanvas); overload;
-    constructor Create(const ABlock: TBlock); overload;
+    constructor Create(const AXStart: Integer; const ABaseOperator: TOperator); overload;
     destructor Destroy; override;
 
     property XStart: Integer read FXStart;
@@ -329,11 +329,11 @@ implementation
     FXStart := AXStart;
   end;
 
-  constructor TBlock.Create(const ABlock: TBlock);
+  constructor TBlock.Create(const AXStart: Integer; const ABaseOperator: TOperator);
   begin
     FStatements := TArrayList<TStatement>.Create(14);
-    Self.Assign(ABlock);
-    FBaseOperator := nil;
+    FXStart := AXStart;
+    FBaseOperator := ABaseOperator;
   end;
 
   procedure TBlock.RedefineSizes;
@@ -342,6 +342,8 @@ implementation
   begin
     for I := 0 to FStatements.Count - 1 do
       FStatements[I].RedefineStatement;
+
+    FixYStatementsPosition(0);
 
     SetOptimalXLastBlock;
   end;
@@ -429,8 +431,7 @@ implementation
       Self.InsertStatement(AIndex + I, AInsertedBlock.FStatements[I]);
     end;
 
-    RedefineSizes;
-    FixYStatementsPosition(AIndex - 1);
+    AInsertedBlock.RedefineSizes;
   end;
 
   function TBlock.ExtractWithResizing(const AStatement: TStatement): Integer;
@@ -1021,8 +1022,6 @@ implementation
     inherited;
     for I := 0 to High(FBlocks) do
       FBlocks[I].RedefineSizes;
-
-    AlignBlocks;
   end;
 
   function TOperator.Clone: TStatement;

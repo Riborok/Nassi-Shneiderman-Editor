@@ -343,6 +343,8 @@ implementation
     for I := 0 to FStatements.Count - 1 do
       FStatements[I].RedefineStatement;
 
+    FixYStatementsPosition(0);
+
     SetOptimalXLastBlock;
   end;
 
@@ -398,9 +400,7 @@ implementation
 
   procedure TBlock.AddBlock(const AIndex: Integer; const AInsertedBlock: TBlock);
   var
-    Offset, I, J: Integer;
-    Blocks: TBlockArr;
-
+    I: Integer;
     procedure InstallCanvas(const ABlocks: TBlockArr);
     var
       I, J: Integer;
@@ -414,23 +414,20 @@ implementation
       end;
     end;
   begin
-    Offset:= Self.XStart - AInsertedBlock.XStart;
+    AInsertedBlock.FCanvas:= Self.FCanvas;
+
+    AInsertedBlock.MoveRight(Self.XStart - AInsertedBlock.XStart);
+    AInsertedBlock.ChangeXLastBlock(Self.XLast);
 
     for I := 0 to AInsertedBlock.FStatements.Count - 1 do
     begin
-      if AInsertedBlock.FStatements[I] is TOperator then
-      begin
-        Blocks:= TOperator(AInsertedBlock.FStatements[I]).Blocks;
-        InstallCanvas(Blocks);
-        for J := 0 to High(Blocks) do
-          Blocks[J].MoveRight(Offset);
-        Blocks[High(Blocks)].ChangeXLastBlock(XLast);
-      end;
       Self.InsertStatement(AIndex + I, AInsertedBlock.FStatements[I]);
+      if AInsertedBlock.FStatements[I] is TOperator then
+        InstallCanvas(TOperator(AInsertedBlock.FStatements[I]).Blocks);
     end;
 
-    RedefineSizes;
-    FixYStatementsPosition(AIndex - 1);
+    AInsertedBlock.RedefineSizes;
+    FixYStatementsPosition(AIndex);
   end;
 
   function TBlock.ExtractWithResizing(const AStatement: TStatement): Integer;
@@ -1021,8 +1018,6 @@ implementation
     inherited;
     for I := 0 to High(FBlocks) do
       FBlocks[I].RedefineSizes;
-
-    AlignBlocks;
   end;
 
   function TOperator.Clone: TStatement;

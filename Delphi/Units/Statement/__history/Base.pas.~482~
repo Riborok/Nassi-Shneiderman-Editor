@@ -150,7 +150,7 @@ type
   public
     constructor Create(const ABaseOperator: TOperator); overload;
     constructor Create(const AXStart: Integer; const ACanvas: TCanvas); overload;
-    constructor Create(const ABlock: TBlock); overload;
+    constructor Create(const AXStart: Integer; const ABaseOperator: TOperator); overload;
     destructor Destroy; override;
 
     property XStart: Integer read FXStart;
@@ -183,7 +183,7 @@ type
 
     procedure Assign(const Source: TBlock);
 
-    procedure RedefineSizes;
+    procedure RedefineSizes(const AIndex: Integer);
 
     function FindStatementIndex(const AFYStart: Integer): Integer;
 
@@ -204,7 +204,7 @@ type
         const AVisibleImageRect: TVisibleImageRect): Integer; inline;
 
   function GetStatementMask(const ACurrStatement: TStatement;
-        const AVisibleImageRect: TVisibleImageRect): Integer; inline;
+        const AVisibleImageRect: TVisibleImageRect; const isTOperator: Boolean): Integer; inline;
 
 implementation
 
@@ -329,11 +329,11 @@ implementation
     FXStart := AXStart;
   end;
 
-  constructor TBlock.Create(const ABlock: TBlock);
+  constructor TBlock.Create(const AXStart: Integer; const ABaseOperator: TOperator);
   begin
     FStatements := TArrayList<TStatement>.Create(14);
-    Self.Assign(ABlock);
-    FBaseOperator := nil;
+    FXStart := AXStart;
+    FBaseOperator := ABaseOperator;
   end;
 
   procedure TBlock.RedefineSizes;
@@ -342,6 +342,8 @@ implementation
   begin
     for I := 0 to FStatements.Count - 1 do
       FStatements[I].RedefineStatement;
+
+    FixYStatementsPosition(0);
 
     SetOptimalXLastBlock;
   end;
@@ -398,9 +400,7 @@ implementation
 
   procedure TBlock.AddBlock(const AIndex: Integer; const AInsertedBlock: TBlock);
   var
-    Offset, I, J: Integer;
-    Blocks: TBlockArr;
-
+    I: Integer;
     procedure InstallCanvas(const ABlocks: TBlockArr);
     var
       I, J: Integer;
@@ -414,23 +414,17 @@ implementation
       end;
     end;
   begin
-    Offset:= Self.XStart - AInsertedBlock.XStart;
+    AInsertedBlock.MoveRight(Self.XStart - AInsertedBlock.XStart);
+    AInsertedBlock.ChangeXLastBlock(Self.XLast);
 
     for I := 0 to AInsertedBlock.FStatements.Count - 1 do
     begin
-      if AInsertedBlock.FStatements[I] is TOperator then
-      begin
-        Blocks:= TOperator(AInsertedBlock.FStatements[I]).Blocks;
-        InstallCanvas(Blocks);
-        for J := 0 to High(Blocks) do
-          Blocks[J].MoveRight(Offset);
-        Blocks[High(Blocks)].ChangeXLastBlock(XLast);
-      end;
       Self.InsertStatement(AIndex + I, AInsertedBlock.FStatements[I]);
+      if AInsertedBlock.FStatements[I] is TOperator then
+        InstallCanvas(TOperator(AInsertedBlock.FStatements[I]).Blocks);
     end;
 
     RedefineSizes;
-    FixYStatementsPosition(AIndex - 1);
   end;
 
   function TBlock.ExtractWithResizing(const AStatement: TStatement): Integer;
@@ -711,23 +705,31 @@ implementation
   end;
 
   function GetStatementMask(const ACurrStatement: TStatement;
-        const AVisibleImageRect: TVisibleImageRect): Integer; inline;
+        const AVisibleImageRect: TVisibleImageRect; const isTOperator: Boolean): Integer; inline;
+  var
+    YLast: Integer;
   begin
+    if isTOperator and (TOperator(ACurrStatement).GetOffsetFromXStart <> 0) then
+      YLast := ACurrStatement.GetYBottom
+    else
+      YLast:= ACurrStatement.FYLast;
+
     Result :=
     {X--- : }
       Ord(ACurrStatement.YStart >= AVisibleImageRect.FTopLeft.Y) shl 3 or
     {-X-- : }
-      Ord(ACurrStatement.YLast <= AVisibleImageRect.FBottomRight.Y) shl 2 or
+      Ord(YLast <= AVisibleImageRect.FBottomRight.Y) shl 2 or
     {--X- : }
       Ord(ACurrStatement.YStart <= AVisibleImageRect.FBottomRight.Y) shl 1 or
     {---X : }
-      Ord(ACurrStatement.YLast >= AVisibleImageRect.FTopLeft.Y);
+      Ord(YLast >= AVisibleImageRect.FTopLeft.Y);
   end;
 
   procedure TBlock.DrawBlock(const AVisibleImageRect: TVisibleImageRect);
   var
     L, R, M: Integer;
     CurrStatement: TStatement;
+    isTOperator: Boolean;
   begin
     L := 0;
     R := FStatements.Count - 1;
@@ -735,7 +737,7 @@ implementation
     while L < R do
     begin
       M := (L + R) shr 1;
-      case GetStatementMask(FStatements[M], AVisibleImageRect) of
+      case GetStatementMask(FStatements[M], AVisibleImageRect, FStatements[M] is TOperator) of
         $0F {1111}, $03 {0011}, $07 {0111}, $0B {1011}:
           R := M;
         $09 {1001}:
@@ -753,9 +755,10 @@ implementation
       for M := R to FStatements.Count - 1 do
       begin
         CurrStatement:= FStatements[M];
-        if CurrStatement is TOperator then
+        isTOperator:= CurrStatement is TOperator;
+        if isTOperator then
           TOperator(CurrStatement).DrawBlocks(AVisibleImageRect);
-        case GetStatementMask(CurrStatement, AVisibleImageRect) of
+        case GetStatementMask(CurrStatement, AVisibleImageRect, isTOperator) of
           $0F {1111}, $03 {0011}, $07 {0111}, $0B {1011}:
             CurrStatement.Draw;
           else
@@ -1012,8 +1015,6 @@ implementation
     inherited;
     for I := 0 to High(FBlocks) do
       FBlocks[I].RedefineSizes;
-
-    AlignBlocks;
   end;
 
   function TOperator.Clone: TStatement;

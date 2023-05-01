@@ -181,9 +181,9 @@ type
 
     procedure DrawBlock(const AVisibleImageRect: TVisibleImageRect);
 
-    procedure Assign(const Source: TBlock);
+    procedure Assign(const ASource: TBlock);
 
-    procedure RedefineSizes;
+    procedure RedefineSizes(const AIndex: Integer = 0);
 
     function FindStatementIndex(const AFYStart: Integer): Integer;
 
@@ -336,14 +336,14 @@ implementation
     FBaseOperator := ABaseOperator;
   end;
 
-  procedure TBlock.RedefineSizes;
+  procedure TBlock.RedefineSizes(const AIndex: Integer = 0);
   var
     I: Integer;
   begin
-    for I := 0 to FStatements.Count - 1 do
+    for I := AIndex to FStatements.Count - 1 do
       FStatements[I].RedefineStatement;
 
-    FixYStatementsPosition(0);
+    FixYStatementsPosition(AIndex);
 
     SetOptimalXLastBlock;
   end;
@@ -400,9 +400,7 @@ implementation
 
   procedure TBlock.AddBlock(const AIndex: Integer; const AInsertedBlock: TBlock);
   var
-    Offset, I, J: Integer;
-    Blocks: TBlockArr;
-
+    I: Integer;
     procedure InstallCanvas(const ABlocks: TBlockArr);
     var
       I, J: Integer;
@@ -416,22 +414,17 @@ implementation
       end;
     end;
   begin
-    Offset:= Self.XStart - AInsertedBlock.XStart;
+    AInsertedBlock.MoveRight(Self.XStart - AInsertedBlock.XStart);
+    AInsertedBlock.ChangeXLastBlock(Self.XLast);
 
     for I := 0 to AInsertedBlock.FStatements.Count - 1 do
     begin
-      if AInsertedBlock.FStatements[I] is TOperator then
-      begin
-        Blocks:= TOperator(AInsertedBlock.FStatements[I]).Blocks;
-        InstallCanvas(Blocks);
-        for J := 0 to High(Blocks) do
-          Blocks[J].MoveRight(Offset);
-        Blocks[High(Blocks)].ChangeXLastBlock(XLast);
-      end;
       Self.InsertStatement(AIndex + I, AInsertedBlock.FStatements[I]);
+      if AInsertedBlock.FStatements[I] is TOperator then
+        InstallCanvas(TOperator(AInsertedBlock.FStatements[I]).Blocks);
     end;
 
-    AInsertedBlock.RedefineSizes;
+    RedefineSizes(AIndex - 1);
   end;
 
   function TBlock.ExtractWithResizing(const AStatement: TStatement): Integer;
@@ -803,11 +796,11 @@ implementation
     end;
   end;
 
-  procedure TBlock.Assign(const Source: TBlock);
+  procedure TBlock.Assign(const ASource: TBlock);
   begin
-    Self.FXStart:= Source.FXStart;
-    Self.FXLast:= Source.FXLast;
-    Self.FCanvas:= Source.FCanvas;
+    Self.FXStart:= ASource.FXStart;
+    Self.FXLast:= ASource.FXLast;
+    Self.FCanvas:= ASource.FCanvas;
   end;
 
   { TOperator }

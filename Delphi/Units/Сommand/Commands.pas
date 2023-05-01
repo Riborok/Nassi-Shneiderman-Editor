@@ -28,6 +28,7 @@ type
     FNewStatement: TStatement;
     FBaseBlock: TBlock;
     FIndex : Integer;
+    WasDefaultStatementRemoved: Boolean;
   public
     constructor Create(const ABaseBlock: TBlock; const AIndex : Integer;
                        const ANewStatement: TStatement);
@@ -125,11 +126,15 @@ implementation
   procedure TCommandAddStatement.Execute;
   begin
     FBaseBlock.InsertUnknownStatement(FIndex, FNewStatement);
+    WasDefaultStatementRemoved:= FIndex >= FBaseBlock.Statements.Count;
   end;
 
   procedure TCommandAddStatement.Undo;
   begin
-    FIndex:= FBaseBlock.ExtractWithResizing(FNewStatement) + 1;
+    Dec(FIndex, Ord(WasDefaultStatementRemoved));
+    FBaseBlock.ExtractStatementAt(FIndex);
+    FBaseBlock.Install(FIndex);
+    Inc(FIndex, Ord(WasDefaultStatementRemoved));
   end;
 
   { TCommandDel }
@@ -171,23 +176,12 @@ implementation
 
   procedure TCommandAddBlock.Undo;
   var
-    Offset, I, J: Integer;
-    Blocks: TBlockArr;
+    I: Integer;
   begin
     Dec(FIndex, Ord(WasDefaultStatementRemoved));
-
-    Offset:= FInsertedBlock.XStart - FBaseBlock.XStart;
     for I := 0 to FInsertedBlock.Statements.Count - 1 do
-      if FBaseBlock.ExtractStatementAt(FIndex + I) is TOperator then
-      begin
-        Blocks:= TOperator(FInsertedBlock.Statements[I]).Blocks;
-        for J := 0 to High(Blocks) do
-          Blocks[J].MoveRight(Offset);
-        Blocks[High(Blocks)].ChangeXLastBlock(FBaseBlock.XLast);
-      end;
-
+      FBaseBlock.ExtractStatementAt(FIndex + I);
     FBaseBlock.Install(FIndex);
-
     Inc(FIndex, Ord(WasDefaultStatementRemoved));
   end;
 
