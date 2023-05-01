@@ -38,7 +38,7 @@ implementation
                                                   AStatement.YStart);
 
         if AStatement.BaseBlock.BaseOperator.Blocks[BlockIndex +
-                      Ord(ADirection)].Statements.Count < StatementIndex  then
+                      Ord(ADirection)].Statements.Count <= StatementIndex  then
           StatementIndex:= AStatement.BaseBlock.BaseOperator.
                 Blocks[BlockIndex + Ord(ADirection)].Statements.Count - 1;
 

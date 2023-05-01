@@ -295,7 +295,7 @@ implementation
       FCarryBlock.DrawBlock(VisibleImageRect);
 
     FMainBlock.DrawBlock(VisibleImageRect);
-    //DrawCoordinates(PaintBox.Canvas, 50);
+    DrawCoordinates(PaintBox.Canvas, 50);
   end;
 
   procedure TNassiShneiderman.ScrollBoxMouseWheel(Sender: TObject;
@@ -342,6 +342,12 @@ implementation
     MIRedo.Enabled:= Self.FRedoStack.Count <> 0;
   end;
 
+  procedure TNassiShneiderman.DblClick(Sender: TObject);
+  begin
+    if FDedicatedStatement <> nil then
+      TryChangeCond(FDedicatedStatement);
+  end;
+
   procedure TNassiShneiderman.MouseDown(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
   begin
@@ -356,7 +362,8 @@ implementation
         if FIsMouseDown then
           FCarryBlock.Destroy;
 
-        FCarryBlock:= TBlock.Create(FDedicatedStatement.BaseBlock);
+        FCarryBlock:= TBlock.Create(nil);
+        FCarryBlock.Assign(FDedicatedStatement.BaseBlock);
 
         FCarryBlock.AddStatement(FDedicatedStatement.Clone);
 
@@ -367,7 +374,6 @@ implementation
       else if Button = mbRight then
         PopupMenu.Popup(Mouse.CursorPos.X, Mouse.CursorPos.Y);
     end;
-
   end;
 
   procedure TNassiShneiderman.tmRedrawingTimer(Sender: TObject);
@@ -412,7 +418,8 @@ implementation
     begin
       FBufferBlock.Destroy;
 
-      FBufferBlock := TBlock.Create(FDedicatedStatement.BaseBlock);
+      FBufferBlock := TBlock.Create(nil);
+      FBufferBlock.Assign(FDedicatedStatement.BaseBlock);
 
       FBufferBlock.AddStatement(FDedicatedStatement.Clone);
     end;
@@ -445,7 +452,8 @@ implementation
 
       FDedicatedStatement:= FBufferBlock.Statements.GetLast;
 
-      FBufferBlock := TBlock.Create(FDedicatedStatement.BaseBlock);
+      FBufferBlock := TBlock.Create(nil);
+      FBufferBlock.Assign(FDedicatedStatement.BaseBlock);
       FBufferBlock.AddStatement(FDedicatedStatement.Clone);
 
       PaintBox.Invalidate;
@@ -487,18 +495,6 @@ implementation
     FUndoStack.Peek.Execute;
 
     PaintBox.Invalidate;
-  end;
-
-  procedure TNassiShneiderman.actChngFontExecute(Sender: TObject);
-  begin
-    if FontDialog.Execute then
-    begin
-      PaintBox.Canvas.Font:= FFont;
-      FMainBlock.RedefineSizes;
-      FMainBlock.FixYStatementsPosition(0);
-
-      PaintBox.Invalidate;
-    end;
   end;
 
   procedure TNassiShneiderman.actRedoExecute(Sender: TObject);
@@ -572,26 +568,23 @@ implementation
     end;
   end;
 
-  procedure TNassiShneiderman.DblClick(Sender: TObject);
-  var
-    MousePos: TPoint;
-    Statement: TStatement;
-  begin
-    MousePos := PaintBox.ScreenToClient(Mouse.CursorPos);
-
-    Statement := BinarySearchStatement(MousePos.X, MousePos.Y, FMainBlock);
-
-    if Statement <> nil then
-      TryChangeCond(Statement);
-
-    PaintBox.Invalidate;
-  end;
-
   procedure TNassiShneiderman.actChangeActionExecute(Sender: TObject);
   begin
     if FDedicatedStatement <> nil then
     begin
       TryChangeCond(FDedicatedStatement);
+      PaintBox.Invalidate;
+    end;
+  end;
+
+  procedure TNassiShneiderman.actChngFontExecute(Sender: TObject);
+  begin
+    if FontDialog.Execute then
+    begin
+      PaintBox.Canvas.Font:= FFont;
+      FMainBlock.RedefineSizes;
+      FMainBlock.FixYStatementsPosition(0);
+
       PaintBox.Invalidate;
     end;
   end;

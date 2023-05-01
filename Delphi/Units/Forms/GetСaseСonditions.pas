@@ -16,13 +16,13 @@ type
     Label1: TLabel;
     btnDelete: TButton;
     Panel: TPanel;
+    procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure FormCreate(Sender: TObject);
     procedure btnAddClick(Sender: TObject);
     procedure ScrollBoxMouseWheel(Sender: TObject; Shift: TShiftState;
       WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
     procedure btnDeleteClick(Sender: TObject);
     destructor Destroy;
-    procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure FormShow(Sender: TObject);
   private
     { Private declarations }
@@ -98,6 +98,13 @@ implementation
     inherited;
   end;
 
+  procedure TWriteÑaseÑonditions.FormKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+  begin
+    if (Key = VK_RETURN) and not (ssShift in Shift) then
+      ModalResult := mrOk;
+  end;
+
   procedure TWriteÑaseÑonditions.btnAddClick(Sender: TObject);
   begin
     if FMemoStack.Count < MaxCond then
@@ -167,13 +174,6 @@ implementation
 
     FMemoStack:= TStack<TMemo>.Create;
     FLabelStack:= TStack<TLabel>.Create;
-  end;
-
-  procedure TWriteÑaseÑonditions.FormKeyDown(Sender: TObject; var Key: Word;
-  Shift: TShiftState);
-  begin
-    if (Key = VK_RETURN) and not (ssShift in Shift) then
-      ModalResult := mrOk;
   end;
 
   procedure TWriteÑaseÑonditions.FormShow(Sender: TObject);

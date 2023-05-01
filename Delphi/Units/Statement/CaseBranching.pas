@@ -14,7 +14,7 @@ type
   protected
     procedure SetTextSize; override;
     procedure CreateBlock; override;
-    procedure CreateBlockStarting(const AStartIndex: Integer);
+    procedure CreateBlockStarting(AStartIndex: Integer);
 
     function GetOptimaWidth: Integer; override;
     function GetOptimalWidthForBlock(const ABlock: TBlock): Integer; override;
@@ -162,6 +162,9 @@ implementation
       // will set the optimal width
       FBlocks[High(PrevCond)].ChangeXLastBlock(FBlocks[High(PrevCond)].XStart + 1);
 
+      for I := Length(PrevCond) to High(FConds) do
+        SetCondSize(I);
+
       // Сreate and initialize new blocks. Set the width to one. In the future
       // will set the optimal width
       CreateBlockStarting(Length(PrevCond));
@@ -220,13 +223,13 @@ implementation
     CreateBlockStarting(0);
   end;
 
-  procedure TCaseBranching.CreateBlockStarting(const AStartIndex: Integer);
+  procedure TCaseBranching.CreateBlockStarting(AStartIndex: Integer);
   var
     I: Integer;
   begin
-    for I := AStartIndex to High(FBlocks) do
+    for I := High(FBlocks) downto AStartIndex do
     begin
-      FBlocks[I]:= TBlock.Create(Self);
+      FBlocks[I]:= TBlock.Create(MaxInt - (High(FBlocks) - I), Self);
       FBlocks[I].Statements.Add(DefaultStatement.CreateUncertainty(FBlocks[I]));
     end;
   end;

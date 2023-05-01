@@ -150,7 +150,7 @@ type
   public
     constructor Create(const ABaseOperator: TOperator); overload;
     constructor Create(const AXStart: Integer; const ACanvas: TCanvas); overload;
-    constructor Create(const ABlock: TBlock); overload;
+    constructor Create(const AXStart: Integer; const ABaseOperator: TOperator); overload;
     destructor Destroy; override;
 
     property XStart: Integer read FXStart;
@@ -329,11 +329,11 @@ implementation
     FXStart := AXStart;
   end;
 
-  constructor TBlock.Create(const ABlock: TBlock);
+  constructor TBlock.Create(const AXStart: Integer; const ABaseOperator: TOperator);
   begin
     FStatements := TArrayList<TStatement>.Create(14);
-    Self.Assign(ABlock);
-    FBaseOperator := nil;
+    FXStart := AXStart;
+    FBaseOperator := ABaseOperator;
   end;
 
   procedure TBlock.RedefineSizes;
