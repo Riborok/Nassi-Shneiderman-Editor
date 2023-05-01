@@ -17,7 +17,6 @@ type
     procedure SetTextSize; override;
     function GetOptimaWidth: Integer; override;
     procedure CreateBlock; override;
-    procedure InitializeBlock; override;
     function GetOptimalWidthForBlock(const ABlock: TBlock): Integer; override;
     function GetOptimalYLast: Integer; override;
     procedure Draw; override;
@@ -69,26 +68,10 @@ implementation
   procedure TIfBranching.CreateBlock;
   begin
     SetLength(FBlocks, FBlockCount);
-
-    FBlocks[0]:= TBlock.Create(FBaseBlock.XStart,
-                 (FBaseBlock.XStart + FBaseBlock.XLast) shr 1,
-                 Self, BaseBlock.Canvas);
-
-    FBlocks[1]:= TBlock.Create(FBlocks[0].XLast, FBaseBlock.XLast, Self,
-                 BaseBlock.Canvas);
-  end;
-
-  procedure TIfBranching.InitializeBlock;
-  var
-    NewStatement: TStatement;
-  begin
-    NewStatement:= DefaultStatement.CreateUncertainty(FBlocks[0]);
-    FBlocks[0].Statements.Add(NewStatement);
-    NewStatement.SetOptimalYLast;
-
-    NewStatement:= DefaultStatement.CreateUncertainty(FBlocks[1]);
-    FBlocks[1].Statements.Add(NewStatement);
-    NewStatement.SetOptimalYLast;
+    FBlocks[0]:= TBlock.Create(Self);
+    FBlocks[1]:= TBlock.Create(Self);
+    FBlocks[0].Statements.Add(DefaultStatement.CreateUncertainty(FBlocks[0]));
+    FBlocks[1].Statements.Add(DefaultStatement.CreateUncertainty(FBlocks[1]));
   end;
 
   function TIfBranching.GetAvailablePartWidth(const APartWidth, ATextHeight: Integer): Integer;

@@ -12,8 +12,8 @@ type
     procedure CreateBlock; override;
     function GetOptimalWidthForBlock(const ABlock: TBlock): Integer; override;
     function GetOptimaWidth: Integer; override;
-    procedure InitializeBlock; override;
     procedure SetTextSize; override;
+    function GetOffsetFromXStart: Integer; override;
   public
     function GetXLastStrip: Integer;
     property CountPixelCorrection: Integer read FCountPixelCorrection;
@@ -26,22 +26,14 @@ implementation
   procedure TLoop.CreateBlock;
   begin
     SetLength(FBlocks, FBlockCount);
-    FBlocks[0] := TBlock.Create(GetXLastStrip, BaseBlock.XLast, Self, BaseBlock.Canvas);
+    FBlocks[0] := TBlock.Create(Self);
+    FBlocks[0].Statements.Add(DefaultStatement.CreateUncertainty(FBlocks[0]));
   end;
 
   procedure TLoop.SetTextSize;
   begin
     inherited;
     FCountPixelCorrection:= BaseBlock.Canvas.Font.Size shl 1 + 5;
-  end;
-
-  procedure TLoop.InitializeBlock;
-  var
-    NewStatement: TStatement;
-  begin
-    NewStatement:= DefaultStatement.CreateUncertainty(FBlocks[0]);
-    FBlocks[0].Statements.Add(NewStatement);
-    NewStatement.SetOptimalYLast;
   end;
 
   function TLoop.GetOptimaWidth: Integer;
@@ -52,6 +44,11 @@ implementation
   function TLoop.GetXLastStrip: Integer;
   begin
     Result:= FBaseBlock.XStart + FCountPixelCorrection;
+  end;
+
+  function TLoop.GetOffsetFromXStart: Integer;
+  begin
+    Result:= FCountPixelCorrection;
   end;
 
   function TLoop.Clone: TStatement;

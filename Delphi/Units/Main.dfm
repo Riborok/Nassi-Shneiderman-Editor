@@ -2190,7 +2190,6 @@ object NassiShneiderman: TNassiShneiderman
     OnDblClick = DblClick
     OnMouseDown = MouseDown
     OnMouseWheel = ScrollBoxMouseWheel
-    ExplicitHeight = 570
     object PaintBox: TPaintBox
       Left = 0
       Top = 0

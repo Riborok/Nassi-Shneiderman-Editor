@@ -124,7 +124,7 @@ implementation
 
   procedure TCommandAddStatement.Execute;
   begin
-    FBaseBlock.InsertStatement(FIndex, FNewStatement);
+    FBaseBlock.InsertUnknownStatement(FIndex, FNewStatement);
   end;
 
   procedure TCommandAddStatement.Undo;
@@ -145,7 +145,7 @@ implementation
 
   procedure TCommandDelStatement.Undo;
   begin
-    FStatement.BaseBlock.InsertStatement(FIndex, FStatement);
+    FStatement.BaseBlock.InsertUnknownStatement(FIndex, FStatement);
   end;
 
   { TCommandAddBlock }

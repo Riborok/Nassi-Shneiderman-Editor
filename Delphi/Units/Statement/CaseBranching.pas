@@ -14,9 +14,7 @@ type
   protected
     procedure SetTextSize; override;
     procedure CreateBlock; override;
-    procedure CreateBlockStarting(AStartIndex: Integer);
-    procedure InitializeBlock; override;
-    procedure InitializeBlockStarting(const AStartIndex: Integer);
+    procedure CreateBlockStarting(const AStartIndex: Integer);
 
     function GetOptimaWidth: Integer; override;
     function GetOptimalWidthForBlock(const ABlock: TBlock): Integer; override;
@@ -24,8 +22,7 @@ type
 
     procedure Draw; override;
   public
-    constructor Create(const AAction : String;
-        const AConds: TStringArr; const ABaseBlock: TBlock);
+    constructor Create(const AAction : String; const AConds: TStringArr);
     function IsPreсOperator: Boolean; override;
 
     procedure ChangeActionWithConds(const AAction: String; const AConds: TStringArr);
@@ -41,12 +38,11 @@ type
 
 implementation
 
-  constructor TCaseBranching.Create(const AAction : String; const AConds: TStringArr;
-                                    const ABaseBlock: TBlock);
+  constructor TCaseBranching.Create(const AAction : String; const AConds: TStringArr);
   begin
     FConds:= AConds;
     SetLength(FCondsSizes, Length(AConds));
-    inherited Create(AAction, ABaseBlock);
+    inherited Create(AAction);
   end;
 
   procedure TCaseBranching.SetCondSize(const AIndex: Integer);
@@ -169,18 +165,10 @@ implementation
       // Сreate and initialize new blocks. Set the width to one. In the future
       // will set the optimal width
       CreateBlockStarting(Length(PrevCond));
-      InitializeBlockStarting(Length(PrevCond));
+      InitializeBlocks(Length(PrevCond));
 
       // Set the optimal width of the last block
       FBlocks[High(PrevCond)].SetOptimalXLastBlock;
-
-      // Set dimensions after adding
-      for I := Length(PrevCond) to High(FConds) do
-      begin
-        SetCondSize(I);
-
-        FBlocks[I].Install(0);
-      end;
     end;
 
     // Changing the action
@@ -232,39 +220,14 @@ implementation
     CreateBlockStarting(0);
   end;
 
-  procedure TCaseBranching.CreateBlockStarting(AStartIndex: Integer);
-  const
-    BlockWidth = 1;
+  procedure TCaseBranching.CreateBlockStarting(const AStartIndex: Integer);
   var
     I: Integer;
   begin
-    if AStartIndex = 0 then
-    begin
-      FBlocks[0]:= TBlock.Create(FBaseBlock.XStart, FBaseBlock.XStart +
-                   BlockWidth, Self, BaseBlock.Canvas);
-      Inc(AStartIndex);
-    end;
-
-    for I := AStartIndex to High(FBlocks) do
-      FBlocks[I]:= TBlock.Create(FBlocks[I-1].XLast,
-                        FBlocks[I-1].XLast + BlockWidth, Self, BaseBlock.Canvas);
-  end;
-
-  procedure TCaseBranching.InitializeBlock;
-  begin
-    InitializeBlockStarting(0);
-  end;
-
-  procedure TCaseBranching.InitializeBlockStarting(const AStartIndex: Integer);
-  var
-    I: Integer;
-    NewStatement: TStatement;
-  begin
     for I := AStartIndex to High(FBlocks) do
     begin
-      NewStatement:= DefaultStatement.CreateUncertainty(FBlocks[I]);
-      FBlocks[I].Statements.Add(NewStatement);
-      NewStatement.SetOptimalYLast;
+      FBlocks[I]:= TBlock.Create(Self);
+      FBlocks[I].Statements.Add(DefaultStatement.CreateUncertainty(FBlocks[I]));
     end;
   end;
 

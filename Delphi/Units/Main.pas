@@ -230,11 +230,11 @@ implementation
 
     Base.DefaultStatement:= TProcessStatement;
 
-    FBufferBlock:= TBlock.Create(0, nil, PaintBox.Canvas);
-    FBufferBlock.AddFirstStatement(Base.DefaultStatement.CreateUncertainty(FBufferBlock));
+    FBufferBlock:= TBlock.Create(0, PaintBox.Canvas);
+    FBufferBlock.AddStatement(Base.DefaultStatement.CreateUncertainty(FBufferBlock));
 
-    FMainBlock:= TBlock.Create(SchemeInitialIndent, nil, PaintBox.Canvas);
-    FMainBlock.AddFirstStatement(Base.DefaultStatement.CreateUncertainty(FMainBlock),
+    FMainBlock:= TBlock.Create(SchemeInitialIndent, PaintBox.Canvas);
+    FMainBlock.AddUnknownStatement(Base.DefaultStatement.CreateUncertainty(FMainBlock),
                                                             SchemeInitialIndent);
     FIsMouseDown:= False;
     PaintBox.Invalidate;
@@ -358,7 +358,7 @@ implementation
 
         FCarryBlock:= TBlock.Create(FDedicatedStatement.BaseBlock);
 
-        FCarryBlock.AddFirstStatement(FDedicatedStatement.Clone);
+        FCarryBlock.AddStatement(FDedicatedStatement.Clone);
 
         FIsMouseDown := True;
         FPrevMousePos.X := X;
@@ -414,7 +414,7 @@ implementation
 
       FBufferBlock := TBlock.Create(FDedicatedStatement.BaseBlock);
 
-      FBufferBlock.AddFirstStatement(FDedicatedStatement.Clone);
+      FBufferBlock.AddStatement(FDedicatedStatement.Clone);
     end;
   end;
 
@@ -446,7 +446,7 @@ implementation
       FDedicatedStatement:= FBufferBlock.Statements.GetLast;
 
       FBufferBlock := TBlock.Create(FDedicatedStatement.BaseBlock);
-      FBufferBlock.AddFirstStatement(FDedicatedStatement.Clone);
+      FBufferBlock.AddStatement(FDedicatedStatement.Clone);
 
       PaintBox.Invalidate;
     end;
@@ -623,10 +623,10 @@ implementation
       begin
         var Cond: TStringArr:= nil;
         if WriteСaseСonditions.TryGetCond(Cond) then
-          Result:= TCaseBranching.Create(Action, Cond, ABaseBlock);
+          Result:= TCaseBranching.Create(Action, Cond);
       end
       else
-        Result:= AStatementClass.Create(Action, ABaseBlock);
+        Result:= AStatementClass.Create(Action);
     end;
   end;
 
@@ -688,7 +688,7 @@ implementation
          ScrollBox.HorzScrollBar.Position:= AStatement.BaseBlock.XStart - Stock;
     end;
 
-    case GetStatementMask(AStatement, VisibleImageScreen) of
+    case GetStatementMask(AStatement, VisibleImageScreen, AStatement is TOperator) of
       $09 {1001}:
          ScrollBox.VertScrollBar.Position := ScrollBox.VertScrollBar.Position +
          AStatement.GetYBottom - VisibleImageScreen.FBottomRight.Y + Stock;
