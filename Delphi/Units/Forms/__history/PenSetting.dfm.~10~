@@ -1,0 +1,50 @@
+object PenDialog: TPenDialog
+  Left = 0
+  Top = 0
+  BorderStyle = bsDialog
+  Caption = 'Pen'
+  ClientHeight = 326
+  ClientWidth = 433
+  Color = clBtnFace
+  Font.Charset = DEFAULT_CHARSET
+  Font.Color = clWindowText
+  Font.Height = -11
+  Font.Name = 'Tahoma'
+  Font.Style = []
+  OldCreateOrder = False
+  Scaled = False
+  OnCreate = FormCreate
+  OnShow = FormShow
+  PixelsPerInch = 96
+  TextHeight = 13
+  object btnOK: TButton
+    Left = 352
+    Top = 24
+    Width = 65
+    Height = 25
+    Caption = 'OK'
+    Default = True
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -11
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    ModalResult = 1
+    ParentFont = False
+    TabOrder = 0
+  end
+  object btnCancel: TButton
+    Left = 352
+    Top = 55
+    Width = 65
+    Height = 25
+    Cancel = True
+    Caption = 'Cancel'
+    ModalResult = 2
+    TabOrder = 1
+  end
+  object ColorDialog: TColorDialog
+    Left = 136
+    Top = 256
+  end
+end

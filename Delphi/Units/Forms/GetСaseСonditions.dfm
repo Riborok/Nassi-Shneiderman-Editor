@@ -2224,6 +2224,5 @@
     ParentFont = False
     TabOrder = 4
     OnMouseWheel = ScrollBoxMouseWheel
-    ExplicitWidth = 543
   end
 end

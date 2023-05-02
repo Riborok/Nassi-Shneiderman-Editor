@@ -28,6 +28,7 @@ type
     { Private declarations }
     FMemoStack: TStack<TMemo>;
     FLabelStack: TStack<TLabel>;
+    FIndent: Integer;
     procedure CreateMemo(const AText: string = '');
   public
     { Public declarations }
@@ -48,6 +49,7 @@ implementation
     I: Integer;
     Memo: TMemo;
   begin
+    FIndent:= 0;
     for I := 0 to High(ACond) do
       CreateMemo(ACond[i]);
 
@@ -102,7 +104,7 @@ implementation
 
   procedure TWrite—ase—onditions.btnAddClick(Sender: TObject);
   begin
-    if FMemoStack.Count < MaxAmount then
+    if FMemoStack.Count <= MaxAmount then
       CreateMemo;
   end;
 
@@ -124,20 +126,6 @@ implementation
     Memo: TMemo;
     LabelCaption: TLabel;
   begin
-    Memo := TMemo.Create(ScrollBox);
-    Memo.Parent := ScrollBox;
-    Memo.ScrollBars := ssBoth;
-    Memo.Text := AText;
-    Memo.Align := alTop;
-    Memo.Font.Size := FontSize;
-    Memo.Font.Name := FontName;
-    Memo.MaxLength := MaxCondLength;
-
-    if FMemoStack.Count > 0 then
-      Memo.Top := FMemoStack.Peek.Top + FMemoStack.Peek.Height
-    else
-      Memo.Top := 0;
-
     LabelCaption := TLabel.Create(ScrollBox);
     LabelCaption.Parent := ScrollBox;
     LabelCaption.Font.Size := FontSize;
@@ -146,7 +134,19 @@ implementation
     LabelCaption.AlignWithMargins := True;
     LabelCaption.Margins.Top := 20;
     LabelCaption.Align := alTop;
-    LabelCaption.Top := Memo.Top;
+    LabelCaption.Top := FIndent;
+    Inc(FIndent, LabelCaption.Width);
+
+    Memo := TMemo.Create(ScrollBox);
+    Memo.Parent := ScrollBox;
+    Memo.ScrollBars := ssBoth;
+    Memo.Text := AText;
+    Memo.Align := alTop;
+    Memo.Font.Size := FontSize;
+    Memo.Font.Name := FontName;
+    Memo.MaxLength := MaxCondLength;
+    Memo.Top:= FIndent;
+    Inc(FIndent, Memo.Width);
 
     FMemoStack.Push(Memo);
     FLabelStack.Push(LabelCaption);
@@ -171,7 +171,7 @@ implementation
   Shift: TShiftState; WheelDelta: Integer; MousePos: TPoint;
   var Handled: Boolean);
   const
-    ScrotStep = 42;
+    ScrotStep = 42 shl 1;
   begin
     if WheelDelta > 0 then
       ScrollBox.VertScrollBar.Position := ScrollBox.VertScrollBar.Position - ScrotStep

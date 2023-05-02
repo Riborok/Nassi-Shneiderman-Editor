@@ -3,7 +3,7 @@ object PenDialog: TPenDialog
   Top = 0
   BorderStyle = bsDialog
   Caption = 'Pen'
-  ClientHeight = 326
+  ClientHeight = 151
   ClientWidth = 433
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -17,6 +17,34 @@ object PenDialog: TPenDialog
   OnShow = FormShow
   PixelsPerInch = 96
   TextHeight = 13
+  object CurrColor: TShape
+    Left = 16
+    Top = 107
+    Width = 113
+    Height = 22
+    OnMouseDown = CurrColorMouseDown
+  end
+  object lbLineType: TLabel
+    Left = 16
+    Top = 8
+    Width = 48
+    Height = 13
+    Caption = 'Line type:'
+  end
+  object lbThickness: TLabel
+    Left = 168
+    Top = 8
+    Width = 50
+    Height = 13
+    Caption = 'Thickness:'
+  end
+  object lbColor: TLabel
+    Left = 16
+    Top = 88
+    Width = 29
+    Height = 13
+    Caption = 'Color:'
+  end
   object btnOK: TButton
     Left = 352
     Top = 24
@@ -43,8 +71,39 @@ object PenDialog: TPenDialog
     ModalResult = 2
     TabOrder = 1
   end
+  object cbLineType: TComboBox
+    Left = 16
+    Top = 27
+    Width = 113
+    Height = 21
+    TabOrder = 2
+    Items.Strings = (
+      'Solid'
+      'Dash'
+      'Dot'
+      'DashDot'
+      'DashDotDot')
+  end
+  object cbThickness: TComboBox
+    Left = 168
+    Top = 27
+    Width = 113
+    Height = 21
+    TabOrder = 3
+    Items.Strings = (
+      '1'
+      '2'
+      '3'
+      '4'
+      '5'
+      '6'
+      '7'
+      '8'
+      '9'
+      '10')
+  end
   object ColorDialog: TColorDialog
-    Left = 136
-    Top = 256
+    Left = 264
+    Top = 88
   end
 end
