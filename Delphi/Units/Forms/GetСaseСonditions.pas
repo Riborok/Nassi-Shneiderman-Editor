@@ -133,6 +133,7 @@ implementation
   const
     FontSize = 14;
     FontName = 'Times New Roman';
+    MaxCondLength = 4242;
   var
     Memo: TMemo;
     LabelCaption: TLabel;
@@ -145,6 +146,7 @@ implementation
     Memo.Align := alTop;
     Memo.Font.Size := FontSize;
     Memo.Font.Name := FontName;
+    Memo.MaxLength := MaxCondLength;
 
     if FMemoStack.Count > 0 then
       Memo.Top := FMemoStack.Peek.Top + FMemoStack.Peek.Height

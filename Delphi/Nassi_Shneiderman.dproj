@@ -131,6 +131,7 @@
         <DCCReference Include="Units\Shapes\DetermineDimensions.pas"/>
         <DCCReference Include="Units\Shapes\DrawShapes.pas"/>
         <DCCReference Include="Units\Сommand\Commands.pas"/>
+        <DCCReference Include="Units\DataStructures\AutoClearStack.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>

@@ -1013,13 +1013,13 @@ implementation
     I, CurrXStart: Integer;
   begin
     inherited;
+
     CurrXStart:= BaseBlock.FXStart + GetOffsetFromXStart;
+    if CurrXStart <> FBlocks[0].FXStart then
+      FBlocks[0].ChangeXStartBlock(CurrXStart);
+
     for I := 0 to High(FBlocks) do
-    begin
-      if CurrXStart <> FBlocks[I].FXStart then
-        FBlocks[I].ChangeXStartBlock(CurrXStart);
       FBlocks[I].RedefineSizes;
-    end;
   end;
 
   function TOperator.Clone: TStatement;

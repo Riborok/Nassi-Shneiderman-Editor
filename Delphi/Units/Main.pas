@@ -6,7 +6,7 @@ uses
   Winapi.Windows, Winapi.Messages, System.Classes, Vcl.Graphics, Vcl.Controls,
   Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls, ProcessStatement, Vcl.StdCtrls, Vcl.Menus,
   Base, FirstLoop, IfBranching, CaseBranching, LastLoop, StatementSearch, DrawShapes,
-  System.Actions, Vcl.ActnList, Vcl.ToolWin, SwitchStatements, Commands, Stack, Types,
+  System.Actions, Vcl.ActnList, Vcl.ToolWin, SwitchStatements, Commands, AutoClearStack, Types,
   Vcl.ComCtrls, Vcl.Buttons, System.ImageList, Vcl.ImgList, AdditionalTypes,
   GetAction, GetСaseСonditions, Constants;
 
@@ -139,7 +139,7 @@ type
     FPen: TPen;
     FFont: TFont;
 
-    FUndoStack, FRedoStack: TStack<ICommand>;
+    FUndoStack, FRedoStack: TAutoClearStack<ICommand>;
     FisZPressed: Boolean;
 
     procedure MyScroll(Sender: TObject);
@@ -207,8 +207,8 @@ implementation
     actUndo.ShortCut := ShortCut(VK_Z, [ssCtrl]);
     actRedo.ShortCut := ShortCut(VK_Z, [ssCtrl, ssShift]);
 
-    FUndoStack := TStack<ICommand>.Create;
-    FRedoStack := TStack<ICommand>.Create;
+    FUndoStack := TAutoClearStack<ICommand>.Create;
+    FRedoStack := TAutoClearStack<ICommand>.Create;
 
     FHighlightColor:= clYellow;
 

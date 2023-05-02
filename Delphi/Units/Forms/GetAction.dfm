@@ -2154,6 +2154,7 @@ object WriteAction: TWriteAction
       Font.Style = []
       Lines.Strings = (
         'MemoAction')
+      MaxLength = 14242
       ParentFont = False
       ScrollBars = ssBoth
       TabOrder = 0
