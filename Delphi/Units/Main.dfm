@@ -2130,6 +2130,8 @@ object NassiShneiderman: TNassiShneiderman
   WindowState = wsMaximized
   OnCreate = FormCreate
   OnKeyDown = FormKeyDown
+  OnKeyUp = FormKeyUp
+  OnShortCut = FormShortCut
   PixelsPerInch = 96
   TextHeight = 13
   object tbSelectFigType: TToolBar

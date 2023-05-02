@@ -130,6 +130,9 @@ implementation
   end;
 
   procedure TWrite—ase—onditions.CreateMemo(const AText: string = '');
+  const
+    FontSize = 14;
+    FontName = 'Times New Roman';
   var
     Memo: TMemo;
     LabelCaption: TLabel;

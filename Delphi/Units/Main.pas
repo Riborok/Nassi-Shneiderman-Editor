@@ -8,7 +8,7 @@ uses
   Base, FirstLoop, IfBranching, CaseBranching, LastLoop, StatementSearch, DrawShapes,
   System.Actions, Vcl.ActnList, Vcl.ToolWin, SwitchStatements, Commands, Stack, Types,
   Vcl.ComCtrls, Vcl.Buttons, System.ImageList, Vcl.ImgList, AdditionalTypes,
-  GetAction, GetСaseСonditions;
+  GetAction, GetСaseСonditions, Constants;
 
 type
   TScrollBox= class(VCL.Forms.TScrollBox)
@@ -122,6 +122,8 @@ type
     procedure actUndoExecute(Sender: TObject);
     procedure actRedoExecute(Sender: TObject);
     procedure actChngFontExecute(Sender: TObject);
+    procedure FormShortCut(var Msg: TWMKey; var Handled: Boolean);
+    procedure FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
   private
     FMainBlock : TBlock;
     FDedicatedStatement: TStatement;
@@ -138,6 +140,7 @@ type
     FFont: TFont;
 
     FUndoStack, FRedoStack: TStack<ICommand>;
+    FisZPressed: Boolean;
 
     procedure MyScroll(Sender: TObject);
 
@@ -190,10 +193,9 @@ implementation
   end;
 
   procedure TNassiShneiderman.FormCreate(Sender: TObject);
-  const
-    VK_Z = $5A;
   begin
     Self.DoubleBuffered := True;
+    FisZPressed:= False;
     Constraints.MinWidth := 960;
     Constraints.MinHeight := 540;
 
@@ -271,6 +273,20 @@ implementation
     end;
   end;
 
+  procedure TNassiShneiderman.FormKeyUp(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+  begin
+    FisZPressed:= False;
+  end;
+
+  procedure TNassiShneiderman.FormShortCut(var Msg: TWMKey; var Handled: Boolean);
+  begin
+    if FisZPressed then
+      Handled:= True
+    else if Msg.CharCode = VK_Z then
+      FisZPressed:= True;
+  end;
+
   procedure TNassiShneiderman.PaintBoxPaint(Sender: TObject);
   const
     Stock = 420;
@@ -295,7 +311,7 @@ implementation
       FCarryBlock.DrawBlock(VisibleImageRect);
 
     FMainBlock.DrawBlock(VisibleImageRect);
-    DrawCoordinates(PaintBox.Canvas, 50);
+    //DrawCoordinates(PaintBox.Canvas, 50);
   end;
 
   procedure TNassiShneiderman.ScrollBoxMouseWheel(Sender: TObject;
