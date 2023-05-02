@@ -253,7 +253,7 @@ implementation
 
     BaseBlock.SetOptimalXLastBlock;
     SetOptimalYLast;
-    BaseBlock.FixYStatementsPosition(BaseBlock.FindStatementIndex(YStart));
+    BaseBlock.FixYStatementsPosition(BaseBlock.FindStatementIndex(FYStart));
   end;
 
   function TStatement.GetYBottom: Integer;
@@ -414,8 +414,8 @@ implementation
       end;
     end;
   begin
-    AInsertedBlock.MoveRight(Self.XStart - AInsertedBlock.XStart);
-    AInsertedBlock.ChangeXLastBlock(Self.XLast);
+    AInsertedBlock.MoveRight(Self.FXStart - AInsertedBlock.FXStart);
+    AInsertedBlock.ChangeXLastBlock(Self.FXLast);
 
     for I := 0 to AInsertedBlock.FStatements.Count - 1 do
     begin
@@ -629,7 +629,7 @@ implementation
     begin
       Blocks:= CurrBlock.FBaseOperator.FBlocks;
 
-      Index:= CurrBlock.FBaseOperator.FindBlockIndex(CurrBlock.XStart) + 1;
+      Index:= CurrBlock.FBaseOperator.FindBlockIndex(CurrBlock.FXStart) + 1;
 
       for I := Index to High(Blocks) - 1 do
         Blocks[I].MoveRight(Blocks[I - 1].FXLast - Blocks[I].FXStart);
@@ -716,11 +716,11 @@ implementation
 
     Result :=
     {X--- : }
-      Ord(ACurrStatement.YStart >= AVisibleImageRect.FTopLeft.Y) shl 3 or
+      Ord(ACurrStatement.FYStart >= AVisibleImageRect.FTopLeft.Y) shl 3 or
     {-X-- : }
       Ord(YLast <= AVisibleImageRect.FBottomRight.Y) shl 2 or
     {--X- : }
-      Ord(ACurrStatement.YStart <= AVisibleImageRect.FBottomRight.Y) shl 1 or
+      Ord(ACurrStatement.FYStart <= AVisibleImageRect.FBottomRight.Y) shl 1 or
     {---X : }
       Ord(YLast >= AVisibleImageRect.FTopLeft.Y);
   end;
@@ -931,13 +931,13 @@ implementation
   begin
     Result :=
     {X--- : }
-      Ord(ACurrBlock.XStart >= AVisibleImageRect.FTopLeft.X) shl 3 or
+      Ord(ACurrBlock.FXStart >= AVisibleImageRect.FTopLeft.X) shl 3 or
     {-X-- : }
-      Ord(ACurrBlock.XLast <= AVisibleImageRect.FBottomRight.X) shl 2 or
+      Ord(ACurrBlock.FXLast <= AVisibleImageRect.FBottomRight.X) shl 2 or
     {--X- : }
-      Ord(ACurrBlock.XStart <= AVisibleImageRect.FBottomRight.X) shl 1 or
+      Ord(ACurrBlock.FXStart <= AVisibleImageRect.FBottomRight.X) shl 1 or
     {---X : }
-      Ord(ACurrBlock.XLast >= AVisibleImageRect.FTopLeft.X);
+      Ord(ACurrBlock.FXLast >= AVisibleImageRect.FTopLeft.X);
   end;
 
   procedure TOperator.DrawBlocks(const AVisibleImageRect: TVisibleImageRect);
@@ -1010,11 +1010,16 @@ implementation
 
   procedure TOperator.RedefineStatement;
   var
-    I: Integer;
+    I, CurrXStart: Integer;
   begin
     inherited;
+    CurrXStart:= BaseBlock.FXStart + GetOffsetFromXStart;
     for I := 0 to High(FBlocks) do
+    begin
+      if CurrXStart <> FBlocks[I].FXStart then
+        FBlocks[I].ChangeXStartBlock(CurrXStart);
       FBlocks[I].RedefineSizes;
+    end;
   end;
 
   function TOperator.Clone: TStatement;

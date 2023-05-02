@@ -8,7 +8,7 @@ uses
   Base, FirstLoop, IfBranching, CaseBranching, LastLoop, StatementSearch, DrawShapes,
   System.Actions, Vcl.ActnList, Vcl.ToolWin, SwitchStatements, Commands, Stack, Types,
   Vcl.ComCtrls, Vcl.Buttons, System.ImageList, Vcl.ImgList, AdditionalTypes,
-  GetAction, GetСaseСonditions;
+  GetAction, GetСaseСonditions, Constants;
 
 type
   TScrollBox= class(VCL.Forms.TScrollBox)
@@ -122,6 +122,8 @@ type
     procedure actUndoExecute(Sender: TObject);
     procedure actRedoExecute(Sender: TObject);
     procedure actChngFontExecute(Sender: TObject);
+    procedure FormShortCut(var Msg: TWMKey; var Handled: Boolean);
+    procedure FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
   private
     FMainBlock : TBlock;
     FDedicatedStatement: TStatement;
@@ -138,6 +140,7 @@ type
     FFont: TFont;
 
     FUndoStack, FRedoStack: TStack<ICommand>;
+    FisZPressed: Boolean;
 
     procedure MyScroll(Sender: TObject);
 
@@ -190,10 +193,9 @@ implementation
   end;
 
   procedure TNassiShneiderman.FormCreate(Sender: TObject);
-  const
-    VK_Z = $5A;
   begin
     Self.DoubleBuffered := True;
+    FisZPressed:= False;
     Constraints.MinWidth := 960;
     Constraints.MinHeight := 540;
 
@@ -271,6 +273,20 @@ implementation
     end;
   end;
 
+  procedure TNassiShneiderman.FormKeyUp(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+  begin
+    FisZPressed:= False;
+  end;
+
+  procedure TNassiShneiderman.FormShortCut(var Msg: TWMKey; var Handled: Boolean);
+  begin
+    if FisZPressed then
+      Handled:= True
+    else if Msg.CharCode = VK_Z then
+      FisZPressed:= True;
+  end;
+
   procedure TNassiShneiderman.PaintBoxPaint(Sender: TObject);
   const
     Stock = 420;
@@ -342,6 +358,12 @@ implementation
     MIRedo.Enabled:= Self.FRedoStack.Count <> 0;
   end;
 
+  procedure TNassiShneiderman.DblClick(Sender: TObject);
+  begin
+    if FDedicatedStatement <> nil then
+      TryChangeCond(FDedicatedStatement);
+  end;
+
   procedure TNassiShneiderman.MouseDown(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
   begin
@@ -368,7 +390,6 @@ implementation
       else if Button = mbRight then
         PopupMenu.Popup(Mouse.CursorPos.X, Mouse.CursorPos.Y);
     end;
-
   end;
 
   procedure TNassiShneiderman.tmRedrawingTimer(Sender: TObject);
@@ -492,18 +513,6 @@ implementation
     PaintBox.Invalidate;
   end;
 
-  procedure TNassiShneiderman.actChngFontExecute(Sender: TObject);
-  begin
-    if FontDialog.Execute then
-    begin
-      PaintBox.Canvas.Font:= FFont;
-      FMainBlock.RedefineSizes;
-      FMainBlock.FixYStatementsPosition(0);
-
-      PaintBox.Invalidate;
-    end;
-  end;
-
   procedure TNassiShneiderman.actRedoExecute(Sender: TObject);
   var
     Commamd: ICommand;
@@ -575,26 +584,22 @@ implementation
     end;
   end;
 
-  procedure TNassiShneiderman.DblClick(Sender: TObject);
-  var
-    MousePos: TPoint;
-    Statement: TStatement;
-  begin
-    MousePos := PaintBox.ScreenToClient(Mouse.CursorPos);
-
-    Statement := BinarySearchStatement(MousePos.X, MousePos.Y, FMainBlock);
-
-    if Statement <> nil then
-      TryChangeCond(Statement);
-
-    PaintBox.Invalidate;
-  end;
-
   procedure TNassiShneiderman.actChangeActionExecute(Sender: TObject);
   begin
     if FDedicatedStatement <> nil then
     begin
       TryChangeCond(FDedicatedStatement);
+      PaintBox.Invalidate;
+    end;
+  end;
+
+  procedure TNassiShneiderman.actChngFontExecute(Sender: TObject);
+  begin
+    if FontDialog.Execute then
+    begin
+      PaintBox.Canvas.Font:= FFont;
+      FMainBlock.RedefineSizes;
+
       PaintBox.Invalidate;
     end;
   end;
