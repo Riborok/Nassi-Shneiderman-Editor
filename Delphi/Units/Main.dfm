@@ -3105,19 +3105,20 @@ object NassiShneiderman: TNassiShneiderman
     object actChngPen: TAction
       Caption = 'Pen ...'
       ImageIndex = 15
+      OnExecute = actChngPenExecute
     end
   end
   object tmRedrawingMovements: TTimer
     Enabled = False
     Interval = 5
     OnTimer = tmRedrawingTimer
-    Left = 912
-    Top = 241
+    Left = 56
+    Top = 521
   end
   object MainMenu: TMainMenu
     Images = ilIcons
-    Left = 904
-    Top = 328
+    Left = 912
+    Top = 232
     object mnFile: TMenuItem
       Caption = 'File'
       object mnNew: TMenuItem
@@ -3157,11 +3158,7 @@ object NassiShneiderman: TNassiShneiderman
     Font.Height = -11
     Font.Name = 'Tahoma'
     Font.Style = []
-    Left = 371
-    Top = 420
-  end
-  object ColorDialog: TColorDialog
-    Left = 443
-    Top = 420
+    Left = 843
+    Top = 516
   end
 end

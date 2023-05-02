@@ -8,7 +8,7 @@ uses
   Base, FirstLoop, IfBranching, CaseBranching, LastLoop, StatementSearch, DrawShapes,
   System.Actions, Vcl.ActnList, Vcl.ToolWin, SwitchStatements, Commands, AutoClearStack, Types,
   Vcl.ComCtrls, Vcl.Buttons, System.ImageList, Vcl.ImgList, AdditionalTypes,
-  GetAction, GetСaseСonditions, Constants;
+  GetAction, GetСaseСonditions, Constants, PenSetting;
 
 type
   TScrollBox= class(VCL.Forms.TScrollBox)
@@ -93,7 +93,6 @@ type
     actChngFont: TAction;
     actChngPen: TAction;
     FontDialog: TFontDialog;
-    ColorDialog: TColorDialog;
 
     procedure FormCreate(Sender: TObject);
 
@@ -124,7 +123,10 @@ type
     procedure actChngFontExecute(Sender: TObject);
     procedure FormShortCut(var Msg: TWMKey; var Handled: Boolean);
     procedure FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
+    procedure actChngPenExecute(Sender: TObject);
   private
+    FPenDialog: TPenDialog;
+
     FMainBlock : TBlock;
     FDedicatedStatement: TStatement;
 
@@ -194,6 +196,7 @@ implementation
 
   procedure TNassiShneiderman.FormCreate(Sender: TObject);
   begin
+    SetThreadUILanguage(MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US));
     Self.DoubleBuffered := True;
     FisZPressed:= False;
     Constraints.MinWidth := 960;
@@ -210,9 +213,11 @@ implementation
     FUndoStack := TAutoClearStack<ICommand>.Create;
     FRedoStack := TAutoClearStack<ICommand>.Create;
 
+    FPenDialog:= TPenDialog.Create(Self);
+
     FHighlightColor:= clYellow;
 
-    FPen:= TPen.Create;
+    FPen:= FPenDialog.Pen;
     FFont:= FontDialog.Font;
 
     FFont.Size := SchemeInitialFontSize;
@@ -604,16 +609,28 @@ implementation
     end;
   end;
 
-  { Private methods }
+  procedure TNassiShneiderman.actChngPenExecute(Sender: TObject);
+  begin
+    if FPenDialog.Execute then
+    begin
+      PaintBox.Canvas.Pen:= FPen;
+      FMainBlock.RedefineSizes;
+
+      PaintBox.Invalidate;
+    end;
+  end;
+
+{ Private methods }
   destructor TNassiShneiderman.Destroy;
   begin
     FMainBlock.Destroy;
     FBufferBlock.Destroy;
 
-    FPen.Destroy;
-
     FUndoStack.Destroy;
     FRedoStack.Destroy;
+
+    FPenDialog.Destroy;
+
     inherited;
   end;
 

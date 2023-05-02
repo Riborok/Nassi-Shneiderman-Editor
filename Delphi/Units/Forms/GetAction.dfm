@@ -2,9 +2,10 @@ object WriteAction: TWriteAction
   Left = 0
   Top = 0
   Anchors = [akLeft, akRight, akBottom]
+  BorderStyle = bsDialog
   Caption = 'WriteAction'
-  ClientHeight = 250
-  ClientWidth = 350
+  ClientHeight = 272
+  ClientWidth = 379
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -2128,47 +2129,54 @@ object WriteAction: TWriteAction
     FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF}
   KeyPreview = True
   OldCreateOrder = False
-  OnCreate = FormCreate
   OnShow = FormShow
+  DesignSize = (
+    379
+    272)
   PixelsPerInch = 96
   TextHeight = 13
-  object Panel: TPanel
+  object btnOK: TButton
+    Left = 192
+    Top = 230
+    Width = 179
+    Height = 38
+    Anchors = [akLeft, akRight, akBottom]
+    Caption = 'OK'
+    ModalResult = 1
+    TabOrder = 0
+    ExplicitWidth = 174
+  end
+  object MemoAction: TMemo
     Left = 0
     Top = 0
-    Width = 350
-    Height = 250
-    Align = alClient
-    Caption = 'Panel'
-    TabOrder = 0
-    object MemoAction: TMemo
-      Left = 1
-      Top = 1
-      Width = 348
-      Height = 211
-      Align = alTop
-      Anchors = [akLeft, akTop, akRight, akBottom]
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -19
-      Font.Name = 'Times New Roman'
-      Font.Style = []
-      Lines.Strings = (
-        'MemoAction')
-      MaxLength = 14242
-      ParentFont = False
-      ScrollBars = ssBoth
-      TabOrder = 0
-      OnKeyDown = MemoActionKeyDown
-    end
-    object btnOK: TButton
-      Left = 1
-      Top = 208
-      Width = 348
-      Height = 41
-      Align = alBottom
-      Caption = 'OK'
-      ModalResult = 1
-      TabOrder = 1
-    end
+    Width = 379
+    Height = 224
+    Align = alTop
+    Anchors = [akLeft, akTop, akRight, akBottom]
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -19
+    Font.Name = 'Times New Roman'
+    Font.Style = []
+    Lines.Strings = (
+      'MemoAction')
+    MaxLength = 14242
+    ParentFont = False
+    ScrollBars = ssBoth
+    TabOrder = 1
+    OnKeyDown = MemoActionKeyDown
+    ExplicitWidth = 544
+    ExplicitHeight = 422
+  end
+  object btnCancel: TButton
+    Left = 8
+    Top = 230
+    Width = 179
+    Height = 38
+    Anchors = [akLeft, akRight, akBottom]
+    Caption = 'Cancel'
+    ModalResult = 2
+    TabOrder = 2
+    ExplicitWidth = 174
   end
 end

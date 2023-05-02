@@ -8,11 +8,9 @@ uses
 
 type
   TWriteAction = class(TForm)
-    Panel: TPanel;
     MemoAction: TMemo;
     btnOK: TButton;
-    procedure FormCreate(Sender: TObject);
-
+    btnCancel: TButton;
     procedure MemoActionKeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
     procedure FormShow(Sender: TObject);
@@ -47,24 +45,19 @@ implementation
       Result:= False;
   end;
 
-  procedure TWriteAction.FormCreate(Sender: TObject);
-  begin
-    Constraints.MinWidth := 350;
-    Constraints.MinHeight := 250;
-
-    Left := (Screen.Width - Width) shr 1;
-    Top := (Screen.Height - Height) shr 1;
-  end;
-
   procedure TWriteAction.FormShow(Sender: TObject);
   begin
+    Left := (Screen.Width - Width) shr 1;
+    Top := (Screen.Height - Height) shr 1;
     MemoAction.SetFocus;
   end;
 
   procedure TWriteAction.MemoActionKeyDown(Sender: TObject; var Key: Word;
     Shift: TShiftState);
   begin
-    if (Key = VK_RETURN) and not (ssShift in Shift) then
+    if Key = VK_ESCAPE then
+      ModalResult := mrCancel
+    else if (Key = VK_RETURN) and not (ssShift in Shift) then
       ModalResult := mrOk;
   end;
 

@@ -11,11 +11,11 @@ type
   TWriteÑaseÑonditions = class(TForm)
     ScrollBox: TScrollBox;
     btnOK: TButton;
-    AddCondition: TLabel;
+    lbAdd: TLabel;
     btnAdd: TButton;
-    Label1: TLabel;
+    lbDel: TLabel;
     btnDelete: TButton;
-    Panel: TPanel;
+    btnCancel: TButton;
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure FormCreate(Sender: TObject);
     procedure btnAddClick(Sender: TObject);
@@ -33,8 +33,8 @@ type
     { Public declarations }
     function TryGetCond(var ACond: TStringArr): Boolean;
   private const
-    MinCond = 2;
-    MaxCond = 100;
+    MinAmount = 2;
+    MaxAmount = 142;
   end;
 
 var
@@ -47,12 +47,11 @@ implementation
   var
     I: Integer;
     Memo: TMemo;
-    LabelCaption: TLabel;
   begin
     for I := 0 to High(ACond) do
       CreateMemo(ACond[i]);
 
-    for I := Length(ACond) + 1 to MinCond do
+    for I := Length(ACond) + 1 to MinAmount do
       CreateMemo;
 
     FMemoStack.Peek.SelStart := 0;
@@ -60,7 +59,7 @@ implementation
 
     ShowModal;
 
-    if Self.ModalResult = MrOk then
+    if ModalResult = MrOk then
     begin
       Result:= True;
 
@@ -77,16 +76,10 @@ implementation
       Result:= False;
 
     for I:= FMemoStack.Count - 1 downto 0 do
-    begin
-      Memo:= FMemoStack.Pop;
-      Memo.Destroy;
-    end;
+      FMemoStack.Pop.Destroy;
 
     for I:= FLabelStack.Count - 1 downto 0 do
-    begin
-      LabelCaption:= FLabelStack.Pop;
-      LabelCaption.Destroy;
-    end;
+      FLabelStack.Pop.Destroy;
 
   end;
 
@@ -101,31 +94,24 @@ implementation
   procedure TWriteÑaseÑonditions.FormKeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
   begin
-    if (Key = VK_RETURN) and not (ssShift in Shift) then
+    if Key = VK_ESCAPE then
+      ModalResult := mrCancel
+    else if (Key = VK_RETURN) and not (ssShift in Shift) then
       ModalResult := mrOk;
   end;
 
   procedure TWriteÑaseÑonditions.btnAddClick(Sender: TObject);
   begin
-    if FMemoStack.Count < MaxCond then
+    if FMemoStack.Count < MaxAmount then
       CreateMemo;
   end;
 
   procedure TWriteÑaseÑonditions.btnDeleteClick(Sender: TObject);
-  var
-    Memo: TMemo;
-    LabelCaption: TLabel;
   begin
-    if FMemoStack.Count > MinCond then
+    if FMemoStack.Count > MinAmount then
     begin
-      Memo:= FMemoStack.Pop;
-      LabelCaption:= FLabelStack.Pop;
-
-      if Panel.Height - Memo.Height - LabelCaption.Height >= Self.Height - ScrollBox.Top then
-        Panel.Height := Panel.Height - Memo.Height - LabelCaption.Height;
-
-      Memo.Destroy;
-      LabelCaption.Destroy;
+      FMemoStack.Pop.Destroy;
+      FLabelStack.Pop.Destroy;
     end;
   end;
 
@@ -138,7 +124,6 @@ implementation
     Memo: TMemo;
     LabelCaption: TLabel;
   begin
-
     Memo := TMemo.Create(ScrollBox);
     Memo.Parent := ScrollBox;
     Memo.ScrollBars := ssBoth;
@@ -157,11 +142,11 @@ implementation
     LabelCaption.Parent := ScrollBox;
     LabelCaption.Font.Size := FontSize;
     LabelCaption.Font.Name := FontName;
-    LabelCaption.Caption := 'Condition ' + IntToStr(FMemoStack.Count + 1);
-    LabelCaption.Top := Memo.Top;
+    LabelCaption.Caption := 'Condition ' + IntToStr(FMemoStack.Count);
     LabelCaption.AlignWithMargins := True;
     LabelCaption.Margins.Top := 20;
     LabelCaption.Align := alTop;
+    LabelCaption.Top := Memo.Top;
 
     FMemoStack.Push(Memo);
     FLabelStack.Push(LabelCaption);
@@ -171,18 +156,14 @@ implementation
 
   procedure TWriteÑaseÑonditions.FormCreate(Sender: TObject);
   begin
-    Constraints.MinWidth := 550;
-    Constraints.MinHeight := 700;
-
-    Left := (Screen.Width - Width) shr 1;
-    Top := (Screen.Height - Height) shr 1;
-
     FMemoStack:= TStack<TMemo>.Create;
     FLabelStack:= TStack<TLabel>.Create;
   end;
 
   procedure TWriteÑaseÑonditions.FormShow(Sender: TObject);
   begin
+    Left := (Screen.Width - Width) shr 1;
+    Top := (Screen.Height - Height) shr 1;
     FMemoStack.Peek.SetFocus;
   end;
 

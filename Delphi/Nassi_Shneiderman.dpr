@@ -27,7 +27,8 @@ uses
   DetermineDimensions in 'Units\Shapes\DetermineDimensions.pas',
   DrawShapes in 'Units\Shapes\DrawShapes.pas',
   Commands in 'Units\Ñommand\Commands.pas',
-  AutoClearStack in 'Units\DataStructures\AutoClearStack.pas';
+  AutoClearStack in 'Units\DataStructures\AutoClearStack.pas',
+  PenSetting in 'Units\Forms\PenSetting.pas' {PenDialog};
 
 {$R *.res}
 
