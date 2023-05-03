@@ -92,7 +92,6 @@ object PenDialog: TPenDialog
     Height = 21
     Style = csDropDownList
     TabOrder = 3
-    OnChange = cbThicknessChange
     Items.Strings = (
       '1'
       '2'

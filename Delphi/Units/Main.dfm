@@ -1,6 +1,7 @@
 object NassiShneiderman: TNassiShneiderman
   Left = 0
   Top = 0
+  BorderIcons = [biSystemMenu, biMinimize, biMaximize, biHelp]
   Caption = 'NassiShneiderman'
   ClientHeight = 597
   ClientWidth = 977

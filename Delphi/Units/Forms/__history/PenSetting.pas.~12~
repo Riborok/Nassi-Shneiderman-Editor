@@ -21,7 +21,6 @@ type
     procedure FormShow(Sender: TObject);
     procedure CurrColorMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
-    procedure cbThicknessChange(Sender: TObject);
   private
     { Private declarations }
     FPen: TPen;
@@ -73,20 +72,8 @@ implementation
     Top := (Screen.Height - Height) shr 1;
 
     CurrColor.Brush.Color:= FPen.Color;
+    cbLineType.ItemIndex := GetIndexStyle(FPen.Style);
     cbThickness.ItemIndex := FPen.Width - 1;
-
-    cbLineType.Enabled:= cbThickness.ItemIndex = 0;
-    if cbLineType.Enabled then
-      cbLineType.ItemIndex := GetIndexStyle(FPen.Style)
-    else
-      cbLineType.ItemIndex := 0;
-  end;
-
-  procedure TPenDialog.cbThicknessChange(Sender: TObject);
-  begin
-    cbLineType.Enabled:= cbThickness.ItemIndex = 0;
-    if not cbLineType.Enabled then
-      cbLineType.ItemIndex := 0;
   end;
 
   procedure TPenDialog.CurrColorMouseDown(Sender: TObject; Button: TMouseButton;

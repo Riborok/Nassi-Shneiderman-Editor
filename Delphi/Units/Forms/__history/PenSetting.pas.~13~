@@ -85,11 +85,13 @@ implementation
   procedure TPenDialog.cbThicknessChange(Sender: TObject);
   begin
     cbLineType.Enabled:= cbThickness.ItemIndex = 0;
-    if not cbLineType.Enabled then
+    if cbLineType.Enabled then
+      cbLineType.ItemIndex := GetIndexStyle(FPen.Style)
+    else
       cbLineType.ItemIndex := 0;
   end;
 
-  procedure TPenDialog.CurrColorMouseDown(Sender: TObject; Button: TMouseButton;
+procedure TPenDialog.CurrColorMouseDown(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);
   begin
     if ColorDialog.Execute then

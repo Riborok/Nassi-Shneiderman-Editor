@@ -85,7 +85,9 @@ implementation
   procedure TPenDialog.cbThicknessChange(Sender: TObject);
   begin
     cbLineType.Enabled:= cbThickness.ItemIndex = 0;
-    if not cbLineType.Enabled then
+    if cbLineType.Enabled then
+      cbLineType.ItemIndex := GetIndexStyle(FPen.Style)
+    else
       cbLineType.ItemIndex := 0;
   end;
 
