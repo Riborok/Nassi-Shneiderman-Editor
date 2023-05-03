@@ -158,7 +158,7 @@ type
   private const
     SchemeInitialIndent = 10;
     SchemeInitialFontSize = 13;
-    SchemeInitialPenWidth = 2;
+    SchemeInitialPenWidth = 1;
     SchemeInitialFont = 'Courier new';
   public
     destructor Destroy;
@@ -228,6 +228,7 @@ implementation
     FPen.Color := clBlack;
     FPen.Width := SchemeInitialPenWidth;
     FPen.Style := psSolid;
+    FPen.Mode := pmCopy;
 
     PaintBox.Canvas.Font := FFont;
     PaintBox.Canvas.Pen := FPen;

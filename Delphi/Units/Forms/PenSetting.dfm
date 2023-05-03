@@ -76,6 +76,7 @@ object PenDialog: TPenDialog
     Top = 27
     Width = 113
     Height = 21
+    Style = csDropDownList
     TabOrder = 2
     Items.Strings = (
       'Solid'
@@ -89,6 +90,7 @@ object PenDialog: TPenDialog
     Top = 27
     Width = 113
     Height = 21
+    Style = csDropDownList
     TabOrder = 3
     Items.Strings = (
       '1'
