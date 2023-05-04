@@ -1,0 +1,663 @@
+﻿unit frmMain;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.Classes, Vcl.Graphics, Vcl.Controls,
+  Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls, uProcessStatement, Vcl.StdCtrls, Vcl.Menus,
+  uBase, uFirstLoop, uIfBranching, uCaseBranching, uLastLoop, uStatementSearch, uDrawShapes,
+  System.Actions, Vcl.ActnList, Vcl.ToolWin, uSwitchStatements, uCommands, uAutoClearStack, Types,
+  Vcl.ComCtrls, Vcl.Buttons, System.ImageList, Vcl.ImgList, uAdditionalTypes, uConstants,
+  frmGetAction, frmGetСaseСonditions, frmPenSetting, uBlockManager;
+
+type
+  TScrollBox= class(VCL.Forms.TScrollBox)
+    procedure WMHScroll(var Message: TWMHScroll); message WM_HSCROLL;
+    procedure WMVScroll(var Message: TWMVScroll); message WM_VSCROLL;
+  private
+    FOnScrollVert: TNotifyEvent;
+    FOnScrollHorz: TNotifyEvent;
+  public
+   Property OnScrollVert:TNotifyEvent read FOnScrollVert Write FonScrollVert;
+   Property OnScrollHorz:TNotifyEvent read FOnScrollHorz Write FonScrollHorz;
+  End;
+
+  TNassiShneiderman = class(TForm)
+    tbSelectFigType: TToolBar;
+    ilIcons: TImageList;
+    ScrollBox: TScrollBox;
+    PopupMenu: TPopupMenu;
+    MIAdd: TMenuItem;
+    MIAfter: TMenuItem;
+    MIBefore: TMenuItem;
+    MIAftProcess: TMenuItem;
+    MIAftBranch: TMenuItem;
+    MIAftMultBranch: TMenuItem;
+    MIAftTestLoop: TMenuItem;
+    MIAftRevTestLoop: TMenuItem;
+    MIBefProcess: TMenuItem;
+    MIBefBranch: TMenuItem;
+    MIBefMultBranch: TMenuItem;
+    MIBefTestLoop: TMenuItem;
+    MIBefRevTestLoop: TMenuItem;
+    MICut: TMenuItem;
+    MICopy: TMenuItem;
+    MIInset: TMenuItem;
+    alActions: TActionList;
+    actAfterProcess: TAction;
+    actAfterIfBranch: TAction;
+    actAfterMultBranch: TAction;
+    actAfterLoop: TAction;
+    actAfterRevLoop: TAction;
+    tbProcess: TToolButton;
+    tbIfBranch: TToolButton;
+    tbMultBranch: TToolButton;
+    tbLoop: TToolButton;
+    tbRevLoop: TToolButton;
+    actBeforeProcess: TAction;
+    actBeforeIfBranch: TAction;
+    actBeforeMultBranch: TAction;
+    actBeforeLoop: TAction;
+    actBeforeRevLoop: TAction;
+    actCopy: TAction;
+    actInsert: TAction;
+    actCut: TAction;
+    N1: TMenuItem;
+    N3: TMenuItem;
+    actDelete: TAction;
+    MIDel: TMenuItem;
+    actSortAsc: TAction;
+    actSortDesc: TAction;
+    MIDescSort: TMenuItem;
+    MIAscSort: TMenuItem;
+    N2: TMenuItem;
+    tmRedrawingMovements: TTimer;
+    actChangeAction: TAction;
+    MIChangeAction: TMenuItem;
+    PaintBox: TPaintBox;
+    actUndo: TAction;
+    actRedo: TAction;
+    N4: TMenuItem;
+    MIUndo: TMenuItem;
+    MIRedo: TMenuItem;
+    MainMenu: TMainMenu;
+    mnFile: TMenuItem;
+    mnNew: TMenuItem;
+    mnOpen: TMenuItem;
+    mnSave: TMenuItem;
+    mnSaveAs: TMenuItem;
+    mnExport: TMenuItem;
+    mnPrefer: TMenuItem;
+    mnFont: TMenuItem;
+    mnPen: TMenuItem;
+    actChngFont: TAction;
+    actChngPen: TAction;
+    FontDialog: TFontDialog;
+    ColorDialog: TColorDialog;
+
+    procedure FormCreate(Sender: TObject);
+
+    procedure MouseDown(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    procedure DblClick(Sender: TObject);
+
+    procedure AddBefore(Sender: TObject);
+    procedure AddAfter(Sender: TObject);
+    procedure ScrollBoxMouseWheel(Sender: TObject; Shift: TShiftState;
+      WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
+    procedure MICopyClick(Sender: TObject);
+    procedure MICutClick(Sender: TObject);
+    procedure MIInsetClick(Sender: TObject);
+    procedure DeleteStatement(Sender: TObject);
+    procedure Sort(Sender: TObject);
+    procedure PopupMenuPopup(Sender: TObject);
+    procedure MouseUp(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    procedure MouseMove(Sender: TObject; Shift: TShiftState; X,
+      Y: Integer);
+    procedure tmRedrawingTimer(Sender: TObject);
+    procedure actChangeActionExecute(Sender: TObject);
+    procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+    procedure PaintBoxPaint(Sender: TObject);
+    procedure actUndoExecute(Sender: TObject);
+    procedure actRedoExecute(Sender: TObject);
+    procedure actChngFontExecute(Sender: TObject);
+    procedure FormShortCut(var Msg: TWMKey; var Handled: Boolean);
+    procedure FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
+    procedure actChngPenExecute(Sender: TObject);
+  private
+    FPenDialog: TPenDialog;
+
+    FPrevMousePos: TPoint;
+    FIsMouseDown: Boolean;
+
+    FPen: TPen;
+    FFont: TFont;
+
+    FisZPressed: Boolean;
+
+    FBlockManager: TBlockManager;
+
+    procedure MyScroll(Sender: TObject);
+
+    class function ConvertToBlockType(const AIndex: Integer): TStatementClass;
+    class function CreateStatement(const AStatementClass: TStatementClass;
+           const ABaseBlock: TBlock): TStatement;
+
+    procedure TryChangeCond(const AStatement: TStatement);
+
+    function GetVisibleImageScreen: TVisibleImageRect;
+    procedure SetScrollPos(const AStatement: TStatement);
+
+  private const
+    SchemeInitialFontSize = 13;
+    SchemeInitialPenWidth = 1;
+    SchemeInitialFont = 'Courier new';
+  public
+    destructor Destroy;
+  end;
+
+var
+  NassiShneiderman: TNassiShneiderman;
+
+implementation
+
+  {$R *.dfm}
+
+  { TScrollBox }
+  procedure TScrollBox.WMHScroll(var Message: TWMHScroll);
+  begin
+     inherited;
+     if Assigned(FOnScrollHorz) then
+      FOnScrollHorz(Self);
+  end;
+
+  procedure TScrollBox.WMVScroll(var Message: TWMVScroll);
+  begin
+     inherited;
+     if Assigned(FOnScrollVert) then
+      FOnScrollVert(Self);
+  end;
+
+  { TNassiShneiderman }
+
+  procedure TNassiShneiderman.MyScroll(Sender: TObject);
+  begin
+    if GetKeyState(VK_LBUTTON) >= 0 then
+      PaintBox.Invalidate;
+  end;
+
+  procedure TNassiShneiderman.FormCreate(Sender: TObject);
+  begin
+    SetThreadUILanguage(MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US));
+    Self.DoubleBuffered := True;
+    FisZPressed:= False;
+    Constraints.MinWidth := 960;
+    Constraints.MinHeight := 540;
+
+    ScrollBox.OnScrollVert := MyScroll;
+    ScrollBox.OnScrollHorz := MyScroll;
+
+    actDelete.ShortCut := ShortCut(VK_DELETE, []);
+    actChangeAction.ShortCut := ShortCut(VK_RETURN, []);
+    actUndo.ShortCut := ShortCut(VK_Z, [ssCtrl]);
+    actRedo.ShortCut := ShortCut(VK_Z, [ssCtrl, ssShift]);
+
+    FPenDialog:= TPenDialog.Create(Self, ColorDialog);
+
+    FPen:= FPenDialog.Pen;
+    FFont:= FontDialog.Font;
+
+    FFont.Size := SchemeInitialFontSize;
+    FFont.Name := SchemeInitialFont;
+    FFont.Color := clBlack;
+    FFont.Style := [];
+
+    FPen.Color := clBlack;
+    FPen.Width := SchemeInitialPenWidth;
+    FPen.Style := psSolid;
+    FPen.Mode := pmCopy;
+
+    PaintBox.Canvas.Font := FFont;
+    PaintBox.Canvas.Pen := FPen;
+
+    uBase.DefaultStatement:= TProcessStatement;
+
+    FBlockManager:= TBlockManager.Create(PaintBox, clYellow);
+
+    FIsMouseDown:= False;
+    PaintBox.Invalidate;
+  end;
+
+  procedure TNassiShneiderman.FormKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+  begin
+    FBlockManager.TryMoveDedicated(SetScrollPos, Key);
+  end;
+
+  procedure TNassiShneiderman.FormKeyUp(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+  begin
+    FisZPressed:= False;
+  end;
+
+  procedure TNassiShneiderman.FormShortCut(var Msg: TWMKey; var Handled: Boolean);
+  begin
+    if FisZPressed then
+      Handled:= True
+    else if Msg.CharCode = VK_Z then
+      FisZPressed:= True;
+  end;
+
+  procedure TNassiShneiderman.PaintBoxPaint(Sender: TObject);
+  begin
+    PaintBox.Canvas.Font := FFont;
+    PaintBox.Canvas.Pen := FPen;
+
+    FBlockManager.Draw(GetVisibleImageScreen);
+  end;
+
+  procedure TNassiShneiderman.ScrollBoxMouseWheel(Sender: TObject;
+  Shift: TShiftState; WheelDelta: Integer; MousePos: TPoint;
+    var Handled: Boolean);
+  const
+    ScrotStep = 42 shl 1;
+  begin
+    if ssShift in Shift then
+    begin
+      if WheelDelta > 0 then
+        ScrollBox.HorzScrollBar.Position := ScrollBox.HorzScrollBar.Position - ScrotStep
+      else
+        ScrollBox.HorzScrollBar.Position := ScrollBox.HorzScrollBar.Position + ScrotStep;
+    end
+    else
+    begin
+      if WheelDelta > 0 then
+        ScrollBox.VertScrollBar.Position := ScrollBox.VertScrollBar.Position - ScrotStep
+      else
+        ScrollBox.VertScrollBar.Position := ScrollBox.VertScrollBar.Position + ScrotStep;
+    end;
+
+    if not tmRedrawingMovements.Enabled then
+      tmRedrawingMovements.Enabled := True;
+
+    MousePos:= PaintBox.ScreenToClient(Mouse.CursorPos);
+    MouseMove(Sender, Shift, MousePos.X, MousePos.Y);
+  end;
+
+  procedure TNassiShneiderman.PopupMenuPopup(Sender: TObject);
+  begin
+    if FDedicatedStatement is TCaseBranching then
+    begin
+      MIAscSort.Visible:= True;
+      MIDescSort.Visible:= True;
+    end
+    else
+    begin
+      MIAscSort.Visible:= False;
+      MIDescSort.Visible:= False;
+    end;
+    MIUndo.Enabled:= Self.FUndoStack.Count <> 0;
+    MIRedo.Enabled:= Self.FRedoStack.Count <> 0;
+  end;
+
+  procedure TNassiShneiderman.DblClick(Sender: TObject);
+  begin
+    if FDedicatedStatement <> nil then
+      TryChangeCond(FDedicatedStatement);
+  end;
+
+  procedure TNassiShneiderman.MouseDown(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+  begin
+    FDedicatedStatement := BinarySearchStatement(X, Y, FMainBlock);
+
+    PaintBox.Invalidate;
+
+    if FDedicatedStatement <> nil then
+    begin
+      if (Button = mbLeft) and (ssAlt in Shift) then
+      begin
+        if FIsMouseDown then
+          FCarryBlock.Destroy;
+
+        FCarryBlock:= TBlock.Create(nil);
+        FCarryBlock.Assign(FDedicatedStatement.BaseBlock);
+
+        FCarryBlock.AddStatement(FDedicatedStatement.Clone);
+
+        FIsMouseDown := True;
+        FPrevMousePos.X := X;
+        FPrevMousePos.Y := Y;
+      end
+      else if Button = mbRight then
+        PopupMenu.Popup(Mouse.CursorPos.X, Mouse.CursorPos.Y);
+    end;
+  end;
+
+  procedure TNassiShneiderman.tmRedrawingTimer(Sender: TObject);
+  begin
+    tmRedrawingMovements.Enabled:= False;
+
+    PaintBox.Invalidate;
+  end;
+
+  procedure TNassiShneiderman.MouseMove(Sender: TObject; Shift: TShiftState;
+  X, Y: Integer);
+  begin
+    if FIsMouseDown then
+    begin
+      FCarryBlock.MoveRight(X - FPrevMousePos.X);
+      FCarryBlock.MoveDown(Y - FPrevMousePos.Y);
+
+      FPrevMousePos := Point(X, Y);
+
+      if not tmRedrawingMovements.Enabled then
+        tmRedrawingMovements.Enabled := True;
+    end;
+  end;
+
+  procedure TNassiShneiderman.MouseUp(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Integer);
+  begin
+    if FIsMouseDown then
+    begin
+      FIsMouseDown := False;
+
+      FCarryBlock.Destroy;
+      FCarryBlock:= nil;
+
+      PaintBox.Invalidate;
+    end;
+  end;
+
+  procedure TNassiShneiderman.MICopyClick(Sender: TObject);
+  begin
+    if FDedicatedStatement <> nil then
+    begin
+      FBufferBlock.Destroy;
+
+      FBufferBlock := TBlock.Create(nil);
+      FBufferBlock.Assign(FDedicatedStatement.BaseBlock);
+
+      FBufferBlock.AddStatement(FDedicatedStatement.Clone);
+    end;
+  end;
+
+  procedure TNassiShneiderman.MICutClick(Sender: TObject);
+  begin
+    if FDedicatedStatement <> nil then
+    begin
+      MICopyClick(Sender);
+
+      DeleteStatement(Sender);
+    end;
+  end;
+
+  procedure TNassiShneiderman.MIInsetClick(Sender: TObject);
+  var
+    BaseBlock: TBlock;
+  begin
+    if (FBufferBlock.Statements.Count <> 0) and (FDedicatedStatement <> nil) then
+    begin
+      FRedoStack.Clear;
+
+      BaseBlock:= FDedicatedStatement.BaseBlock;
+
+      FUndoStack.Push(TCommandAddBlock.Create(BaseBlock,
+                      BaseBlock.FindStatementIndex(FDedicatedStatement.YStart) + 1,
+                      FBufferBlock));
+      FUndoStack.Peek.Execute;
+
+      FDedicatedStatement:= FBufferBlock.Statements.GetLast;
+
+      FBufferBlock := TBlock.Create(nil);
+      FBufferBlock.Assign(FDedicatedStatement.BaseBlock);
+      FBufferBlock.AddStatement(FDedicatedStatement.Clone);
+
+      PaintBox.Invalidate;
+    end;
+  end;
+
+  procedure TNassiShneiderman.AddBefore(Sender: TObject);
+  var
+    NewStatement: TStatement;
+  begin
+
+    if FDedicatedStatement <> nil then
+    begin
+      NewStatement:= CreateStatement(ConvertToBlockType(TComponent(Sender).Tag),
+                                     FDedicatedStatement.BaseBlock);
+
+      if NewStatement <> nil then
+      begin
+        FRedoStack.Clear;
+        var Block: TBlock:= FDedicatedStatement.BaseBlock;
+        FUndoStack.Push(TCommandAddStatement.Create(Block,
+                        Block.FindStatementIndex(FDedicatedStatement.YStart),
+                        NewStatement));
+        FUndoStack.Peek.Execute;
+
+        FDedicatedStatement:= NewStatement;
+      end;
+
+      PaintBox.Invalidate;
+    end;
+  end;
+
+  procedure TNassiShneiderman.Sort(Sender: TObject);
+  begin
+    FRedoStack.Clear;
+
+    FUndoStack.Push(TCommandCaseSort.Create(TCaseBranching(FDedicatedStatement),
+                    TComponent(Sender).Tag));
+    FUndoStack.Peek.Execute;
+
+    PaintBox.Invalidate;
+  end;
+
+  procedure TNassiShneiderman.actRedoExecute(Sender: TObject);
+  var
+    Commamd: ICommand;
+  begin
+    if FRedoStack.Count <> 0 then
+    begin
+      Commamd:= FRedoStack.Pop;
+      Commamd.Execute;
+      FUndoStack.Push(Commamd);
+
+      FDedicatedStatement := nil;
+
+      PaintBox.Invalidate;
+    end;
+  end;
+
+  procedure TNassiShneiderman.actUndoExecute(Sender: TObject);
+  var
+    Commamd: ICommand;
+  begin
+    if FUndoStack.Count <> 0 then
+    begin
+      Commamd:= FUndoStack.Pop;
+      Commamd.Undo;
+      FRedoStack.Push(Commamd);
+
+      FDedicatedStatement := nil;
+
+      PaintBox.Invalidate;
+    end;
+  end;
+
+  procedure TNassiShneiderman.AddAfter(Sender: TObject);
+  var
+    NewStatement: TStatement;
+  begin
+
+    if FDedicatedStatement <> nil then
+    begin
+      NewStatement:= CreateStatement(ConvertToBlockType(TComponent(Sender).Tag),
+                                     FDedicatedStatement.BaseBlock);
+
+      if NewStatement <> nil then
+      begin
+        FRedoStack.Clear;
+        var Block: TBlock:= FDedicatedStatement.BaseBlock;
+        FUndoStack.Push(TCommandAddStatement.Create(Block,
+                        Block.FindStatementIndex(FDedicatedStatement.YStart) + 1,
+                        NewStatement));
+        FUndoStack.Peek.Execute;
+
+        FDedicatedStatement:= NewStatement;
+      end;
+
+      PaintBox.Invalidate;
+    end;
+  end;
+
+  procedure TNassiShneiderman.DeleteStatement(Sender: TObject);
+  begin
+    if FDedicatedStatement <> nil then
+    begin
+      FRedoStack.Clear;
+      FUndoStack.Push(TCommandDelStatement.Create(FDedicatedStatement));
+      FUndoStack.Peek.Execute;
+
+      FDedicatedStatement:= nil;
+      PaintBox.Invalidate;
+    end;
+  end;
+
+  procedure TNassiShneiderman.actChangeActionExecute(Sender: TObject);
+  begin
+    if FDedicatedStatement <> nil then
+    begin
+      TryChangeCond(FDedicatedStatement);
+      PaintBox.Invalidate;
+    end;
+  end;
+
+  procedure TNassiShneiderman.actChngFontExecute(Sender: TObject);
+  begin
+    if FontDialog.Execute then
+    begin
+      PaintBox.Canvas.Font:= FFont;
+      FMainBlock.RedefineSizes;
+
+      PaintBox.Invalidate;
+    end;
+  end;
+
+  procedure TNassiShneiderman.actChngPenExecute(Sender: TObject);
+  begin
+    if FPenDialog.Execute then
+    begin
+      PaintBox.Canvas.Pen:= FPen;
+      FMainBlock.RedefineSizes;
+
+      PaintBox.Invalidate;
+    end;
+  end;
+
+{ Private methods }
+  destructor TNassiShneiderman.Destroy;
+  begin
+    FMainBlock.Destroy;
+    FBufferBlock.Destroy;
+
+    FUndoStack.Destroy;
+    FRedoStack.Destroy;
+
+    FPenDialog.Destroy;
+
+    inherited;
+  end;
+
+  class function TNassiShneiderman.CreateStatement(const AStatementClass: TStatementClass;
+                          const ABaseBlock: TBlock): TStatement;
+  var
+    Action: String;
+  begin
+    Result:= nil;
+    Action := '';
+    if WriteAction.TryGetAction(Action) then
+    begin
+
+      if AStatementClass = TCaseBranching then
+      begin
+        var Cond: TStringArr:= nil;
+        if WriteСaseСonditions.TryGetCond(Cond) then
+          Result:= TCaseBranching.Create(Action, Cond);
+      end
+      else
+        Result:= AStatementClass.Create(Action);
+    end;
+  end;
+
+  procedure TNassiShneiderman.TryChangeCond(const AStatement: TStatement);
+  var
+    Action: String;
+  begin
+    Action := AStatement.Action;
+    if AStatement is TCaseBranching then
+    begin
+      var CaseBranching: TCaseBranching:= TCaseBranching(AStatement);
+      var Cond: TStringArr:= CaseBranching.Conds;
+      if (WriteAction.TryGetAction(Action)) and (WriteСaseСonditions.TryGetCond(Cond)) then
+      begin
+        FRedoStack.Clear;
+        FUndoStack.Push(TCommnadChangeContent.Create(AStatement, Action, Cond));
+        FUndoStack.Peek.Execute;
+      end;
+    end
+    else if WriteAction.TryGetAction(Action) then
+    begin
+      FRedoStack.Clear;
+      FUndoStack.Push(TCommnadChangeContent.Create(AStatement, Action, nil));
+      FUndoStack.Peek.Execute;
+    end;
+  end;
+
+  class function TNassiShneiderman.ConvertToBlockType(const AIndex: Integer): TStatementClass;
+  begin
+    case AIndex of
+      0 : Result:= TProcessStatement;
+      1 : Result:= TIfBranching;
+      2 : Result:= TCaseBranching;
+      3 : Result:= TFirstLoop;
+      4 : Result:= TLastLoop;
+    end;
+  end;
+
+  function TNassiShneiderman.GetVisibleImageScreen: TVisibleImageRect;
+  begin
+    Result.FTopLeft := PaintBox.ScreenToClient(ScrollBox.ClientToScreen(Point(0, 0)));
+    Result.FBottomRight := PaintBox.ScreenToClient(
+          ScrollBox.ClientToScreen(Point(ScrollBox.Width, ScrollBox.Height)));
+  end;
+
+  procedure TNassiShneiderman.SetScrollPos(const AStatement: TStatement);
+  const
+    Stock = 42;
+  var
+    VisibleImageScreen: TVisibleImageRect;
+  begin
+    VisibleImageScreen:= GetVisibleImageScreen;
+
+    case GetBlockMask(AStatement.BaseBlock, VisibleImageScreen) of
+      $09 {1001}:
+         ScrollBox.HorzScrollBar.Position:= ScrollBox.HorzScrollBar.Position +
+         AStatement.BaseBlock.XLast - VisibleImageScreen.FBottomRight.X + Stock;
+      $06 {1100}:
+         ScrollBox.HorzScrollBar.Position:= AStatement.BaseBlock.XStart - Stock;
+    end;
+
+    case GetStatementMask(AStatement, VisibleImageScreen, AStatement is TOperator) of
+      $09 {1001}:
+         ScrollBox.VertScrollBar.Position := ScrollBox.VertScrollBar.Position +
+         AStatement.GetYBottom - VisibleImageScreen.FBottomRight.Y + Stock;
+      $06 {1100}:
+         ScrollBox.VertScrollBar.Position := AStatement.YStart - Stock;
+    end;
+  end;
+
+end.

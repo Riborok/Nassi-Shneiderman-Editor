@@ -1,0 +1,39 @@
+﻿unit uFirstLoop;
+
+interface
+uses uDrawShapes, uLoop;
+type
+
+  TFirstLoop = class(TLoop)
+  protected
+    function GetOptimalYLast: Integer; override;
+    procedure Draw; override;
+  public
+    function IsPreсOperator: Boolean; override;
+  end;
+
+implementation
+
+  function TFirstLoop.IsPreсOperator: Boolean;
+  begin
+    Result:= True;
+  end;
+
+  function TFirstLoop.GetOptimalYLast: Integer;
+  begin
+    Result := FYStart + FActionSize.Height + FYIndentText shl 1;
+  end;
+
+  procedure TFirstLoop.Draw;
+  begin
+    DrawUnfinishedVertRectForLoop(BaseBlock.XStart, BaseBlock.XLast, FYStart,
+                                          FYLast, GetYBottom, BaseBlock.Canvas);
+
+    DrawUnfinishedHorRectForLoop(BaseBlock.XStart, Blocks[0].XStart,
+                         BaseBlock.XLast, FYStart, FYLast, BaseBlock.Canvas);
+
+    DrawText(BaseBlock.Canvas, BaseBlock.XStart + ((BaseBlock.XLast - BaseBlock.XStart) shr 1)
+      - (FActionSize.Width shr 1), FYStart + FYIndentText, Action);
+  end;
+
+end.

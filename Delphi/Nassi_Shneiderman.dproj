@@ -101,41 +101,42 @@
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
-        <DCCReference Include="Units\Main.pas">
+        <DCCReference Include="Units\frmMain.pas">
             <Form>NassiShneiderman</Form>
             <FormType>dfm</FormType>
         </DCCReference>
-        <DCCReference Include="Units\Statement\Base.pas"/>
-        <DCCReference Include="Units\Statement\ProcessStatement.pas"/>
-        <DCCReference Include="Units\Statement\IfBranching.pas"/>
-        <DCCReference Include="Units\Statement\CaseBranching.pas"/>
-        <DCCReference Include="Units\Statement\FirstLoop.pas"/>
-        <DCCReference Include="Units\Statement\LastLoop.pas"/>
-        <DCCReference Include="Units\DataStructures\ArrayList.pas"/>
-        <DCCReference Include="Units\DataStructures\Stack.pas"/>
-        <DCCReference Include="Units\Support\StatementSearch.pas"/>
-        <DCCReference Include="Units\Support\MinMaxInt.pas"/>
-        <DCCReference Include="Units\Forms\GetAction.pas">
+        <DCCReference Include="Units\Statement\uBase.pas"/>
+        <DCCReference Include="Units\Statement\uProcessStatement.pas"/>
+        <DCCReference Include="Units\Statement\uIfBranching.pas"/>
+        <DCCReference Include="Units\Statement\uCaseBranching.pas"/>
+        <DCCReference Include="Units\Statement\uFirstLoop.pas"/>
+        <DCCReference Include="Units\Statement\uLastLoop.pas"/>
+        <DCCReference Include="Units\DataStructures\uArrayList.pas"/>
+        <DCCReference Include="Units\DataStructures\uStack.pas"/>
+        <DCCReference Include="Units\Support\uStatementSearch.pas"/>
+        <DCCReference Include="Units\Support\uMinMaxInt.pas"/>
+        <DCCReference Include="Units\Forms\frmGetAction.pas">
             <Form>WriteAction</Form>
             <FormType>dfm</FormType>
         </DCCReference>
-        <DCCReference Include="Units\Statement\Loop.pas"/>
-        <DCCReference Include="Units\Forms\GetСaseСonditions.pas">
+        <DCCReference Include="Units\Statement\uLoop.pas"/>
+        <DCCReference Include="Units\Forms\frmGetСaseСonditions.pas">
             <Form>WriteСaseСonditions</Form>
             <FormType>dfm</FormType>
         </DCCReference>
-        <DCCReference Include="Units\Support\AdditionalTypes.pas"/>
-        <DCCReference Include="Units\Support\Constants.pas"/>
-        <DCCReference Include="Units\Support\CaseBlockSorting.pas"/>
-        <DCCReference Include="Units\Support\SwitchStatements.pas"/>
-        <DCCReference Include="Units\Shapes\DetermineDimensions.pas"/>
-        <DCCReference Include="Units\Shapes\DrawShapes.pas"/>
-        <DCCReference Include="Units\Сommand\Commands.pas"/>
-        <DCCReference Include="Units\DataStructures\AutoClearStack.pas"/>
-        <DCCReference Include="Units\Forms\PenSetting.pas">
+        <DCCReference Include="Units\Support\uAdditionalTypes.pas"/>
+        <DCCReference Include="Units\Support\uConstants.pas"/>
+        <DCCReference Include="Units\Support\uCaseBlockSorting.pas"/>
+        <DCCReference Include="Units\Support\uSwitchStatements.pas"/>
+        <DCCReference Include="Units\Shapes\uDetermineDimensions.pas"/>
+        <DCCReference Include="Units\Shapes\uDrawShapes.pas"/>
+        <DCCReference Include="Units\Сommand\uCommands.pas"/>
+        <DCCReference Include="Units\DataStructures\uAutoClearStack.pas"/>
+        <DCCReference Include="Units\Forms\frmPenSetting.pas">
             <Form>PenDialog</Form>
             <FormType>dfm</FormType>
         </DCCReference>
+        <DCCReference Include="Units\Support\uBlockManager.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
