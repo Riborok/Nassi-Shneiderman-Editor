@@ -121,7 +121,7 @@ implementation
 
   procedure TBlockManager.TryDeleteDedicated;
   begin
-    if FDedicatedStatement <> nil then
+    if (FDedicatedStatement <> nil) and not isDefaultStatement(FDedicatedStatement) then
     begin
       FRedoStack.Clear;
       FUndoStack.Push(TCommandDelStatement.Create(FDedicatedStatement));
@@ -135,24 +135,35 @@ implementation
   procedure TBlockManager.TryInsertBufferBlock;
   var
     BaseBlock: TBlock;
+    I: Integer;
   begin
     if (FBufferBlock.Statements.Count <> 0) and (FDedicatedStatement <> nil) then
     begin
-      BaseBlock:= FDedicatedStatement.BaseBlock;
+      for I := FBufferBlock.Statements.Count - 1 downto 0 do
+        if isDefaultStatement(FBufferBlock.Statements[I]) then
+        begin
+          FBufferBlock.ExtractStatementAt(I);
+          FBufferBlock.Install(I);
+        end;
 
-      FRedoStack.Clear;
-      FUndoStack.Push(TCommandAddBlock.Create(BaseBlock,
-                      BaseBlock.FindStatementIndex(FDedicatedStatement.YStart) + 1,
-                      FBufferBlock));
-      FUndoStack.Peek.Execute;
+      if (FBufferBlock.Statements.Count <> 1) or not isDefaultStatement(FBufferBlock.Statements[0]) then
+      begin
+        BaseBlock:= FDedicatedStatement.BaseBlock;
 
-      FDedicatedStatement:= FBufferBlock.Statements.GetLast;
+        FRedoStack.Clear;
+        FUndoStack.Push(TCommandAddBlock.Create(BaseBlock,
+                        BaseBlock.FindStatementIndex(FDedicatedStatement.YStart) + 1,
+                        FBufferBlock));
+        FUndoStack.Peek.Execute;
 
-      FBufferBlock := TBlock.Create(nil);
-      FBufferBlock.Assign(FDedicatedStatement.BaseBlock);
-      FBufferBlock.AddStatement(FDedicatedStatement.Clone);
+        FDedicatedStatement:= FBufferBlock.Statements.GetLast;
 
-      FPaintBox.Invalidate;
+        FBufferBlock := TBlock.Create(nil);
+        FBufferBlock.Assign(FDedicatedStatement.BaseBlock);
+        FBufferBlock.AddStatement(FDedicatedStatement.Clone);
+
+        FPaintBox.Invalidate;
+      end;
     end;
   end;
 
@@ -198,7 +209,7 @@ implementation
       NewStatement:= CreateStatement(AStatementClass,
                                      FDedicatedStatement.BaseBlock);
 
-      if NewStatement <> nil then
+      if (NewStatement <> nil) and not isDefaultStatement(NewStatement) then
       begin
         FRedoStack.Clear;
         Block:= FDedicatedStatement.BaseBlock;

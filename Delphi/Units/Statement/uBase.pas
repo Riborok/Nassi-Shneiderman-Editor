@@ -167,7 +167,7 @@ type
 
     procedure AddBlock(const AIndex: Integer; const AInsertedBlock: TBlock);
 
-    function ExtractWithResizing(const AStatement: TStatement): Integer;
+    function Extract(const AStatement: TStatement): Integer;
     function ExtractStatementAt(const AIndex: Integer) : TStatement;
     procedure RemoveStatementAt(const Index: Integer);
 
@@ -434,7 +434,7 @@ implementation
     RedefineSizes(AIndex - 1);
   end;
 
-  function TBlock.ExtractWithResizing(const AStatement: TStatement): Integer;
+  function TBlock.Extract(const AStatement: TStatement): Integer;
   begin
     Result:= FindStatementIndex(AStatement.FYStart);
 
@@ -442,8 +442,6 @@ implementation
 
     if Result = FStatements.Count then
       Dec(Result);
-
-    Install(Result);
   end;
 
   function TBlock.ExtractStatementAt(const AIndex: Integer) : TStatement;

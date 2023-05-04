@@ -145,7 +145,8 @@ implementation
 
   procedure TCommandDelStatement.Execute;
   begin
-    FIndex:= FStatement.BaseBlock.ExtractWithResizing(FStatement) + 1;
+    FIndex:= FStatement.BaseBlock.Extract(FStatement) + 1;
+    FStatement.BaseBlock.Install(FIndex);
   end;
 
   procedure TCommandDelStatement.Undo;
