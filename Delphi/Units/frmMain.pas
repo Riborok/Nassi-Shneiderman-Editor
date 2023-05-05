@@ -6,9 +6,8 @@ uses
   Winapi.Windows, Winapi.Messages, System.Classes, Vcl.Graphics, Vcl.Controls,
   Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls, Vcl.StdCtrls, Vcl.Menus, uConstants,
   uBase, uFirstLoop, uIfBranching, uCaseBranching, uLastLoop, uProcessStatement,
-  uStatementSearch, System.Actions, Vcl.ActnList, Vcl.ToolWin, Types,
-  Vcl.ComCtrls, Vcl.Buttons, System.ImageList, Vcl.ImgList, uAdditionalTypes,
-  frmPenSetting, uBlockManager;
+  uStatementSearch, System.Actions, Vcl.ActnList, Vcl.ToolWin, Types, uBlockManager,
+  Vcl.ComCtrls, uAdditionalTypes, frmPenSetting, System.ImageList, Vcl.ImgList;
 
 type
   TNassiShneiderman = class(TForm)
@@ -60,7 +59,6 @@ type
     MIDescSort: TMenuItem;
     MIAscSort: TMenuItem;
     N2: TMenuItem;
-    tmRedrawingMovements: TTimer;
     actChangeAction: TAction;
     MIChangeAction: TMenuItem;
     PaintBox: TPaintBox;
@@ -104,7 +102,6 @@ type
       Shift: TShiftState; X, Y: Integer);
     procedure MouseMove(Sender: TObject; Shift: TShiftState; X,
       Y: Integer);
-    procedure tmRedrawingTimer(Sender: TObject);
     procedure actChangeActionExecute(Sender: TObject);
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure PaintBoxPaint(Sender: TObject);
@@ -237,25 +234,17 @@ implementation
         ScrollBox.VertScrollBar.Position := ScrollBox.VertScrollBar.Position + ScrotStep;
     end;
 
-    if not tmRedrawingMovements.Enabled then
-      tmRedrawingMovements.Enabled := True;
-
     MousePos:= PaintBox.ScreenToClient(Mouse.CursorPos);
     MouseMove(Sender, Shift, MousePos.X, MousePos.Y);
   end;
 
   procedure TNassiShneiderman.PopupMenuPopup(Sender: TObject);
+  var
+    isCaseBranching: Boolean;
   begin
-    if FBlockManager.DedicatedStatement is TCaseBranching then
-    begin
-      MIAscSort.Visible:= True;
-      MIDescSort.Visible:= True;
-    end
-    else
-    begin
-      MIAscSort.Visible:= False;
-      MIDescSort.Visible:= False;
-    end;
+    isCaseBranching:= FBlockManager.DedicatedStatement is TCaseBranching;
+    MIAscSort.Visible:= isCaseBranching;
+    MIDescSort.Visible:= isCaseBranching;
     MIUndo.Enabled:= FBlockManager.UndoStack.Count <> 0;
     MIRedo.Enabled:= FBlockManager.RedoStack.Count <> 0;
   end;
@@ -288,14 +277,6 @@ implementation
     end;
   end;
 
-  procedure TNassiShneiderman.tmRedrawingTimer(Sender: TObject);
-  begin
-    //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    tmRedrawingMovements.Enabled:= False;
-
-    PaintBox.Invalidate;
-  end;
-
   procedure TNassiShneiderman.MouseMove(Sender: TObject; Shift: TShiftState;
   X, Y: Integer);
   begin
@@ -304,9 +285,6 @@ implementation
       FBlockManager.MoveCarryBlock(X - FPrevMousePos.X, Y - FPrevMousePos.Y);
 
       FPrevMousePos := Point(X, Y);
-
-      if not tmRedrawingMovements.Enabled then
-        tmRedrawingMovements.Enabled := True;
     end;
   end;
 
@@ -353,12 +331,12 @@ implementation
 
   procedure TNassiShneiderman.actRedoExecute(Sender: TObject);
   begin
-    FBlockManager.RedoExecute;
+    FBlockManager.TryRedo;
   end;
 
   procedure TNassiShneiderman.actUndoExecute(Sender: TObject);
   begin
-    FBlockManager.UndoExecute;
+    FBlockManager.TryUndo;
   end;
 
   procedure TNassiShneiderman.DeleteStatement(Sender: TObject);
@@ -376,9 +354,7 @@ implementation
     if FontDialog.Execute then
     begin
       PaintBox.Canvas.Font:= FFont;
-      FBlockManager.MainBlock.RedefineSizes;
-
-      PaintBox.Invalidate;
+      FBlockManager.RedefineMainBlock;
     end;
   end;
 
@@ -387,9 +363,7 @@ implementation
     if FPenDialog.Execute then
     begin
       PaintBox.Canvas.Pen:= FPen;
-      FBlockManager.MainBlock.RedefineSizes;
-
-      PaintBox.Invalidate;
+      FBlockManager.RedefineMainBlock;
     end;
   end;
 

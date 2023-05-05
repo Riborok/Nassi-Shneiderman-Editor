@@ -3111,13 +3111,6 @@ object NassiShneiderman: TNassiShneiderman
       OnExecute = actChngPenExecute
     end
   end
-  object tmRedrawingMovements: TTimer
-    Enabled = False
-    Interval = 5
-    OnTimer = tmRedrawingTimer
-    Left = 56
-    Top = 521
-  end
   object MainMenu: TMainMenu
     Images = ilIcons
     Left = 912

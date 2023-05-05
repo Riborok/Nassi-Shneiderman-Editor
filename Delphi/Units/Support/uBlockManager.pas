@@ -34,6 +34,9 @@ type
     property HighlightColor: TColor write FHighlightColor;
     property DedicatedStatement: TStatement read FDedicatedStatement write ChangeDedicated;
 
+    { MainBlock }
+    procedure RedefineMainBlock;
+
     { BufferBlock }
     procedure TryCutDedicated;
     procedure TryCopyDedicated;
@@ -60,8 +63,8 @@ type
            const ABaseBlock: TBlock): TStatement;
 
     { Stacks }
-    procedure UndoExecute;
-    procedure RedoExecute;
+    procedure TryUndo;
+    procedure TryRedo;
 
     { View update }
     procedure Draw(const AVisibleImageRect: TVisibleImageRect);
@@ -73,6 +76,9 @@ implementation
   begin
     FMainBlock.Destroy;
     FBufferBlock.Destroy;
+
+    if FCarryBlock <> nil then
+      FCarryBlock.Destroy;
 
     FUndoStack.Destroy;
     FRedoStack.Destroy;
@@ -97,6 +103,13 @@ implementation
     FMainBlock:= TBlock.Create(SchemeInitialIndent, FPaintBox.Canvas);
     FMainBlock.AddUnknownStatement(uBase.DefaultStatement.CreateUncertainty(FMainBlock),
                                                             SchemeInitialIndent);
+  end;
+
+  { MainBlock }
+  procedure TBlockManager.RedefineMainBlock;
+  begin
+    MainBlock.RedefineSizes;
+    FPaintBox.Invalidate;
   end;
 
   { BufferBlock }
@@ -285,6 +298,8 @@ implementation
   begin
     FCarryBlock.MoveRight(ADeltaX);
     FCarryBlock.MoveDown(ADeltaY);
+
+    FPaintBox.Invalidate;
   end;
 
   procedure TBlockManager.DestroyCarryBlock;
@@ -318,7 +333,7 @@ implementation
   end;
 
   { Stacks }
-  procedure TBlockManager.UndoExecute;
+  procedure TBlockManager.TryUndo;
   var
     Commamd: ICommand;
   begin
@@ -334,15 +349,15 @@ implementation
     end;
   end;
 
-  procedure TBlockManager.RedoExecute;
+  procedure TBlockManager.TryRedo;
   var
     Commamd: ICommand;
   begin
-    if FUndoStack.Count <> 0 then
+    if FRedoStack.Count <> 0 then
     begin
-      Commamd:= FUndoStack.Pop;
-      Commamd.Undo;
-      FRedoStack.Push(Commamd);
+      Commamd:= FRedoStack.Pop;
+      Commamd.Execute;
+      FUndoStack.Push(Commamd);
 
       FDedicatedStatement := nil;
 

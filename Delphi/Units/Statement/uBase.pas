@@ -159,8 +159,8 @@ type
     property BaseOperator: TOperator read FBaseOperator;
     property Statements: TArrayList<TStatement> read FStatements;
 
-    procedure InsertStatement(const AIndex: Integer;const AInsertedStatement: TStatement);
-    procedure InsertUnknownStatement(const AIndex: Integer;const AInsertedStatement: TStatement);
+    procedure Insert(const AIndex: Integer;const AInsertedStatement: TStatement);
+    procedure InsertWithResizing(const AIndex: Integer;const AInsertedStatement: TStatement);
 
     procedure AddUnknownStatement(const AStatement: TStatement; const AYStart: Integer);
     procedure AddStatement(const AStatement: TStatement);
@@ -356,9 +356,18 @@ implementation
     SetOptimalXLastBlock;
   end;
 
-  procedure TBlock.InsertStatement(const AIndex: Integer;const AInsertedStatement: TStatement);
+  procedure TBlock.Insert(const AIndex: Integer; const AInsertedStatement: TStatement);
   begin
-    if AIndex = FStatements.Count then
+    AInsertedStatement.FBaseBlock:= Self;
+    AInsertedStatement.SetTextSize;
+    FStatements.Insert(AInsertedStatement, AIndex);
+
+    if (FStatements.Count = 2) and (isDefaultStatement(Statements[AIndex xor 1])) then
+    begin
+      AInsertedStatement.FYStart:= Statements[AIndex xor 1].FYStart;
+      Self.RemoveStatementAt(AIndex xor 1);
+    end
+    else if AIndex = FStatements.Count then
     begin
       FStatements[FStatements.Count - 1].
             SetYBottom(FStatements[FStatements.Count - 1].GetMaxOptimalYBottom);
@@ -366,21 +375,11 @@ implementation
     end
     else
       AInsertedStatement.FYStart:= Statements[AIndex].GetYBottom;
-
-    AInsertedStatement.FBaseBlock:= Self;
-    AInsertedStatement.SetTextSize;
-    FStatements.Insert(AInsertedStatement, AIndex);
-
-    if isDefaultStatement(Statements[AIndex - 1]) then
-    begin
-      AInsertedStatement.FYStart:= Statements[AIndex - 1].FYStart;
-      Self.RemoveStatementAt(AIndex - 1);
-    end;
   end;
 
-  procedure TBlock.InsertUnknownStatement(const AIndex: Integer; const AInsertedStatement: TStatement);
+  procedure TBlock.InsertWithResizing(const AIndex: Integer; const AInsertedStatement: TStatement);
   begin
-    InsertStatement(AIndex, AInsertedStatement);
+    Insert(AIndex, AInsertedStatement);
 
     AInsertedStatement.Initialize;
 
@@ -426,7 +425,7 @@ implementation
 
     for I := 0 to AInsertedBlock.FStatements.Count - 1 do
     begin
-      Self.InsertStatement(AIndex + I, AInsertedBlock.FStatements[I]);
+      Self.Insert(AIndex + I, AInsertedBlock.FStatements[I]);
       if AInsertedBlock.FStatements[I] is TOperator then
         InstallCanvas(TOperator(AInsertedBlock.FStatements[I]).Blocks);
     end;

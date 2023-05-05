@@ -28,7 +28,6 @@ type
     FNewStatement: TStatement;
     FBaseBlock: TBlock;
     FIndex : Integer;
-    WasDefaultStatementRemoved: Boolean;
   public
     constructor Create(const ABaseBlock: TBlock; const AIndex : Integer;
                        const ANewStatement: TStatement);
@@ -53,7 +52,6 @@ type
   private
     FInsertedBlock, FBaseBlock: TBlock;
     FIndex: Integer;
-    WasDefaultStatementRemoved: Boolean;
   public
     constructor Create(const ABaseBlock: TBlock; const AIndex : Integer;
                        const AInsertedBlock: TBlock);
@@ -125,12 +123,14 @@ implementation
 
   procedure TCommandAddStatement.Execute;
   begin
-    FBaseBlock.InsertUnknownStatement(FIndex, FNewStatement);
-    WasDefaultStatementRemoved:= FIndex >= FBaseBlock.Statements.Count;
+    FBaseBlock.InsertWithResizing(FIndex, FNewStatement);
   end;
 
   procedure TCommandAddStatement.Undo;
+  var
+    WasDefaultStatementRemoved: Boolean;
   begin
+    WasDefaultStatementRemoved:= FIndex >= FBaseBlock.Statements.Count;
     Dec(FIndex, Ord(WasDefaultStatementRemoved));
     FBaseBlock.ExtractStatementAt(FIndex);
     FBaseBlock.Install(FIndex);
@@ -144,14 +144,19 @@ implementation
   end;
 
   procedure TCommandDelStatement.Execute;
+  var
+    PrevCount: Integer;
   begin
-    FIndex:= FStatement.BaseBlock.Extract(FStatement) + 1;
+    PrevCount:= FStatement.BaseBlock.Statements.Count;
+
+    FIndex:= FStatement.BaseBlock.Extract(FStatement) +
+             Ord(PrevCount <> FStatement.BaseBlock.Statements.Count);
     FStatement.BaseBlock.Install(FIndex);
   end;
 
   procedure TCommandDelStatement.Undo;
   begin
-    FStatement.BaseBlock.InsertUnknownStatement(FIndex, FStatement);
+    FStatement.BaseBlock.InsertWithResizing(FIndex, FStatement);
   end;
 
   { TCommandAddBlock }
@@ -172,13 +177,14 @@ implementation
   procedure TCommandAddBlock.Execute;
   begin
     FBaseBlock.AddBlock(FIndex, FInsertedBlock);
-    WasDefaultStatementRemoved:= FIndex >= FBaseBlock.Statements.Count;
   end;
 
   procedure TCommandAddBlock.Undo;
   var
     I: Integer;
+    WasDefaultStatementRemoved: Boolean;
   begin
+    WasDefaultStatementRemoved:= FIndex >= FBaseBlock.Statements.Count;
     Dec(FIndex, Ord(WasDefaultStatementRemoved));
     for I := 0 to FInsertedBlock.Statements.Count - 1 do
       FBaseBlock.ExtractStatementAt(FIndex + I);
