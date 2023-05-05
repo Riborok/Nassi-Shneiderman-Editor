@@ -367,14 +367,16 @@ implementation
       AInsertedStatement.FYStart:= Statements[AIndex xor 1].FYStart;
       Self.RemoveStatementAt(AIndex xor 1);
     end
-    else if AIndex = FStatements.Count then
+    else if AIndex = FStatements.Count - 1 then
     begin
-      FStatements[FStatements.Count - 1].
-            SetYBottom(FStatements[FStatements.Count - 1].GetMaxOptimalYBottom);
-      AInsertedStatement.FYStart:= Statements[AIndex - 1].FYLast;
+      FStatements[AIndex - 1].
+            SetYBottom(FStatements[AIndex - 1].GetMaxOptimalYBottom);
+      AInsertedStatement.FYStart:= Statements[AIndex - 1].GetYBottom;
     end
+    else if AIndex <> 0 then
+      AInsertedStatement.FYStart:= Statements[AIndex].GetYBottom
     else
-      AInsertedStatement.FYStart:= Statements[AIndex].GetYBottom;
+      AInsertedStatement.FYStart:= Statements[AIndex + 1].FYStart;
   end;
 
   procedure TBlock.InsertWithResizing(const AIndex: Integer; const AInsertedStatement: TStatement);

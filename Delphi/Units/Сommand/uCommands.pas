@@ -148,7 +148,6 @@ implementation
     PrevCount: Integer;
   begin
     PrevCount:= FStatement.BaseBlock.Statements.Count;
-
     FIndex:= FStatement.BaseBlock.Extract(FStatement) +
              Ord(PrevCount <> FStatement.BaseBlock.Statements.Count);
     FStatement.BaseBlock.Install(FIndex);
