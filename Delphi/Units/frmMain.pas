@@ -130,6 +130,7 @@ type
     function GetVisibleImageScreen: TVisibleImageRect;
     procedure SetScrollPos(const AStatement: TStatement);
 
+    function isDragging: Boolean; inline;
   private const
     SchemeInitialFontSize = 13;
     SchemeInitialPenWidth = 1;
@@ -287,7 +288,7 @@ implementation
   const
     AmountPixelToMove = 42;
   begin
-    if FBlockManager.CarryBlock <> nil then
+    if isDragging then
     begin
       FBlockManager.MoveCarryBlock(X - FPrevMousePos.X, Y - FPrevMousePos.Y);
 
@@ -297,7 +298,7 @@ implementation
                           (Abs(FPrevMousePos.Y - Y) > AmountPixelToMove)) then
     begin
       FMayDrag:= False;
-      if FBlockManager.CarryBlock <> nil then
+      if isDragging then
         FBlockManager.DestroyCarryBlock;
 
       FBlockManager.CreateCarryBlock;
@@ -308,7 +309,7 @@ implementation
   Shift: TShiftState; X, Y: Integer);
   begin
     FMayDrag:= False;
-    if FBlockManager.CarryBlock <> nil then
+    if isDragging then
       FBlockManager.DestroyCarryBlock;
   end;
 
@@ -390,6 +391,11 @@ implementation
     inherited;
   end;
 
+  function TNassiShneiderman.isDragging: Boolean;
+  begin
+    Result:= FBlockManager.CarryBlock <> nil;
+  end;
+
   class function TNassiShneiderman.ConvertToBlockType(const AIndex: Integer): TStatementClass;
   begin
     case AIndex of
@@ -416,7 +422,7 @@ implementation
   begin
     VisibleImageScreen:= GetVisibleImageScreen;
 
-    case GetBlockMask(AStatement.BaseBlock, VisibleImageScreen) of
+    case AStatement.BaseBlock.GetMask(VisibleImageScreen) of
       $09 {1001}:
          ScrollBox.HorzScrollBar.Position:= ScrollBox.HorzScrollBar.Position +
          AStatement.BaseBlock.XLast - VisibleImageScreen.FBottomRight.X + Stock;
@@ -424,7 +430,7 @@ implementation
          ScrollBox.HorzScrollBar.Position:= AStatement.BaseBlock.XStart - Stock;
     end;
 
-    case GetStatementMask(AStatement, VisibleImageScreen, AStatement is TOperator) of
+    case AStatement.GetMask(VisibleImageScreen, AStatement is TOperator) of
       $09 {1001}:
          ScrollBox.VertScrollBar.Position := ScrollBox.VertScrollBar.Position +
          AStatement.GetYBottom - VisibleImageScreen.FBottomRight.Y + Stock;

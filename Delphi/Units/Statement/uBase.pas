@@ -80,6 +80,9 @@ type
     procedure SetOptimalYLast;
 
     function Clone: TStatement; virtual;
+
+  function GetMask(const AVisibleImageRect: TVisibleImageRect;
+                   const isTOperator: Boolean): Integer; inline;
   end;
 
   { TStatementClass }
@@ -195,18 +198,12 @@ type
     // After changing the Y coordinate, need to call the procedure in order to
     // change the Y coordinates of others
     procedure FixYStatementsPosition(const Index: Integer);
+
+    function GetMask(const AVisibleImageRect: TVisibleImageRect): Integer; inline;
   end;
 
   var
     DefaultStatement: TStatementClass = nil;
-
-  { Masks }
-  function GetBlockMask(const ACurrBlock: TBlock;
-        const AVisibleImageRect: TVisibleImageRect): Integer; inline;
-
-  function GetStatementMask(const ACurrStatement: TStatement;
-        const AVisibleImageRect: TVisibleImageRect; const isTOperator: Boolean): Integer; inline;
-
   function isDefaultStatement(const AStatement: TStatement): Boolean;
 
 implementation
@@ -310,6 +307,27 @@ implementation
 
     Result.FYStart:= Self.FYStart;
     Result.FYLast:= Self.FYLast;
+  end;
+
+  function TStatement.GetMask(const AVisibleImageRect: TVisibleImageRect;
+                              const isTOperator: Boolean): Integer;
+  var
+    YLast: Integer;
+  begin
+    if isTOperator and (TOperator(Self).GetOffsetFromXStart <> 0) then
+      YLast := GetYBottom
+    else
+      YLast:= FYLast;
+
+    Result :=
+    {X--- : }
+      Ord(FYStart >= AVisibleImageRect.FTopLeft.Y) shl 3 or
+    {-X-- : }
+      Ord(YLast <= AVisibleImageRect.FBottomRight.Y) shl 2 or
+    {--X- : }
+      Ord(FYStart <= AVisibleImageRect.FBottomRight.Y) shl 1 or
+    {---X : }
+      Ord(YLast >= AVisibleImageRect.FTopLeft.Y);
   end;
 
   { TBlock }
@@ -711,27 +729,6 @@ implementation
     FixYStatementsPosition(Index);
   end;
 
-  function GetStatementMask(const ACurrStatement: TStatement;
-        const AVisibleImageRect: TVisibleImageRect; const isTOperator: Boolean): Integer; inline;
-  var
-    YLast: Integer;
-  begin
-    if isTOperator and (TOperator(ACurrStatement).GetOffsetFromXStart <> 0) then
-      YLast := ACurrStatement.GetYBottom
-    else
-      YLast:= ACurrStatement.FYLast;
-
-    Result :=
-    {X--- : }
-      Ord(ACurrStatement.FYStart >= AVisibleImageRect.FTopLeft.Y) shl 3 or
-    {-X-- : }
-      Ord(YLast <= AVisibleImageRect.FBottomRight.Y) shl 2 or
-    {--X- : }
-      Ord(ACurrStatement.FYStart <= AVisibleImageRect.FBottomRight.Y) shl 1 or
-    {---X : }
-      Ord(YLast >= AVisibleImageRect.FTopLeft.Y);
-  end;
-
   procedure TBlock.DrawBlock(const AVisibleImageRect: TVisibleImageRect);
   var
     L, R, M: Integer;
@@ -744,7 +741,7 @@ implementation
     while L < R do
     begin
       M := (L + R) shr 1;
-      case GetStatementMask(FStatements[M], AVisibleImageRect, FStatements[M] is TOperator) of
+      case FStatements[M].GetMask(AVisibleImageRect, FStatements[M] is TOperator) of
         $0F {1111}, $03 {0011}, $07 {0111}, $0B {1011}:
           R := M;
         $09 {1001}:
@@ -765,7 +762,7 @@ implementation
         isTOperator:= CurrStatement is TOperator;
         if isTOperator then
           TOperator(CurrStatement).DrawBlocks(AVisibleImageRect);
-        case GetStatementMask(CurrStatement, AVisibleImageRect, isTOperator) of
+        case CurrStatement.GetMask(AVisibleImageRect, isTOperator) of
           $0F {1111}, $03 {0011}, $07 {0111}, $0B {1011}:
             CurrStatement.Draw;
           else
@@ -808,6 +805,19 @@ implementation
     Self.FXStart:= ASource.FXStart;
     Self.FXLast:= ASource.FXLast;
     Self.FCanvas:= ASource.FCanvas;
+  end;
+
+  function TBlock.GetMask(const AVisibleImageRect: TVisibleImageRect): Integer;
+  begin
+    Result :=
+    {X--- : }
+      Ord(FXStart >= AVisibleImageRect.FTopLeft.X) shl 3 or
+    {-X-- : }
+      Ord(FXLast <= AVisibleImageRect.FBottomRight.X) shl 2 or
+    {--X- : }
+      Ord(FXStart <= AVisibleImageRect.FBottomRight.X) shl 1 or
+    {---X : }
+      Ord(FXLast >= AVisibleImageRect.FTopLeft.X);
   end;
 
   { TOperator }
@@ -933,20 +943,6 @@ implementation
     end;
   end;
 
-  function GetBlockMask(const ACurrBlock: TBlock;
-        const AVisibleImageRect: TVisibleImageRect): Integer; inline;
-  begin
-    Result :=
-    {X--- : }
-      Ord(ACurrBlock.FXStart >= AVisibleImageRect.FTopLeft.X) shl 3 or
-    {-X-- : }
-      Ord(ACurrBlock.FXLast <= AVisibleImageRect.FBottomRight.X) shl 2 or
-    {--X- : }
-      Ord(ACurrBlock.FXStart <= AVisibleImageRect.FBottomRight.X) shl 1 or
-    {---X : }
-      Ord(ACurrBlock.FXLast >= AVisibleImageRect.FTopLeft.X);
-  end;
-
   procedure TOperator.DrawBlocks(const AVisibleImageRect: TVisibleImageRect);
   var
     L, R, M: Integer;
@@ -957,7 +953,7 @@ implementation
     while L < R do
     begin
       M := (L + R) shr 1;
-      case GetBlockMask(FBlocks[M], AVisibleImageRect) of
+      case FBlocks[M].GetMask(AVisibleImageRect) of
         $0F {1111}, $03 {0011}, $07 {0111}, $0B {1011}:
           R := M;
         $09 {1001}:
@@ -970,7 +966,7 @@ implementation
     if R >= 0 then
       for M := R to High(FBlocks) do
       begin
-        case GetBlockMask(FBlocks[M], AVisibleImageRect) of
+        case FBlocks[M].GetMask(AVisibleImageRect) of
           $0F {1111}, $03 {0011}, $07 {0111}, $0B {1011}:
             FBlocks[M].DrawBlock(AVisibleImageRect);
           else

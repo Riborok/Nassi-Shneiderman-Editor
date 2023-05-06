@@ -2130,8 +2130,6 @@ object NassiShneiderman: TNassiShneiderman
   OldCreateOrder = False
   WindowState = wsMaximized
   OnCreate = FormCreate
-  OnKeyDown = FormKeyDown
-  OnKeyUp = FormKeyUp
   OnShortCut = FormShortCut
   PixelsPerInch = 96
   TextHeight = 13
