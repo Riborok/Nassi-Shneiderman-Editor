@@ -70,8 +70,8 @@ implementation
     SetLength(FBlocks, FBlockCount);
     FBlocks[0]:= TBlock.Create(Self);
     FBlocks[1]:= TBlock.Create(Self);
-    FBlocks[0].Statements.Add(DefaultStatement.CreateUncertainty(FBlocks[0]));
-    FBlocks[1].Statements.Add(DefaultStatement.CreateUncertainty(FBlocks[1]));
+    FBlocks[0].Statements.Add(DefaultStatement.CreateDefault(FBlocks[0]));
+    FBlocks[1].Statements.Add(DefaultStatement.CreateDefault(FBlocks[1]));
   end;
 
   function TIfBranching.GetAvailablePartWidth(const APartWidth, ATextHeight: Integer): Integer;

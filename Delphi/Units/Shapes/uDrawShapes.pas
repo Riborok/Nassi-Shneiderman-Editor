@@ -1,7 +1,7 @@
 unit uDrawShapes;
 
 interface
-uses Vcl.graphics, System.Types, System.SysUtils, uConstants, uAdditionalTypes;
+uses Vcl.graphics, System.Types, System.SysUtils, uConstants, uAdditionalTypes, uBase;
 
 procedure DrawRect(const AXStart, AXLast, AYStart, AYLast : Integer;
                    const ACanvas: TCanvas);
@@ -9,8 +9,8 @@ procedure DrawRect(const AXStart, AXLast, AYStart, AYLast : Integer;
 procedure DrawInvertedTriangle(const AXStart, AXMiddle, AXLast, AYStart,
                                AYLast : Integer; const ACanvas: TCanvas);
 
-procedure ColorizeRect(const ACanvas: TCanvas; const AXStart, AXLast, AYStart,
-                       AYLast: Integer; const AColor: TColor);
+procedure ColorizeStatement(const ACanvas: TCanvas; const AStatement: TStatement;
+                            const AColor: TColor);
 
 procedure DrawUnfinishedVertRectForLoop(const AXStart, AXLast, AYStart, AYMiddle,
                 AYLast: Integer; const ACanvas: TCanvas);
@@ -69,15 +69,16 @@ implementation
     ACanvas.LineTo(AXLast, AYStart);
   end;
 
-  procedure ColorizeRect(const ACanvas: TCanvas; const AXStart, AXLast, AYStart,
-                         AYLast: Integer; const AColor: TColor);
+  procedure ColorizeStatement(const ACanvas: TCanvas; const AStatement: TStatement;
+                              const AColor: TColor);
   var
     SavedColor: TColor;
   begin
     SavedColor := ACanvas.Brush.Color;
 
     ACanvas.Brush.Color := AColor;
-    ACanvas.FillRect(Rect(AXStart, AYStart, AXLast, AYLast));
+    ACanvas.FillRect(Rect(AStatement.BaseBlock.XStart, AStatement.YStart,
+                          AStatement.BaseBlock.XLast, AStatement.GetYBottom));
 
     ACanvas.Brush.Color := SavedColor;
   end;

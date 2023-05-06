@@ -4,7 +4,7 @@ interface
 uses
   uBase, uCommands, uAutoClearStack, Vcl.ExtCtrls, uSwitchStatements,
   Winapi.Windows, uAdditionalTypes, uDrawShapes, Vcl.Graphics, frmGetAction,
-  frmGet—ase—onditions, uCaseBranching;
+  frmGet—ase—onditions, uCaseBranching, uMinMaxInt;
 type
 
   TBlockManager = class
@@ -98,10 +98,10 @@ implementation
     FCarryBlock:= nil;
 
     FBufferBlock:= TBlock.Create(0, FPaintBox.Canvas);
-    FBufferBlock.AddStatement(uBase.DefaultStatement.CreateUncertainty(FBufferBlock));
+    FBufferBlock.AddStatement(uBase.DefaultStatement.CreateDefault(FBufferBlock));
 
     FMainBlock:= TBlock.Create(SchemeInitialIndent, FPaintBox.Canvas);
-    FMainBlock.AddUnknownStatement(uBase.DefaultStatement.CreateUncertainty(FMainBlock),
+    FMainBlock.AddUnknownStatement(uBase.DefaultStatement.CreateDefault(FMainBlock),
                                                             SchemeInitialIndent);
   end;
 
@@ -369,17 +369,19 @@ implementation
   procedure TBlockManager.Draw(const AVisibleImageRect: TVisibleImageRect);
   const
     Stock = 420;
+    Correction = 5;
   begin
+    FPaintBox.Width := Max(FMainBlock.XLast + Stock,
+                       AVisibleImageRect.FBottomRight.X -
+                       AVisibleImageRect.FTopLeft.X - Correction);
+    FPaintBox.Height := Max(FMainBlock.Statements.GetLast.GetYBottom + Stock,
+                        AVisibleImageRect.FBottomRight.Y -
+                        AVisibleImageRect.FTopLeft.Y - Correction);
+
     AVisibleImageRect.Expand(Stock);
-    FPaintBox.Width := FMainBlock.XLast + Stock;
-    FPaintBox.Height := FMainBlock.Statements.GetLast.GetYBottom + Stock;
 
     if FDedicatedStatement <> nil then
-      ColorizeRect(FPaintBox.Canvas, FDedicatedStatement.BaseBlock.XStart,
-                   FDedicatedStatement.BaseBlock.XLast,
-                   FDedicatedStatement.YStart,
-                   FDedicatedStatement.GetYBottom,
-                   FHighlightColor);
+      ColorizeStatement(FPaintBox.Canvas, FDedicatedStatement, FHighlightColor);
 
     if FCarryBlock <> nil then
       FCarryBlock.DrawBlock(AVisibleImageRect);

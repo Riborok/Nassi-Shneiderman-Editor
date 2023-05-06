@@ -115,12 +115,13 @@ type
     FPenDialog: TPenDialog;
 
     FPrevMousePos: TPoint;
-    FIsMouseDown: Boolean;
 
     FPen: TPen;
     FFont: TFont;
 
-    FisZPressed: Boolean;
+    FisZXCVPressed: Boolean;
+
+    FMayDrag, FWasDbClick: Boolean;
 
     FBlockManager: TBlockManager;
 
@@ -147,12 +148,16 @@ implementation
   { TNassiShneiderman }
 
   procedure TNassiShneiderman.FormCreate(Sender: TObject);
+  const
+    MinFormSize = 600;
   begin
     SetThreadUILanguage(MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US));
     Self.DoubleBuffered := True;
-    FisZPressed:= False;
-    Constraints.MinWidth := 960;
-    Constraints.MinHeight := 540;
+    FisZXCVPressed:= False;
+    FMayDrag:= False;
+    FWasDbClick:= False;
+    Constraints.MinWidth := MinFormSize;
+    Constraints.MinHeight := MinFormSize;
 
     actDelete.ShortCut := ShortCut(VK_DELETE, []);
     actChangeAction.ShortCut := ShortCut(VK_RETURN, []);
@@ -181,7 +186,6 @@ implementation
 
     FBlockManager:= TBlockManager.Create(PaintBox, clYellow);
 
-    FIsMouseDown:= False;
     PaintBox.Invalidate;
   end;
 
@@ -194,15 +198,17 @@ implementation
   procedure TNassiShneiderman.FormKeyUp(Sender: TObject; var Key: Word;
   Shift: TShiftState);
   begin
-    FisZPressed:= False;
+    FisZXCVPressed:= False;
   end;
 
   procedure TNassiShneiderman.FormShortCut(var Msg: TWMKey; var Handled: Boolean);
   begin
-    if FisZPressed then
+    if FisZXCVPressed then
       Handled:= True
-    else if Msg.CharCode = VK_Z then
-      FisZPressed:= True;
+    else case Msg.CharCode of
+      VK_Z, VK_X, VK_C, VK_V:
+        FisZXCVPressed:= True;
+    end;
   end;
 
   procedure TNassiShneiderman.PaintBoxPaint(Sender: TObject);
@@ -252,6 +258,7 @@ implementation
   procedure TNassiShneiderman.DblClick(Sender: TObject);
   begin
     FBlockManager.TryChangeDedicatedText;
+    FWasDbClick:= True;
   end;
 
   procedure TNassiShneiderman.MouseDown(Sender: TObject;
@@ -261,42 +268,48 @@ implementation
 
     if FBlockManager.DedicatedStatement <> nil then
     begin
-      if (Button = mbLeft) and (ssAlt in Shift) then
-      begin
-        if FIsMouseDown then
-          FBlockManager.DestroyCarryBlock;
-
-        FBlockManager.CreateCarryBlock;
-
-        FIsMouseDown := True;
-        FPrevMousePos.X := X;
-        FPrevMousePos.Y := Y;
-      end
-      else if Button = mbRight then
-        PopupMenu.Popup(Mouse.CursorPos.X, Mouse.CursorPos.Y);
+      case Button of
+        mbLeft:
+        begin
+          FMayDrag:= not FWasDbClick;
+          FWasDbClick:= False;
+          FPrevMousePos := Point(X, Y);
+        end;
+        mbRight:
+          PopupMenu.Popup(Mouse.CursorPos.X, Mouse.CursorPos.Y);
+      end;
     end;
+
   end;
 
   procedure TNassiShneiderman.MouseMove(Sender: TObject; Shift: TShiftState;
   X, Y: Integer);
+  const
+    AmountPixelToMove = 42;
   begin
-    if FIsMouseDown then
+    if FBlockManager.CarryBlock <> nil then
     begin
       FBlockManager.MoveCarryBlock(X - FPrevMousePos.X, Y - FPrevMousePos.Y);
 
       FPrevMousePos := Point(X, Y);
+    end
+    else if FMayDrag and ((Abs(FPrevMousePos.X - X) > AmountPixelToMove) or
+                          (Abs(FPrevMousePos.Y - Y) > AmountPixelToMove)) then
+    begin
+      FMayDrag:= False;
+      if FBlockManager.CarryBlock <> nil then
+        FBlockManager.DestroyCarryBlock;
+
+      FBlockManager.CreateCarryBlock;
     end;
   end;
 
   procedure TNassiShneiderman.MouseUp(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);
   begin
-    if FIsMouseDown then
-    begin
-      FIsMouseDown := False;
-
+    FMayDrag:= False;
+    if FBlockManager.CarryBlock <> nil then
       FBlockManager.DestroyCarryBlock;
-    end;
   end;
 
   procedure TNassiShneiderman.MICopyClick(Sender: TObject);

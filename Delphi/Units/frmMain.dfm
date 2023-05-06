@@ -2130,8 +2130,6 @@ object NassiShneiderman: TNassiShneiderman
   OldCreateOrder = False
   WindowState = wsMaximized
   OnCreate = FormCreate
-  OnKeyDown = FormKeyDown
-  OnKeyUp = FormKeyUp
   OnShortCut = FormShortCut
   PixelsPerInch = 96
   TextHeight = 13
@@ -2192,8 +2190,6 @@ object NassiShneiderman: TNassiShneiderman
     Color = clWindow
     ParentColor = False
     TabOrder = 1
-    OnDblClick = DblClick
-    OnMouseDown = MouseDown
     OnMouseWheel = ScrollBoxMouseWheel
     object PaintBox: TPaintBox
       Left = 0

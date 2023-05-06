@@ -9,11 +9,11 @@ type
   { TBaseStatement }
   // Define abstract class TStatement
   // This class is a base class for all statements and is abstract
-  // UncertaintySymbol is a constant field used to represent an unknown value
+  // DefaultSymbol is a constant field used to represent an unknown value
   // in the statement
   TStatement = class abstract
   private const
-    UncertaintySymbol = '';
+    DefaultSymbol = '';
   protected
 
     // FYStart and FYLast are used to store the Y position of the statement
@@ -56,8 +56,8 @@ type
 
     procedure Initialize; virtual;
   public
-    // This constructor creates an uncertainty statement
-    constructor CreateUncertainty(const ABaseBlock: TBlock);
+    // This constructor creates an default statement
+    constructor CreateDefault(const ABaseBlock: TBlock);
 
     // Create
     constructor Create(const AAction : String); virtual;
@@ -147,6 +147,9 @@ type
     function GetLastStatement: TStatement;
 
     function Clone(const ABaseOperator: TOperator): TBlock;
+
+    procedure Insert(const AIndex: Integer;const AInsertedStatement: TStatement);
+    procedure RemoveStatementAt(const Index: Integer);
   public
     constructor Create(const ABaseOperator: TOperator); overload;
     constructor Create(const AXStart: Integer; const ACanvas: TCanvas); overload;
@@ -159,7 +162,6 @@ type
     property BaseOperator: TOperator read FBaseOperator;
     property Statements: TArrayList<TStatement> read FStatements;
 
-    procedure Insert(const AIndex: Integer;const AInsertedStatement: TStatement);
     procedure InsertWithResizing(const AIndex: Integer;const AInsertedStatement: TStatement);
 
     procedure AddUnknownStatement(const AStatement: TStatement; const AYStart: Integer);
@@ -169,7 +171,6 @@ type
 
     function Extract(const AStatement: TStatement): Integer;
     function ExtractStatementAt(const AIndex: Integer) : TStatement;
-    procedure RemoveStatementAt(const Index: Integer);
 
     procedure SetOptimalXLastBlock;
 
@@ -212,15 +213,15 @@ implementation
 
   function isDefaultStatement(const AStatement: TStatement): Boolean;
   begin
-    Result:= (AStatement.FAction = TStatement.UncertaintySymbol) and
+    Result:= (AStatement.FAction = TStatement.DefaultSymbol) and
              (AStatement.ClassType = DefaultStatement);
   end;
 
   { TStatement }
 
-  constructor TStatement.CreateUncertainty(const ABaseBlock: TBlock);
+  constructor TStatement.CreateDefault(const ABaseBlock: TBlock);
   begin
-    FAction := UncertaintySymbol;
+    FAction := DefaultSymbol;
     FBaseBlock:= ABaseBlock;
   end;
 
@@ -298,7 +299,7 @@ implementation
 
   function TStatement.Clone: TStatement;
   begin
-    Result:= TStatementClass(Self.ClassType).CreateUncertainty(Self.BaseBlock);
+    Result:= TStatementClass(Self.ClassType).CreateDefault(Self.BaseBlock);
 
     Result.FAction:= Self.FAction;
 
@@ -451,7 +452,7 @@ implementation
     FStatements.Delete(AIndex);
     if FStatements.Count = 0 then
     begin
-      AddStatement(DefaultStatement.CreateUncertainty(Self));
+      AddStatement(DefaultStatement.CreateDefault(Self));
       FStatements[0].FYStart:= Result.FYStart;
     end
     else if (Result.BaseBlock.BaseOperator = nil) and (AIndex = 0) then
