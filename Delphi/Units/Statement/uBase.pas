@@ -70,6 +70,8 @@ type
     property YStart: Integer read FYStart;
     property YLast: Integer read FYLast;
 
+    property YIndentText: Integer read FYIndentText;
+
     // Returns the Y coordinate of the bottommost part
     function GetYBottom: Integer; virtual;
 
@@ -114,8 +116,6 @@ type
     procedure Initialize; override;
 
     procedure InitializeBlocks(StartIndex: Integer = 0);
-
-    function GetOffsetFromXStart: Integer; virtual;
   public
     constructor Create(const AAction : String); override;
     destructor Destroy; override;
@@ -129,6 +129,7 @@ type
     function Clone: TStatement; override;
 
     function FindBlockIndex(const AXStart: Integer): Integer;
+    function GetOffsetFromXStart: Integer; virtual;
   end;
 
   { TBlock }

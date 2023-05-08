@@ -13,11 +13,11 @@ type
     function GetOptimalWidthForBlock(const ABlock: TBlock): Integer; override;
     function GetOptimaWidth: Integer; override;
     procedure SetTextSize; override;
-    function GetXLastStrip: Integer;
+    function GetOffsetFromXStart: Integer; override;
   public
+    function GetXLastStrip: Integer;
     property CountPixelCorrection: Integer read FCountPixelCorrection;
     function Clone: TStatement; override;
-    function GetOffsetFromXStart: Integer; override;
   end;
 
 

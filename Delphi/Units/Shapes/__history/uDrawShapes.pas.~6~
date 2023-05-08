@@ -1,7 +1,7 @@
-unit uDrawShapes;
+ï»¿unit uDrawShapes;
 
 interface
-uses Vcl.graphics, System.Types, System.SysUtils, uConstants, uAdditionalTypes, uBase, System.UITypes;
+uses Vcl.graphics, System.Types, System.SysUtils, uConstants, uAdditionalTypes, uBase;
 
 procedure DrawRect(const AXStart, AXLast, AYStart, AYLast : Integer;
                    const ACanvas: TCanvas);
@@ -9,7 +9,8 @@ procedure DrawRect(const AXStart, AXLast, AYStart, AYLast : Integer;
 procedure DrawInvertedTriangle(const AXStart, AXMiddle, AXLast, AYStart,
                                AYLast : Integer; const ACanvas: TCanvas);
 
-procedure ColorizeRect(const ACanvas: TCanvas; const ARect: TRect; const AColor: TColor);
+procedure ColorizeStatement(const ACanvas: TCanvas; const ARect: TRect;
+                            const AColor: TColor);
 
 procedure DrawUnfinishedVertRectForLoop(const AXStart, AXLast, AYStart, AYMiddle,
                 AYLast: Integer; const ACanvas: TCanvas);
@@ -23,10 +24,7 @@ procedure DrawText(const ACanvas: TCanvas; const AX, AY: Integer; const AText: s
 
 function CreateRect(const AStatement: TStatement): TRect; inline;
 
-procedure DrawArrow(const ACanvas: TCanvas; const AX, AStartY, AEndY: Integer;
-                    const AColor: TColor);
-
-// Ïîòîì óáðàòü íàäà
+// ÐŸÐ¾Ñ‚Ð¾Ð¼ ÑƒÐ±Ñ€Ð°Ñ‚ÑŒ Ð½Ð°Ð´Ð°
 procedure DrawCoordinates(Canvas: TCanvas; Step: Integer);
 implementation
 
@@ -79,10 +77,17 @@ implementation
                   AStatement.BaseBlock.XLast, AStatement.GetYBottom);
   end;
 
-  procedure ColorizeRect(const ACanvas: TCanvas; const ARect: TRect; const AColor: TColor);
+  procedure ColorizeStatement(const ACanvas: TCanvas; const ARect: TRect;
+                              const AColor: TColor);
+  var
+    SavedColor: TColor;
   begin
+    SavedColor := ACanvas.Brush.Color;
+
     ACanvas.Brush.Color := AColor;
     ACanvas.FillRect(ARect);
+
+    ACanvas.Brush.Color := SavedColor;
   end;
 
   procedure DrawText(const ACanvas: TCanvas; const AX, AY: Integer; const AText: string);
@@ -90,7 +95,9 @@ implementation
     Lines: TStringDynArray;
     Indent: Integer;
     I: Integer;
+    SavedColor: TColor;
   begin
+    SavedColor := ACanvas.Brush.Color;
     ACanvas.Brush.Style := bsClear;
 
     Lines := AText.Split([sLineBreak]);
@@ -99,6 +106,8 @@ implementation
 
     for I := 0 to High(Lines) do
       ACanvas.TextOut(AX, AY + I * Indent, Lines[I]);
+
+    ACanvas.Brush.Color := SavedColor;
   end;
 
   procedure DrawCoordinates(Canvas: TCanvas; Step: Integer);
@@ -121,26 +130,6 @@ implementation
     end;
 
     Canvas.Font.Size:= PrevFontSize;
-  end;
-
-  procedure DrawArrow(const ACanvas: TCanvas; const AX, AStartY, AEndY: Integer;
-                      const AColor: TColor);
-  var
-    Points: array [0..2] of TPoint;
-    Offset, ArrowHeight, ArrowWidth: Integer;
-  begin
-    ACanvas.Brush.Color:= AColor;
-
-    ArrowHeight := Abs(AEndY - AStartY);
-    ArrowWidth := ArrowHeight div 2;
-    if AStartY > AEndY then
-      Offset := -ArrowHeight
-    else
-      Offset := ArrowHeight;
-    Points[0] := Point(AX, AStartY);
-    Points[1] := Point(AX - ArrowWidth, AStartY + Offset);
-    Points[2] := Point(AX + ArrowWidth, AStartY + Offset);
-    ACanvas.Polygon(Points);
   end;
 
 end.

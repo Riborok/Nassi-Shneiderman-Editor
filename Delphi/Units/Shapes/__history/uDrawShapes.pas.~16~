@@ -1,4 +1,4 @@
-unit uDrawShapes;
+Ôªøunit uDrawShapes;
 
 interface
 uses Vcl.graphics, System.Types, System.SysUtils, uConstants, uAdditionalTypes, uBase, System.UITypes;
@@ -24,9 +24,9 @@ procedure DrawText(const ACanvas: TCanvas; const AX, AY: Integer; const AText: s
 function CreateRect(const AStatement: TStatement): TRect; inline;
 
 procedure DrawArrow(const ACanvas: TCanvas; const AX, AStartY, AEndY: Integer;
-                    const AColor: TColor);
+                    const Color: TColor);
 
-// œÓÚÓÏ Û·‡Ú¸ Ì‡‰‡
+// –ü–æ—Ç–æ–º —É–±—Ä–∞—Ç—å –Ω–∞–¥–∞
 procedure DrawCoordinates(Canvas: TCanvas; Step: Integer);
 implementation
 
@@ -80,9 +80,15 @@ implementation
   end;
 
   procedure ColorizeRect(const ACanvas: TCanvas; const ARect: TRect; const AColor: TColor);
+  var
+    SavedColor: TColor;
   begin
+    SavedColor := ACanvas.Brush.Color;
+
     ACanvas.Brush.Color := AColor;
     ACanvas.FillRect(ARect);
+
+    ACanvas.Brush.Color := SavedColor;
   end;
 
   procedure DrawText(const ACanvas: TCanvas; const AX, AY: Integer; const AText: string);
@@ -90,7 +96,9 @@ implementation
     Lines: TStringDynArray;
     Indent: Integer;
     I: Integer;
+    SavedColor: TColor;
   begin
+    SavedColor := ACanvas.Brush.Color;
     ACanvas.Brush.Style := bsClear;
 
     Lines := AText.Split([sLineBreak]);
@@ -99,6 +107,8 @@ implementation
 
     for I := 0 to High(Lines) do
       ACanvas.TextOut(AX, AY + I * Indent, Lines[I]);
+
+    ACanvas.Brush.Color := SavedColor;
   end;
 
   procedure DrawCoordinates(Canvas: TCanvas; Step: Integer);
@@ -124,12 +134,14 @@ implementation
   end;
 
   procedure DrawArrow(const ACanvas: TCanvas; const AX, AStartY, AEndY: Integer;
-                      const AColor: TColor);
+                      const Color: TColor);
   var
     Points: array [0..2] of TPoint;
     Offset, ArrowHeight, ArrowWidth: Integer;
+    OldColor: TColor;
   begin
-    ACanvas.Brush.Color:= AColor;
+    OldColor:= ACanvas.Brush.Color;
+    ACanvas.Brush.Color:=
 
     ArrowHeight := Abs(AEndY - AStartY);
     ArrowWidth := ArrowHeight div 2;

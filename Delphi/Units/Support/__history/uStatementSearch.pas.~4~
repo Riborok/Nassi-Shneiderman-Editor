@@ -1,7 +1,7 @@
 unit uStatementSearch;
 
 interface
-uses uBase;
+uses uBase, uLoop;
 
   function BinarySearchStatement(const AX, AY: Integer; const ABlock: TBlock): TStatement;
   function BinarySearchBlock(const Blocks: TBlockArr; const AX: Integer): TBlock;
@@ -65,7 +65,8 @@ implementation
                   Exit(CurrStatement);
             end;
 
-            if AX <= CurrOperator.BaseBlock.XStart + CurrOperator.GetOffsetFromXStart then
+            if CurrOperator is TLoop and
+                          (AX <= TLoop(CurrOperator).GetXLastStrip) then
               Exit(CurrStatement);
 
             Exit(BinarySearchStatement(AX, AY, BinarySearchBlock(CurrOperator.Blocks, AX)));
