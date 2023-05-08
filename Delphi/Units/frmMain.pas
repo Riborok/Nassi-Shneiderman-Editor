@@ -317,7 +317,10 @@ implementation
   begin
     FMayDrag:= False;
     if isDragging then
+    begin
+      FBlockManager.TryTakeAction;
       FBlockManager.DestroyCarryBlock;
+    end;
   end;
 
   procedure TNassiShneiderman.MICopyClick(Sender: TObject);

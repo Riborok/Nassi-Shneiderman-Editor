@@ -13,7 +13,7 @@ type
 
     THoveredStatement = record
     private type
-      TState = (stBefore, stAfter, stSwap, stCancel);
+      TState = (stBefore = 0, stAfter = 1, stSwap, stCancel);
     public
       Statement: TStatement;
       Rect: TRect;
@@ -78,6 +78,7 @@ type
     procedure MoveCarryBlock(const ADeltaX, ADeltaY: Integer);
     procedure DefineHover(const AX, AY: Integer);
     procedure TryDrawCarryBlock(const AVisibleImageRect: TVisibleImageRect); inline;
+    procedure TryTakeAction;
     procedure DestroyCarryBlock;
 
     { Interactions with statements }
@@ -455,6 +456,22 @@ implementation
     end;
   end;
 
+  procedure TBlockManager.TryTakeAction;
+  begin
+    case FHoveredStatement.State of
+      stAfter, stBefore:
+      begin
+        var Block : TBlock:= FHoveredStatement.Statement.BaseBlock;
+        FUndoStack.Push(TCommandTransferAnotherBlock.Create(Block,
+                        Block.FindStatementIndex(FHoveredStatement.Statement.YStart) +
+                        Ord(FHoveredStatement.State),
+                        FDedicatedStatement));
+        FUndoStack.Peek.Execute;
+      end;
+
+    end;
+  end;
+
   procedure TBlockManager.DestroyCarryBlock;
   begin
     FCarryBlock.Destroy;
@@ -539,6 +556,6 @@ implementation
     TryDrawCarryBlock(AVisibleImageRect);
 
     FMainBlock.DrawBlock(AVisibleImageRect);
-    //DrawCoordinates(FPaintBox.Canvas, 50);
+    DrawCoordinates(FPaintBox.Canvas, 50);
   end;
 end.

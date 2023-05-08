@@ -1,7 +1,7 @@
 unit uCommands;
 
 interface
-uses AdditionalTypes, Base, Stack, CaseBranching;
+uses uAdditionalTypes, uBase, uStack, uCaseBranching;
 type
 
   ICommand = interface
@@ -28,7 +28,6 @@ type
     FNewStatement: TStatement;
     FBaseBlock: TBlock;
     FIndex : Integer;
-    WasDefaultStatementRemoved: Boolean;
   public
     constructor Create(const ABaseBlock: TBlock; const AIndex : Integer;
                        const ANewStatement: TStatement);
@@ -53,7 +52,6 @@ type
   private
     FInsertedBlock, FBaseBlock: TBlock;
     FIndex: Integer;
-    WasDefaultStatementRemoved: Boolean;
   public
     constructor Create(const ABaseBlock: TBlock; const AIndex : Integer;
                        const AInsertedBlock: TBlock);
@@ -74,6 +72,20 @@ type
     procedure Execute;
     procedure Undo;
   End;
+
+  { TCommandTransferAnotherBlock }
+  TCommandTransferAnotherBlock = class(TInterfacedObject, ICommand)
+    private
+      FCommandAddStatement : TCommandAddStatement;
+      FCommandDelStatement : TCommandDelStatement;
+      FOldBaseBlock : TBlock;
+      procedure MoveChildrens(const AXLast, AOffset: Integer);
+    public
+      constructor Create(const ABaseBlock: TBlock; const AIndex : Integer;
+                         const AStatement: TStatement);
+    procedure Execute;
+    procedure Undo;
+  end;
 
 implementation
 
@@ -125,12 +137,14 @@ implementation
 
   procedure TCommandAddStatement.Execute;
   begin
-    FBaseBlock.InsertUnknownStatement(FIndex, FNewStatement);
-    WasDefaultStatementRemoved:= FIndex >= FBaseBlock.Statements.Count;
+    FBaseBlock.InsertWithResizing(FIndex, FNewStatement);
   end;
 
   procedure TCommandAddStatement.Undo;
+  var
+    WasDefaultStatementRemoved: Boolean;
   begin
+    WasDefaultStatementRemoved:= FIndex >= FBaseBlock.Statements.Count;
     Dec(FIndex, Ord(WasDefaultStatementRemoved));
     FBaseBlock.ExtractStatementAt(FIndex);
     FBaseBlock.Install(FIndex);
@@ -145,12 +159,13 @@ implementation
 
   procedure TCommandDelStatement.Execute;
   begin
-    FIndex:= FStatement.BaseBlock.ExtractWithResizing(FStatement) + 1;
+    FIndex:= FStatement.BaseBlock.Extract(FStatement);
+    FStatement.BaseBlock.Install(FIndex);
   end;
 
   procedure TCommandDelStatement.Undo;
   begin
-    FStatement.BaseBlock.InsertUnknownStatement(FIndex, FStatement);
+    FStatement.BaseBlock.InsertWithResizing(FIndex, FStatement);
   end;
 
   { TCommandAddBlock }
@@ -171,16 +186,17 @@ implementation
   procedure TCommandAddBlock.Execute;
   begin
     FBaseBlock.AddBlock(FIndex, FInsertedBlock);
-    WasDefaultStatementRemoved:= FIndex >= FBaseBlock.Statements.Count;
   end;
 
   procedure TCommandAddBlock.Undo;
   var
     I: Integer;
+    WasDefaultStatementRemoved: Boolean;
   begin
+    WasDefaultStatementRemoved:= FIndex >= FBaseBlock.Statements.Count;
     Dec(FIndex, Ord(WasDefaultStatementRemoved));
     for I := 0 to FInsertedBlock.Statements.Count - 1 do
-      FBaseBlock.ExtractStatementAt(FIndex + I);
+      FBaseBlock.ExtractStatementAt(FIndex + I).BaseBlock := FInsertedBlock;
     FBaseBlock.Install(FIndex);
     Inc(FIndex, Ord(WasDefaultStatementRemoved));
   end;
@@ -204,6 +220,45 @@ implementation
   procedure TCommandCaseSort.Undo;
   begin
     FCaseBranching.Restore—onditions(FPrevConds, FPrevBlocks);
+  end;
+
+  { TCommandTransferAnotherBlock }
+  constructor TCommandTransferAnotherBlock.Create(const ABaseBlock: TBlock;
+                    const AIndex : Integer; const AStatement: TStatement);
+  begin
+    FOldBaseBlock:= AStatement.BaseBlock;
+
+    FCommandDelStatement := TCommandDelStatement.Create(AStatement);
+    FCommandAddStatement:= TCommandAddStatement.Create(ABaseBlock, AIndex, AStatement);
+  end;
+
+  procedure TCommandTransferAnotherBlock.Execute;
+  begin
+    FCommandDelStatement.Execute;
+    if FCommandAddStatement.FNewStatement is TOperator then
+      MoveChildrens(FCommandAddStatement.FBaseBlock.XLast,
+                 FCommandAddStatement.FBaseBlock.XStart - FOldBaseBlock.XStart);
+    FCommandAddStatement.Execute;
+  end;
+
+  procedure TCommandTransferAnotherBlock.Undo;
+  begin
+    FCommandAddStatement.Undo;
+    if FCommandAddStatement.FNewStatement is TOperator then
+      MoveChildrens(FOldBaseBlock.XLast,
+                 FOldBaseBlock.XStart - FCommandAddStatement.FBaseBlock.XStart);
+    FCommandDelStatement.FStatement.BaseBlock := FOldBaseBlock;
+    FCommandDelStatement.Undo;
+  end;
+
+  procedure TCommandTransferAnotherBlock.MoveChildrens(const AXLast, AOffset: Integer);
+  var
+    Blocks : TBlockArr;
+  begin
+    Blocks:= TOperator(FCommandAddStatement.FNewStatement).Blocks;
+      for var J := 0 to High(Blocks) do
+        Blocks[J].MoveRight(AOffset);
+    Blocks[High(Blocks)].ChangeXLastBlock(AXLast);
   end;
 
 end.

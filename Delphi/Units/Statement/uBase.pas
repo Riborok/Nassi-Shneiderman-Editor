@@ -64,7 +64,7 @@ type
 
     // These properties return the text of the statement and base block
     property Action: String read FAction;
-    property BaseBlock: TBlock read FBaseBlock;
+    property BaseBlock: TBlock read FBaseBlock write FBaseBlock;
 
     // Returnts the Y statrt coordinate
     property YStart: Integer read FYStart;
