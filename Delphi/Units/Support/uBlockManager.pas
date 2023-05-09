@@ -372,10 +372,7 @@ implementation
           FHoveredStatement.Rect.Bottom:= YStart + FHoveredStatement.Statement.YIndentText;
           FHoveredStatement.State := stBefore;
         end
-        else if (FHoveredStatement.Statement is TOperator) and
-             (FDedicatedStatement is TOperator) and
-             (Length(TOperator(FHoveredStatement.Statement).Blocks) =
-              Length(TOperator(FDedicatedStatement).Blocks)) then
+        else if FHoveredStatement.Statement is TOperator then
         begin
           var BaseOperator: TOperator:= TOperator(FHoveredStatement.Statement);
           var CurrBlock: TBlock := FDedicatedStatement.BaseBlock;
@@ -387,8 +384,7 @@ implementation
           end;
           FHoveredStatement.State := stSwap;
         end
-        else if not (FHoveredStatement.Statement is TOperator) and
-             not (FDedicatedStatement is TOperator) then
+        else if not isDefaultStatement(FHoveredStatement.Statement) then
           FHoveredStatement.State := stSwap;
       end;
     end
@@ -477,6 +473,9 @@ implementation
   begin
     FCarryBlock.Destroy;
     FCarryBlock:= nil;
+
+    FHoveredStatement.State := stCancel;
+    FHoveredStatement.Statement := nil;
 
     FPaintBox.Invalidate;
   end;

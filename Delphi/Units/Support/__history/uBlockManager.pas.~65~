@@ -13,7 +13,7 @@ type
 
     THoveredStatement = record
     private type
-      TState = (stBefore, stAfter, stSwap, stCancel);
+      TState = (stBefore = 0, stAfter = 1, stSwap, stCancel);
     public
       Statement: TStatement;
       Rect: TRect;
@@ -78,6 +78,7 @@ type
     procedure MoveCarryBlock(const ADeltaX, ADeltaY: Integer);
     procedure DefineHover(const AX, AY: Integer);
     procedure TryDrawCarryBlock(const AVisibleImageRect: TVisibleImageRect); inline;
+    procedure TryTakeAction;
     procedure DestroyCarryBlock;
 
     { Interactions with statements }
@@ -393,6 +394,13 @@ implementation
     end
     else
       FHoveredStatement.Rect:= CreateRect(FHoveredStatement.Statement);
+
+    if isDefaultStatement(FDedicatedStatement) then
+    begin
+      FHoveredStatement.State := stCancel;
+      if FHoveredStatement.Statement <> nil then
+        FHoveredStatement.Rect:= CreateRect(FHoveredStatement.Statement);
+    end;
   end;
 
   procedure TBlockManager.TryDrawCarryBlock(const AVisibleImageRect: TVisibleImageRect);
@@ -440,15 +448,28 @@ implementation
             end;
           end;
           stSwap:
-          begin
             ColorizeRect(FPaintBox.Canvas, FHoveredStatement.Rect, clGreen);
-            //DrawExchange(FPaintBox.Canvas,
-            //FHoveredStatement.Rect);
-          end;
           stCancel:
             ColorizeRect(FPaintBox.Canvas, FHoveredStatement.Rect, clRed);
         end;
       FCarryBlock.DrawBlock(AVisibleImageRect);
+    end;
+  end;
+
+  procedure TBlockManager.TryTakeAction;
+  begin
+    case FHoveredStatement.State of
+      stAfter, stBefore:
+      begin
+        var Block : TBlock:= FHoveredStatement.Statement.BaseBlock;
+        FRedoStack.Clear;
+        FUndoStack.Push(TCommandTransferAnotherBlock.Create(Block,
+                        Block.FindStatementIndex(FHoveredStatement.Statement.YStart) +
+                        Ord(FHoveredStatement.State),
+                        FDedicatedStatement));
+        FUndoStack.Peek.Execute;
+      end;
+
     end;
   end;
 
@@ -536,6 +557,6 @@ implementation
     TryDrawCarryBlock(AVisibleImageRect);
 
     FMainBlock.DrawBlock(AVisibleImageRect);
-    //DrawCoordinates(FPaintBox.Canvas, 50);
+    DrawCoordinates(FPaintBox.Canvas, 50);
   end;
 end.

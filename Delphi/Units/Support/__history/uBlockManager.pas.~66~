@@ -13,7 +13,7 @@ type
 
     THoveredStatement = record
     private type
-      TState = (stBefore, stAfter, stSwap, stCancel);
+      TState = (stBefore = 0, stAfter = 1, stSwap, stCancel);
     public
       Statement: TStatement;
       Rect: TRect;
@@ -24,6 +24,8 @@ type
 
     clrCancel: TColor = clRed;
     clrOK: TColor = clGreen;
+
+    clArrowColor: TColor = clBlack;
   private
     FMainBlock : TBlock;
     FDedicatedStatement: TStatement;
@@ -76,6 +78,7 @@ type
     procedure MoveCarryBlock(const ADeltaX, ADeltaY: Integer);
     procedure DefineHover(const AX, AY: Integer);
     procedure TryDrawCarryBlock(const AVisibleImageRect: TVisibleImageRect); inline;
+    procedure TryTakeAction;
     procedure DestroyCarryBlock;
 
     { Interactions with statements }
@@ -369,10 +372,7 @@ implementation
           FHoveredStatement.Rect.Bottom:= YStart + FHoveredStatement.Statement.YIndentText;
           FHoveredStatement.State := stBefore;
         end
-        else if (FHoveredStatement.Statement is TOperator) and
-             (FDedicatedStatement is TOperator) and
-             (Length(TOperator(FHoveredStatement.Statement).Blocks) =
-              Length(TOperator(FDedicatedStatement).Blocks)) then
+        else if FHoveredStatement.Statement is TOperator then
         begin
           var BaseOperator: TOperator:= TOperator(FHoveredStatement.Statement);
           var CurrBlock: TBlock := FDedicatedStatement.BaseBlock;
@@ -383,35 +383,89 @@ implementation
             CurrBlock := CurrBlock.BaseOperator.BaseBlock;
           end;
           FHoveredStatement.State := stSwap;
-        end;
+        end
+        else if not isDefaultStatement(FHoveredStatement.Statement) then
+          FHoveredStatement.State := stSwap;
       end;
     end
     else
       FHoveredStatement.Rect:= CreateRect(FHoveredStatement.Statement);
+
+    if isDefaultStatement(FDedicatedStatement) then
+    begin
+      FHoveredStatement.State := stCancel;
+      if FHoveredStatement.Statement <> nil then
+        FHoveredStatement.Rect:= CreateRect(FHoveredStatement.Statement);
+    end;
   end;
 
   procedure TBlockManager.TryDrawCarryBlock(const AVisibleImageRect: TVisibleImageRect);
+  const
+    Offset = 3;
   begin
     if FCarryBlock <> nil then
     begin
       if FHoveredStatement.Statement <> nil then
-      begin
         case FHoveredStatement.State of
           stAfter:
           begin
             ColorizeRect(FPaintBox.Canvas, FHoveredStatement.Rect, clGreen);
             DrawArrow(FPaintBox.Canvas,
-             (FHoveredStatement.Statement.BaseBlock.XLast -
-             FHoveredStatement.Statement.BaseBlock.XStart) shr 1 +
-             FHoveredStatement.Statement.BaseBlock.XStart,
-             FHoveredStatement.Rect.Bottom, FHoveredStatement.Rect.Top, True);
+                     FHoveredStatement.Rect.Width shr 1 +
+                     FHoveredStatement.Rect.Left,
+                     FHoveredStatement.Rect.Bottom,
+                     FHoveredStatement.Rect.Top + Offset,
+                     clArrowColor);
+            if (FHoveredStatement.Statement is TOperator) and
+                     TOperator(FHoveredStatement.Statement).IsPreñOperator then
+            begin
+              FHoveredStatement.Rect.Right:= FHoveredStatement.Statement.BaseBlock.XStart +
+                                TOperator(FHoveredStatement.Statement).GetOffsetFromXStart;
+              FHoveredStatement.Rect.Bottom:= FHoveredStatement.Statement.GetYBottom;
+              ColorizeRect(FPaintBox.Canvas, FHoveredStatement.Rect, clGreen);
+            end;
           end;
-
+          stBefore:
+          begin
+            ColorizeRect(FPaintBox.Canvas, FHoveredStatement.Rect, clGreen);
+            DrawArrow(FPaintBox.Canvas,
+                     FHoveredStatement.Rect.Width shr 1 +
+                     FHoveredStatement.Rect.Left,
+                     FHoveredStatement.Rect.Top,
+                     FHoveredStatement.Rect.Bottom - Offset,
+                     clArrowColor);
+            if (FHoveredStatement.Statement is TOperator) and
+                  not TOperator(FHoveredStatement.Statement).IsPreñOperator then
+            begin
+              FHoveredStatement.Rect.Right:= FHoveredStatement.Statement.BaseBlock.XStart +
+                                TOperator(FHoveredStatement.Statement).GetOffsetFromXStart;
+              FHoveredStatement.Rect.Top:= FHoveredStatement.Statement.YStart;
+              ColorizeRect(FPaintBox.Canvas, FHoveredStatement.Rect, clGreen);
+            end;
+          end;
+          stSwap:
+            ColorizeRect(FPaintBox.Canvas, FHoveredStatement.Rect, clGreen);
           stCancel:
             ColorizeRect(FPaintBox.Canvas, FHoveredStatement.Rect, clRed);
         end;
-      end;
       FCarryBlock.DrawBlock(AVisibleImageRect);
+    end;
+  end;
+
+  procedure TBlockManager.TryTakeAction;
+  begin
+    case FHoveredStatement.State of
+      stAfter, stBefore:
+      begin
+        var Block : TBlock:= FHoveredStatement.Statement.BaseBlock;
+        FRedoStack.Clear;
+        FUndoStack.Push(TCommandTransferAnotherBlock.Create(Block,
+                        Block.FindStatementIndex(FHoveredStatement.Statement.YStart) +
+                        Ord(FHoveredStatement.State),
+                        FDedicatedStatement));
+        FUndoStack.Peek.Execute;
+      end;
+
     end;
   end;
 
@@ -499,6 +553,6 @@ implementation
     TryDrawCarryBlock(AVisibleImageRect);
 
     FMainBlock.DrawBlock(AVisibleImageRect);
-    //DrawCoordinates(FPaintBox.Canvas, 50);
+    DrawCoordinates(FPaintBox.Canvas, 50);
   end;
 end.

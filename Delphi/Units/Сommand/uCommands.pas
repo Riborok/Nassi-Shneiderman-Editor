@@ -185,7 +185,7 @@ implementation
 
   procedure TCommandAddBlock.Execute;
   begin
-    FBaseBlock.AddBlock(FIndex, FInsertedBlock);
+    FBaseBlock.InsertBlock(FIndex, FInsertedBlock);
   end;
 
   procedure TCommandAddBlock.Undo;
@@ -196,7 +196,7 @@ implementation
     WasDefaultStatementRemoved:= FIndex >= FBaseBlock.Statements.Count;
     Dec(FIndex, Ord(WasDefaultStatementRemoved));
     for I := 0 to FInsertedBlock.Statements.Count - 1 do
-      FBaseBlock.ExtractStatementAt(FIndex + I).BaseBlock := FInsertedBlock;
+      FBaseBlock.ExtractStatementAt(FIndex + I);
     FBaseBlock.Install(FIndex);
     Inc(FIndex, Ord(WasDefaultStatementRemoved));
   end;
@@ -229,8 +229,8 @@ implementation
     FOldBaseBlock:= AStatement.BaseBlock;
 
     FCommandDelStatement := TCommandDelStatement.Create(AStatement);
-    Dec(AIndex, Ord((ABaseBlock = AStatement.BaseBlock) and
-        (ABaseBlock.Statements.Count = AIndex)));
+    Dec(AIndex, Ord((ABaseBlock = AStatement.BaseBlock) and (AIndex <> 0) and
+        (AIndex - 1 <> FCommandDelStatement.FIndex)));
     FCommandAddStatement:= TCommandAddStatement.Create(ABaseBlock, AIndex, AStatement);
   end;
 

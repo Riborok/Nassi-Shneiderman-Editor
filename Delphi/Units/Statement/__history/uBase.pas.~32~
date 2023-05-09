@@ -64,7 +64,7 @@ type
 
     // These properties return the text of the statement and base block
     property Action: String read FAction;
-    property BaseBlock: TBlock read FBaseBlock;
+    property BaseBlock: TBlock read FBaseBlock write FBaseBlock;
 
     // Returnts the Y statrt coordinate
     property YStart: Integer read FYStart;
@@ -116,6 +116,8 @@ type
     procedure Initialize; override;
 
     procedure InitializeBlocks(StartIndex: Integer = 0);
+    procedure InstallCanvas(const ACanvas: TCanvas);
+    procedure SetBlockTextSize;
   public
     constructor Create(const AAction : String); override;
     destructor Destroy; override;
@@ -152,7 +154,7 @@ type
 
     function Clone(const ABaseOperator: TOperator): TBlock;
 
-    procedure Insert(const AIndex: Integer;const AInsertedStatement: TStatement);
+    procedure Insert(var AIndex: Integer;const AInsertedStatement: TStatement);
     procedure RemoveStatementAt(const Index: Integer);
   public
     constructor Create(const ABaseOperator: TOperator); overload;
@@ -166,12 +168,12 @@ type
     property BaseOperator: TOperator read FBaseOperator;
     property Statements: TArrayList<TStatement> read FStatements;
 
-    procedure InsertWithResizing(const AIndex: Integer;const AInsertedStatement: TStatement);
+    procedure InsertWithResizing(AIndex: Integer;const AInsertedStatement: TStatement);
 
     procedure AddUnknownStatement(const AStatement: TStatement; const AYStart: Integer);
     procedure AddStatement(const AStatement: TStatement);
 
-    procedure AddBlock(const AIndex: Integer; const AInsertedBlock: TBlock);
+    procedure AddBlock(AIndex: Integer; const AInsertedBlock: TBlock);
 
     function Extract(const AStatement: TStatement): Integer;
     function ExtractStatementAt(const AIndex: Integer) : TStatement;
@@ -230,7 +232,7 @@ implementation
 
   procedure TStatement.SetTextSize;
   const
-    Stock = 5;
+    Stock = 3;
   begin
     SetActionSizes;
     FYIndentText:= BaseBlock.FCanvas.Font.Size + BaseBlock.FCanvas.Pen.Width + Stock;
@@ -376,7 +378,7 @@ implementation
     SetOptimalXLastBlock;
   end;
 
-  procedure TBlock.Insert(const AIndex: Integer; const AInsertedStatement: TStatement);
+  procedure TBlock.Insert(var AIndex: Integer; const AInsertedStatement: TStatement);
   begin
     AInsertedStatement.FBaseBlock:= Self;
     AInsertedStatement.SetTextSize;
@@ -386,6 +388,7 @@ implementation
     begin
       AInsertedStatement.FYStart:= Statements[AIndex xor 1].FYStart;
       Self.RemoveStatementAt(AIndex xor 1);
+      AIndex:= 0;
     end
     else if AIndex = FStatements.Count - 1 then
     begin
@@ -394,18 +397,18 @@ implementation
       AInsertedStatement.FYStart:= Statements[AIndex - 1].GetYBottom;
     end
     else if AIndex <> 0 then
-      AInsertedStatement.FYStart:= Statements[AIndex].GetYBottom
+      AInsertedStatement.FYStart:= Statements[AIndex - 1].GetYBottom
     else
       AInsertedStatement.FYStart:= Statements[AIndex + 1].FYStart;
   end;
 
-  procedure TBlock.InsertWithResizing(const AIndex: Integer; const AInsertedStatement: TStatement);
+  procedure TBlock.InsertWithResizing(AIndex: Integer; const AInsertedStatement: TStatement);
   begin
     Insert(AIndex, AInsertedStatement);
 
     AInsertedStatement.Initialize;
 
-    FixYStatementsPosition(AIndex);
+    FixYStatementsPosition(AIndex + 1);
   end;
 
   procedure TBlock.AddUnknownStatement(const AStatement: TStatement; const AYStart: Integer);
@@ -426,33 +429,23 @@ implementation
     AStatement.SetTextSize;
   end;
 
-  procedure TBlock.AddBlock(const AIndex: Integer; const AInsertedBlock: TBlock);
+  procedure TBlock.AddBlock(AIndex: Integer; const AInsertedBlock: TBlock);
   var
     I: Integer;
-    procedure InstallCanvas(const ABlocks: TBlockArr);
-    var
-      I, J: Integer;
-    begin
-      for I := 0 to High(ABlocks) do
-      begin
-        ABlocks[I].FCanvas:= Self.FCanvas;
-        for J := 0 to ABlocks[I].FStatements.Count - 1 do
-          if ABlocks[I].FStatements[J] is TOperator then
-            InstallCanvas(TOperator(ABlocks[I].FStatements[J]).Blocks);
-      end;
-    end;
   begin
     AInsertedBlock.MoveRight(Self.FXStart - AInsertedBlock.FXStart);
     AInsertedBlock.ChangeXLastBlock(Self.FXLast);
 
     for I := 0 to AInsertedBlock.FStatements.Count - 1 do
     begin
-      Self.Insert(AIndex + I, AInsertedBlock.FStatements[I]);
+      Inc(AIndex, I);
+      Self.Insert(AIndex, AInsertedBlock.FStatements[I]);
       if AInsertedBlock.FStatements[I] is TOperator then
-        InstallCanvas(TOperator(AInsertedBlock.FStatements[I]).Blocks);
+        TOperator(AInsertedBlock.FStatements[I]).InstallCanvas(FCanvas);
     end;
+    Dec(AIndex, AInsertedBlock.FStatements.Count);
 
-    RedefineSizes(AIndex - 1);
+    RedefineSizes(Max(0, AIndex));
   end;
 
   function TBlock.Extract(const AStatement: TStatement): Integer;
@@ -460,9 +453,6 @@ implementation
     Result:= FindStatementIndex(AStatement.FYStart);
 
     ExtractStatementAt(Result);
-
-    if Result = FStatements.Count then
-      Dec(Result);
   end;
 
   function TBlock.ExtractStatementAt(const AIndex: Integer) : TStatement;
@@ -488,7 +478,6 @@ implementation
     I, J: Integer;
     Blocks: TBlockArr;
   begin
-
     if AIndex = 0 then
     begin
       if BaseOperator <> nil then
@@ -506,7 +495,6 @@ implementation
 
     for I := AIndex to FStatements.Count - 1 do
     begin
-
       FStatements[I].Lower(FStatements[I - 1].GetYBottom - FStatements[I].FYStart);
 
       if FStatements[I] is TOperator then
@@ -868,22 +856,21 @@ implementation
   var
     I: Integer;
     BlockYStart: Integer;
-    procedure SetCanvas(const ABlock: TBlock; const ACanvas: TCanvas); inline;
-    begin
-      ABlock.FCanvas := ACanvas;
-      ABlock.Statements[0].SetTextSize;
-    end;
     procedure SetYPos(const ABlock: TBlock; const AYStart: Integer); inline;
+    var
+      I: Integer;
     begin
       ABlock.Statements[0].FYStart := AYStart;
       ABlock.Statements[0].SetOptimalYLast;
+      ABlock.ChangeYStatement(0);
     end;
   begin
+    InstallCanvas(FBaseBlock.FCanvas);
+    SetBlockTextSize;
     BlockYStart:= GetBlockYStart;
 
     if StartIndex = 0 then
     begin
-      SetCanvas(Blocks[StartIndex], Self.BaseBlock.FCanvas);
       SetYPos(Blocks[StartIndex], BlockYStart);
 
       Blocks[StartIndex].FXStart:= BaseBlock.FXStart + GetOffsetFromXStart;
@@ -894,7 +881,6 @@ implementation
 
     for I := StartIndex to High(Blocks) - 1 do
     begin
-      SetCanvas(Blocks[I], Self.BaseBlock.FCanvas);
       SetYPos(Blocks[I], BlockYStart);
 
       Blocks[I].FXStart:= Blocks[I - 1].FXLast;
@@ -904,11 +890,12 @@ implementation
     if Length(Blocks) > 1 then
       Blocks[High(Blocks)].FXStart:= Blocks[High(Blocks) - 1].FXLast;
 
-    SetCanvas(Blocks[High(Blocks)], Self.BaseBlock.FCanvas);
     SetYPos(Blocks[High(Blocks)], BlockYStart);
 
     Blocks[High(Blocks)].FXLast:= BaseBlock.FXLast;
     Blocks[High(Blocks)].SetOptimalXLastBlock;
+
+    AlignBlocks;
   end;
 
   function TOperator.GetYBottom: Integer;
@@ -1042,5 +1029,31 @@ implementation
   function TOperator.GetOffsetFromXStart: Integer;
   begin
     Result:= 0;
+  end;
+
+  procedure TOperator.InstallCanvas(const ACanvas: TCanvas);
+  var
+    I, J: Integer;
+  begin
+    for I := 0 to High(Blocks) do
+    begin
+      Blocks[I].FCanvas:= ACanvas;
+      for J := 0 to Blocks[I].FStatements.Count - 1 do
+        if Blocks[I].FStatements[J] is TOperator then
+          TOperator(Blocks[I].FStatements[J]).InstallCanvas(ACanvas);
+    end;
+  end;
+
+  procedure TOperator.SetBlockTextSize;
+  var
+    I, J: Integer;
+  begin
+    for I := 0 to High(FBlocks) do
+      for J := 0 to FBlocks[I].Statements.Count - 1 do
+      begin
+        FBlocks[I].Statements[J].SetTextSize;
+        if FBlocks[I].Statements[J] is TOperator then
+          TOperator(FBlocks[I].Statements[J]).SetBlockTextSize;
+      end;
   end;
 end.

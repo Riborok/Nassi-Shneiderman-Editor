@@ -173,7 +173,7 @@ type
     procedure AddUnknownStatement(const AStatement: TStatement; const AYStart: Integer);
     procedure AddStatement(const AStatement: TStatement);
 
-    procedure AddBlock(AIndex: Integer; const AInsertedBlock: TBlock);
+    procedure InsertBlock(AIndex: Integer; const AInsertedBlock: TBlock);
 
     function Extract(const AStatement: TStatement): Integer;
     function ExtractStatementAt(const AIndex: Integer) : TStatement;
@@ -429,7 +429,7 @@ implementation
     AStatement.SetTextSize;
   end;
 
-  procedure TBlock.AddBlock(AIndex: Integer; const AInsertedBlock: TBlock);
+  procedure TBlock.InsertBlock(AIndex: Integer; const AInsertedBlock: TBlock);
   var
     I: Integer;
   begin
@@ -443,9 +443,9 @@ implementation
       if AInsertedBlock.FStatements[I] is TOperator then
         TOperator(AInsertedBlock.FStatements[I]).InstallCanvas(FCanvas);
     end;
-    Dec(AIndex, AInsertedBlock.FStatements.Count);
+    Dec(AIndex, AInsertedBlock.FStatements.Count - 1);
 
-    RedefineSizes(Max(0, AIndex));
+    RedefineSizes(AIndex);
   end;
 
   function TBlock.Extract(const AStatement: TStatement): Integer;
@@ -891,9 +891,7 @@ implementation
       Blocks[High(Blocks)].FXStart:= Blocks[High(Blocks) - 1].FXLast;
 
     SetYPos(Blocks[High(Blocks)], BlockYStart);
-
     Blocks[High(Blocks)].FXLast:= BaseBlock.FXLast;
-    Blocks[High(Blocks)].SetOptimalXLastBlock;
 
     AlignBlocks;
   end;
@@ -997,6 +995,7 @@ implementation
         SetOptimalYLast;
       end;
     end;
+    BaseBlock.SetOptimalXLastBlock;
   end;
 
   procedure TOperator.RedefineStatement;
