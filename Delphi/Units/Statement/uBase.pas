@@ -152,7 +152,7 @@ type
 
     function Clone(const ABaseOperator: TOperator): TBlock;
 
-    procedure Insert(const AIndex: Integer;const AInsertedStatement: TStatement);
+    procedure Insert(var AIndex: Integer;const AInsertedStatement: TStatement);
     procedure RemoveStatementAt(const Index: Integer);
   public
     constructor Create(const ABaseOperator: TOperator); overload;
@@ -166,12 +166,12 @@ type
     property BaseOperator: TOperator read FBaseOperator;
     property Statements: TArrayList<TStatement> read FStatements;
 
-    procedure InsertWithResizing(const AIndex: Integer;const AInsertedStatement: TStatement);
+    procedure InsertWithResizing(AIndex: Integer;const AInsertedStatement: TStatement);
 
     procedure AddUnknownStatement(const AStatement: TStatement; const AYStart: Integer);
     procedure AddStatement(const AStatement: TStatement);
 
-    procedure AddBlock(const AIndex: Integer; const AInsertedBlock: TBlock);
+    procedure AddBlock(AIndex: Integer; const AInsertedBlock: TBlock);
 
     function Extract(const AStatement: TStatement): Integer;
     function ExtractStatementAt(const AIndex: Integer) : TStatement;
@@ -376,7 +376,7 @@ implementation
     SetOptimalXLastBlock;
   end;
 
-  procedure TBlock.Insert(const AIndex: Integer; const AInsertedStatement: TStatement);
+  procedure TBlock.Insert(var AIndex: Integer; const AInsertedStatement: TStatement);
   begin
     AInsertedStatement.FBaseBlock:= Self;
     AInsertedStatement.SetTextSize;
@@ -386,6 +386,7 @@ implementation
     begin
       AInsertedStatement.FYStart:= Statements[AIndex xor 1].FYStart;
       Self.RemoveStatementAt(AIndex xor 1);
+      AIndex:= 0;
     end
     else if AIndex = FStatements.Count - 1 then
     begin
@@ -399,7 +400,7 @@ implementation
       AInsertedStatement.FYStart:= Statements[AIndex + 1].FYStart;
   end;
 
-  procedure TBlock.InsertWithResizing(const AIndex: Integer; const AInsertedStatement: TStatement);
+  procedure TBlock.InsertWithResizing(AIndex: Integer; const AInsertedStatement: TStatement);
   begin
     Insert(AIndex, AInsertedStatement);
 
@@ -426,9 +427,10 @@ implementation
     AStatement.SetTextSize;
   end;
 
-  procedure TBlock.AddBlock(const AIndex: Integer; const AInsertedBlock: TBlock);
+  procedure TBlock.AddBlock(AIndex: Integer; const AInsertedBlock: TBlock);
   var
     I: Integer;
+    CurrIndex: Integer;
     procedure InstallCanvas(const ABlocks: TBlockArr);
     var
       I, J: Integer;
@@ -445,9 +447,11 @@ implementation
     AInsertedBlock.MoveRight(Self.FXStart - AInsertedBlock.FXStart);
     AInsertedBlock.ChangeXLastBlock(Self.FXLast);
 
+    CurrIndex:= AIndex;
     for I := 0 to AInsertedBlock.FStatements.Count - 1 do
     begin
-      Self.Insert(AIndex + I, AInsertedBlock.FStatements[I]);
+      Inc(CurrIndex, I);
+      Self.Insert(CurrIndex, AInsertedBlock.FStatements[I]);
       if AInsertedBlock.FStatements[I] is TOperator then
         InstallCanvas(TOperator(AInsertedBlock.FStatements[I]).Blocks);
     end;
