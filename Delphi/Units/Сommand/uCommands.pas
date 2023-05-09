@@ -165,7 +165,7 @@ implementation
 
   procedure TCommandDelStatement.Undo;
   begin
-    FStatement.BaseBlock.InsertWithResizing(FIndex, FStatement);
+    FStatement.BaseBlock.InsertWithResizing(FIndex + 1, FStatement);
   end;
 
   { TCommandAddBlock }

@@ -430,7 +430,6 @@ implementation
   procedure TBlock.AddBlock(AIndex: Integer; const AInsertedBlock: TBlock);
   var
     I: Integer;
-    CurrIndex: Integer;
     procedure InstallCanvas(const ABlocks: TBlockArr);
     var
       I, J: Integer;
@@ -447,16 +446,16 @@ implementation
     AInsertedBlock.MoveRight(Self.FXStart - AInsertedBlock.FXStart);
     AInsertedBlock.ChangeXLastBlock(Self.FXLast);
 
-    CurrIndex:= AIndex;
     for I := 0 to AInsertedBlock.FStatements.Count - 1 do
     begin
-      Inc(CurrIndex, I);
-      Self.Insert(CurrIndex, AInsertedBlock.FStatements[I]);
+      Inc(AIndex, I);
+      Self.Insert(AIndex, AInsertedBlock.FStatements[I]);
       if AInsertedBlock.FStatements[I] is TOperator then
         InstallCanvas(TOperator(AInsertedBlock.FStatements[I]).Blocks);
     end;
+    Dec(AIndex, AInsertedBlock.FStatements.Count);
 
-    RedefineSizes(AIndex - 1);
+    RedefineSizes(Max(0, AIndex));
   end;
 
   function TBlock.Extract(const AStatement: TStatement): Integer;
