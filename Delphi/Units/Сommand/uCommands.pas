@@ -81,7 +81,7 @@ type
       FOldBaseBlock : TBlock;
       procedure MoveChildrens(const AXLast, AOffset: Integer);
     public
-      constructor Create(const ABaseBlock: TBlock; const AIndex : Integer;
+      constructor Create(const ABaseBlock: TBlock; AIndex : Integer;
                          const AStatement: TStatement);
     procedure Execute;
     procedure Undo;
@@ -165,7 +165,7 @@ implementation
 
   procedure TCommandDelStatement.Undo;
   begin
-    FStatement.BaseBlock.InsertWithResizing(FIndex + 1, FStatement);
+    FStatement.BaseBlock.InsertWithResizing(FIndex, FStatement);
   end;
 
   { TCommandAddBlock }
@@ -224,11 +224,13 @@ implementation
 
   { TCommandTransferAnotherBlock }
   constructor TCommandTransferAnotherBlock.Create(const ABaseBlock: TBlock;
-                    const AIndex : Integer; const AStatement: TStatement);
+                    AIndex : Integer; const AStatement: TStatement);
   begin
     FOldBaseBlock:= AStatement.BaseBlock;
 
     FCommandDelStatement := TCommandDelStatement.Create(AStatement);
+    Dec(AIndex, Ord((ABaseBlock = AStatement.BaseBlock) and
+        (ABaseBlock.Statements.Count = AIndex)));
     FCommandAddStatement:= TCommandAddStatement.Create(ABaseBlock, AIndex, AStatement);
   end;
 
@@ -254,9 +256,10 @@ implementation
   procedure TCommandTransferAnotherBlock.MoveChildrens(const AXLast, AOffset: Integer);
   var
     Blocks : TBlockArr;
+    J : Integer;
   begin
     Blocks:= TOperator(FCommandAddStatement.FNewStatement).Blocks;
-      for var J := 0 to High(Blocks) do
+      for J := 0 to High(Blocks) do
         Blocks[J].MoveRight(AOffset);
     Blocks[High(Blocks)].ChangeXLastBlock(AXLast);
   end;

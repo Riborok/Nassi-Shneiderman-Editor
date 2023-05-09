@@ -462,6 +462,7 @@ implementation
       stAfter, stBefore:
       begin
         var Block : TBlock:= FHoveredStatement.Statement.BaseBlock;
+        FRedoStack.Clear;
         FUndoStack.Push(TCommandTransferAnotherBlock.Create(Block,
                         Block.FindStatementIndex(FHoveredStatement.Statement.YStart) +
                         Ord(FHoveredStatement.State),
