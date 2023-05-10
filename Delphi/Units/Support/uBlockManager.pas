@@ -464,6 +464,14 @@ implementation
                    FDedicatedStatement));
         FUndoStack.Peek.Execute;
       end;
+      stSwap:
+      begin
+        FRedoStack.Clear;
+        FUndoStack.Push(TCommandSwapStatements.Create(
+                   FHoveredStatement.Statement,
+                   FDedicatedStatement));
+        FUndoStack.Peek.Execute;
+      end;
     end;
   end;
 
@@ -554,6 +562,6 @@ implementation
     TryDrawCarryBlock(AVisibleImageRect);
 
     FMainBlock.DrawBlock(AVisibleImageRect);
-    //DrawCoordinates(FPaintBox.Canvas, 50);
+    DrawCoordinates(FPaintBox.Canvas, 50);
   end;
 end.

@@ -109,8 +109,6 @@ type
 
     procedure DrawBlocks(const AVisibleImageRect: TVisibleImageRect);
 
-    procedure AlignBlocks;
-
     procedure RedefineStatement; override;
 
     procedure Initialize; override;
@@ -135,6 +133,7 @@ type
     procedure MoveRightChildrens(const AOffset : Integer);
     procedure MoveDownChildrens(const AOffset : Integer);
     procedure SetXLastForChildrens(const AXLast : Integer);
+    procedure AlignBlocks;
   end;
 
   { TBlock }
@@ -182,6 +181,7 @@ type
 
     procedure AddUnknownStatement(const AStatement: TStatement; const AYStart: Integer);
     procedure AddStatement(const AStatement: TStatement);
+    procedure AssignStatement(const AIndex: Integer; const AStatement : TStatement);
 
     function Extract(const AStatement: TStatement): Integer;
     function ExtractStatementAt(const AIndex: Integer) : TStatement;
@@ -427,7 +427,14 @@ implementation
   procedure TBlock.AddStatement(const AStatement: TStatement);
   begin
     FStatements.Add(AStatement);
-    AStatement.FBaseBlock:= Self;
+    AStatement.FBaseBlock := Self;
+    AStatement.SetTextSize;
+  end;
+
+  procedure TBlock.AssignStatement(const AIndex: Integer; const AStatement : TStatement);
+  begin
+    FStatements[AIndex] := AStatement;
+    AStatement.FBaseBlock := Self;
     AStatement.SetTextSize;
   end;
 
@@ -702,7 +709,10 @@ implementation
       Blocks:= TOperator(FStatements[Index]).Blocks;
       Blocks[0].SetOptimalXLastBlock;
       for I := 1 to High(Blocks) - 1 do
+      begin
         Blocks[I].SetOptimalXLastBlock;
+        Blocks[I].GetLastStatement.SetYBottom(Blocks[I].GetLastStatement.GetOptimalYLast);
+      end;
     end
     else
       Self.SetOptimalXLastBlock;

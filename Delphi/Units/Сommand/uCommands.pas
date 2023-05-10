@@ -75,13 +75,25 @@ type
 
   { TCommandTransferAnotherBlock }
   TCommandTransferAnotherBlock = class(TInterfacedObject, ICommand)
-    private
-      FCommandAddStatement : TCommandAddStatement;
-      FCommandDelStatement : TCommandDelStatement;
-      FOldBaseBlock : TBlock;
-    public
-      constructor Create(const AHoveredStatement : TStatement; const isAfter: Boolean;
-                         const AStatement: TStatement);
+  private
+    FCommandAddStatement : TCommandAddStatement;
+    FCommandDelStatement : TCommandDelStatement;
+    FOldBaseBlock : TBlock;
+  public
+    constructor Create(const AHoveredStatement : TStatement; const isAfter: Boolean;
+                       const AStatement: TStatement);
+    procedure Execute;
+    procedure Undo;
+  end;
+
+  { TCommandSwapStatements }
+  TCommandSwapStatements = class(TInterfacedObject, ICommand)
+  private
+    FFirstStatement, FSecondStatement : TStatement;
+    FFirstIndex, FSecondIndex: Integer;
+    procedure SortStatements;
+  public
+    constructor Create(const AFirstStatement, ASecondStatement: TStatement);
     procedure Execute;
     procedure Undo;
   end;
@@ -272,6 +284,79 @@ implementation
     end;
     FCommandDelStatement.FStatement.BaseBlock := FOldBaseBlock;
     FCommandDelStatement.Undo;
+  end;
+
+  { TCommandSwapStatements }
+
+  constructor TCommandSwapStatements.Create(const AFirstStatement,
+                                            ASecondStatement: TStatement);
+  begin
+    FFirstStatement := AFirstStatement;
+    FFirstIndex := FFirstStatement.BaseBlock.FindStatementIndex(FFirstStatement.YStart);
+
+    FSecondStatement := ASecondStatement;
+    FSecondIndex := FSecondStatement.BaseBlock.FindStatementIndex(FSecondStatement.YStart);
+  end;
+
+  procedure TCommandSwapStatements.SortStatements;
+  var
+    TempStatement: TStatement;
+    TempIndex: Integer;
+  begin
+    if FFirstStatement.BaseBlock.XStart < FSecondStatement.BaseBlock.XStart then
+    begin
+      TempStatement := FFirstStatement;
+      FFirstStatement := FSecondStatement;
+      FSecondStatement:= TempStatement;
+
+      TempIndex := FFirstIndex;
+      FFirstIndex := FSecondIndex;
+      FSecondIndex := TempIndex;
+    end;
+  end;
+
+  procedure TCommandSwapStatements.Execute;
+  var
+    SecondBaseBlock: TBlock;
+    CurrOperator: TOperator;
+    Offset: Integer;
+    TempIndex: Integer;
+  begin
+    SortStatements;
+    Offset := FFirstStatement.BaseBlock.XStart - FSecondStatement.BaseBlock.XStart;
+
+    SecondBaseBlock := FSecondStatement.BaseBlock;
+
+    FFirstStatement.BaseBlock.AssignStatement(FFirstIndex, FSecondStatement);
+    SecondBaseBlock.AssignStatement(FSecondIndex, FFirstStatement);
+
+    TempIndex := FFirstIndex;
+    FFirstIndex := FSecondIndex;
+    FSecondIndex := TempIndex;
+
+    if FFirstStatement is TOperator then
+    begin
+      CurrOperator := TOperator(FFirstStatement);
+      CurrOperator.MoveRightChildrens(-Offset);
+      CurrOperator.SetXLastForChildrens(CurrOperator.BaseBlock.XLast);
+      CurrOperator.AlignBlocks;
+    end;
+
+    if FSecondStatement is TOperator then
+    begin
+      CurrOperator := TOperator(FSecondStatement);
+      CurrOperator.MoveRightChildrens(Offset);
+      CurrOperator.SetXLastForChildrens(CurrOperator.BaseBlock.XLast);
+      CurrOperator.AlignBlocks;
+    end;
+
+    FFirstStatement.BaseBlock.Install(FFirstIndex);
+    FSecondStatement.BaseBlock.Install(FSecondIndex);
+  end;
+
+  procedure TCommandSwapStatements.Undo;
+  begin
+    Execute;
   end;
 
 end.
