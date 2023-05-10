@@ -2246,47 +2246,32 @@ object NassiShneiderman: TNassiShneiderman
     object tbProcess: TToolButton
       Left = 283
       Top = 0
-      Hint = 'Insert a new process after the selected element'
       Action = actAfterProcess
       Enabled = False
-      ParentShowHint = False
-      ShowHint = True
     end
     object tbIfBranch: TToolButton
       Left = 320
       Top = 0
-      Hint = 'Insert a new branching block after the selected element'
       Action = actAfterIfBranch
       Enabled = False
-      ParentShowHint = False
-      ShowHint = True
     end
     object tbMultBranch: TToolButton
       Left = 357
       Top = 0
-      Hint = 'Insert a new multiple branching block after the selected element'
       Action = actAfterMultBranch
       Enabled = False
-      ParentShowHint = False
-      ShowHint = True
     end
     object tbLoop: TToolButton
       Left = 394
       Top = 0
-      Hint = 'Insert a new testing loop after the selected element'
       Action = actAfterLoop
       Enabled = False
-      ParentShowHint = False
-      ShowHint = True
     end
     object tbRevLoop: TToolButton
       Left = 431
       Top = 0
-      Hint = 'Insert a new reversed testing loop after the selected element'
       Action = actAfterRevLoop
       Enabled = False
-      ParentShowHint = False
-      ShowHint = True
     end
     object sep1: TToolButton
       Left = 468
@@ -2299,20 +2284,14 @@ object NassiShneiderman: TNassiShneiderman
     object tbSortAsc: TToolButton
       Left = 476
       Top = 0
-      Hint = 'Sort case blocks in ascending order'
       Action = actSortAsc
       Enabled = False
-      ParentShowHint = False
-      ShowHint = True
     end
     object tbSortDesc: TToolButton
       Left = 513
       Top = 0
-      Hint = 'Sort case blocks in descending order'
       Action = actSortDesc
       Enabled = False
-      ParentShowHint = False
-      ShowHint = True
     end
     object sep5: TToolButton
       Left = 550

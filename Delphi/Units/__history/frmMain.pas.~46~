@@ -133,8 +133,14 @@ type
     function isDragging: Boolean; inline;
   private const
     SchemeInitialFontSize = 13;
-    SchemeInitialPenWidth = 1;
     SchemeInitialFont = 'Courier new';
+    SchemeInitialFontColor: TColor = clBlack;
+    SchemeInitialFontStyles: TFontStyles = [];
+
+    SchemeInitialPenColor: TColor = clBlack;
+    SchemeInitialPenWidth = 1;
+    SchemeInitialPenStyle: TPenStyle = psSolid;
+    SchemeInitialPenMode: TPenMode = pmCopy;
   public
     destructor Destroy;
   end;
@@ -172,13 +178,13 @@ implementation
 
     FFont.Size := SchemeInitialFontSize;
     FFont.Name := SchemeInitialFont;
-    FFont.Color := clBlack;
-    FFont.Style := [];
+    FFont.Color := SchemeInitialFontColor;
+    FFont.Style := SchemeInitialFontStyles;
 
-    FPen.Color := clBlack;
+    FPen.Color := SchemeInitialPenColor;
     FPen.Width := SchemeInitialPenWidth;
-    FPen.Style := psSolid;
-    FPen.Mode := pmCopy;
+    FPen.Style := SchemeInitialPenStyle;
+    FPen.Mode := SchemeInitialPenMode;
 
     PaintBox.Canvas.Font := FFont;
     PaintBox.Canvas.Pen := FPen;
@@ -290,6 +296,7 @@ implementation
   begin
     if isDragging then
     begin
+      FBlockManager.DefineHover(X, Y);
       FBlockManager.MoveCarryBlock(X - FPrevMousePos.X, Y - FPrevMousePos.Y);
 
       FPrevMousePos := Point(X, Y);
@@ -310,7 +317,10 @@ implementation
   begin
     FMayDrag:= False;
     if isDragging then
+    begin
+      FBlockManager.TryTakeAction;
       FBlockManager.DestroyCarryBlock;
+    end;
   end;
 
   procedure TNassiShneiderman.MICopyClick(Sender: TObject);

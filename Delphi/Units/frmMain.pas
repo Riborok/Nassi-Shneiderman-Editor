@@ -81,6 +81,22 @@ type
     actChngPen: TAction;
     FontDialog: TFontDialog;
     ColorDialog: TColorDialog;
+    sep1: TToolButton;
+    tbFont: TToolButton;
+    tbPen: TToolButton;
+    sep2: TToolButton;
+    tbDelete: TToolButton;
+    tbAction: TToolButton;
+    sep3: TToolButton;
+    tbInsert: TToolButton;
+    tbCopy: TToolButton;
+    tbCut: TToolButton;
+    tbUndo: TToolButton;
+    tbRedo: TToolButton;
+    sep4: TToolButton;
+    tbSortDesc: TToolButton;
+    tbSortAsc: TToolButton;
+    sep5: TToolButton;
 
     procedure FormCreate(Sender: TObject);
 
@@ -131,6 +147,9 @@ type
     procedure SetScrollPos(const AStatement: TStatement);
 
     function isDragging: Boolean; inline;
+
+    procedure UpdateForDedicatedStatement;
+    procedure UpdateForStack;
   private const
     SchemeInitialFontSize = 13;
     SchemeInitialFont = 'Courier new';
@@ -156,20 +175,25 @@ implementation
 
   procedure TNassiShneiderman.FormCreate(Sender: TObject);
   const
-    MinFormSize = 600;
+    MinFormWidth = 850;
+    MinFormHeight = 600;
   begin
     SetThreadUILanguage(MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US));
     Self.DoubleBuffered := True;
     FisZXCVPressed:= False;
     FMayDrag:= False;
     FWasDbClick:= False;
-    Constraints.MinWidth := MinFormSize;
-    Constraints.MinHeight := MinFormSize;
+    Constraints.MinWidth := MinFormWidth;
+    Constraints.MinHeight := MinFormHeight;
 
     actDelete.ShortCut := ShortCut(VK_DELETE, []);
     actChangeAction.ShortCut := ShortCut(VK_RETURN, []);
     actUndo.ShortCut := ShortCut(VK_Z, [ssCtrl]);
     actRedo.ShortCut := ShortCut(VK_Z, [ssCtrl, ssShift]);
+    actChngFont.ShortCut := ShortCut(VK_F, [ssShift, ssCtrl]);
+    actChngPen.ShortCut := ShortCut(VK_P, [ssShift, ssCtrl]);
+    actSortAsc.ShortCut := ShortCut(VK_RIGHT, [ssCtrl, ssShift]);
+    actSortDesc.ShortCut := ShortCut(VK_LEFT, [ssCtrl, ssShift]);
 
     FPenDialog:= TPenDialog.Create(Self, ColorDialog);
 
@@ -200,6 +224,7 @@ implementation
   Shift: TShiftState);
   begin
     FBlockManager.TryMoveDedicated(SetScrollPos, Key);
+    UpdateForDedicatedStatement;
   end;
 
   procedure TNassiShneiderman.FormKeyUp(Sender: TObject; var Key: Word;
@@ -253,13 +278,15 @@ implementation
 
   procedure TNassiShneiderman.PopupMenuPopup(Sender: TObject);
   var
-    isCaseBranching: Boolean;
+    bool : Boolean;
   begin
-    isCaseBranching:= FBlockManager.DedicatedStatement is TCaseBranching;
-    MIAscSort.Visible:= isCaseBranching;
-    MIDescSort.Visible:= isCaseBranching;
-    MIUndo.Enabled:= FBlockManager.UndoStack.Count <> 0;
-    MIRedo.Enabled:= FBlockManager.RedoStack.Count <> 0;
+    bool := FBlockManager.DedicatedStatement is TCaseBranching;
+    MIAscSort.Visible:= bool;
+    MIDescSort.Visible:= bool;
+
+    bool := FBlockManager.UndoStack.Count <> 0;
+    MIUndo.Enabled:= bool;
+    MIRedo.Enabled:= bool;
   end;
 
   procedure TNassiShneiderman.DblClick(Sender: TObject);
@@ -287,6 +314,8 @@ implementation
       end;
     end;
 
+    UpdateForDedicatedStatement;
+    UpdateForStack;
   end;
 
   procedure TNassiShneiderman.MouseMove(Sender: TObject; Shift: TShiftState;
@@ -326,51 +355,61 @@ implementation
   procedure TNassiShneiderman.MICopyClick(Sender: TObject);
   begin
     FBlockManager.TryCopyDedicated;
+    UpdateForStack;
   end;
 
   procedure TNassiShneiderman.MICutClick(Sender: TObject);
   begin
     FBlockManager.TryCutDedicated;
+    UpdateForStack;
   end;
 
   procedure TNassiShneiderman.MIInsetClick(Sender: TObject);
   begin
     FBlockManager.TryInsertBufferBlock;
+    UpdateForStack;
   end;
 
   procedure TNassiShneiderman.AddAfter(Sender: TObject);
   begin
     FBlockManager.TryAddNewStatement(ConvertToBlockType(TComponent(Sender).Tag), True);
+    UpdateForStack;
   end;
 
   procedure TNassiShneiderman.AddBefore(Sender: TObject);
   begin
     FBlockManager.TryAddNewStatement(ConvertToBlockType(TComponent(Sender).Tag), False);
+    UpdateForStack;
   end;
 
   procedure TNassiShneiderman.Sort(Sender: TObject);
   begin
-    FBlockManager.SortDedicatedCase(TComponent(Sender).Tag);
+    FBlockManager.TrySortDedicatedCase(TComponent(Sender).Tag);
+    UpdateForStack;
   end;
 
   procedure TNassiShneiderman.actRedoExecute(Sender: TObject);
   begin
     FBlockManager.TryRedo;
+    UpdateForStack;
   end;
 
   procedure TNassiShneiderman.actUndoExecute(Sender: TObject);
   begin
     FBlockManager.TryUndo;
+    UpdateForStack;
   end;
 
   procedure TNassiShneiderman.DeleteStatement(Sender: TObject);
   begin
     FBlockManager.TryDeleteDedicated;
+    UpdateForStack;
   end;
 
   procedure TNassiShneiderman.actChangeActionExecute(Sender: TObject);
   begin
     FBlockManager.TryChangeDedicatedText;
+    UpdateForStack;
   end;
 
   procedure TNassiShneiderman.actChngFontExecute(Sender: TObject);
@@ -399,6 +438,38 @@ implementation
     FPenDialog.Destroy;
 
     inherited;
+  end;
+
+  procedure TNassiShneiderman.UpdateForStack;
+  var
+    bool: Boolean;
+  begin
+    bool := FBlockManager.UndoStack.Count <> 0;
+    tbUndo.Enabled:= bool;
+    tbRedo.Enabled:= bool;
+  end;
+
+  procedure TNassiShneiderman.UpdateForDedicatedStatement;
+  var
+    bool: Boolean;
+  begin
+    bool:= FBlockManager.DedicatedStatement is TCaseBranching;
+    tbSortDesc.Enabled := bool;
+    tbSortAsc.Enabled := bool;
+
+    bool := FBlockManager.DedicatedStatement <> nil;
+    tbInsert.Enabled := bool;
+    tbAction.Enabled := bool;
+    tbDelete.Enabled := bool;
+    tbProcess.Enabled := bool;
+    tbIfBranch.Enabled := bool;
+    tbMultBranch.Enabled := bool;
+    tbLoop.Enabled := bool;
+    tbRevLoop.Enabled := bool;
+
+    bool := bool and not isDefaultStatement(FBlockManager.DedicatedStatement);
+    tbCut.Enabled := bool;
+    tbCopy.Enabled := bool;
   end;
 
   function TNassiShneiderman.isDragging: Boolean;

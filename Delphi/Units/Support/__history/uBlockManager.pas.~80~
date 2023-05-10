@@ -46,6 +46,7 @@ type
     destructor Destroy;
     property MainBlock: TBlock read FMainBlock;
     property BufferBlock: TBlock read FBufferBlock;
+
     property HighlightColor: TColor write FHighlightColor;
     property DedicatedStatement: TStatement read FDedicatedStatement write ChangeDedicated;
 
@@ -144,7 +145,7 @@ implementation
 
   procedure TBlockManager.TryCopyDedicated;
   begin
-    if FDedicatedStatement <> nil then
+    if (FDedicatedStatement <> nil) and not isDefaultStatement(FDedicatedStatement) then
     begin
       FBufferBlock.Destroy;
 
@@ -455,17 +456,23 @@ implementation
   procedure TBlockManager.TryTakeAction;
   begin
     case FHoveredStatement.State of
-      stAfter, stBefore:
+      stBefore, stAfter:
       begin
-        var Block : TBlock:= FHoveredStatement.Statement.BaseBlock;
         FRedoStack.Clear;
-        FUndoStack.Push(TCommandTransferAnotherBlock.Create(Block,
-                        Block.FindStatementIndex(FHoveredStatement.Statement.YStart) +
-                        Ord(FHoveredStatement.State),
-                        FDedicatedStatement));
+        FUndoStack.Push(TCommandTransferAnotherBlock.Create(
+                   FHoveredStatement.Statement,
+                   Boolean(Ord(FHoveredStatement.State)),
+                   FDedicatedStatement));
         FUndoStack.Peek.Execute;
       end;
-
+      stSwap:
+      begin
+        FRedoStack.Clear;
+        FUndoStack.Push(TCommandSwapStatements.Create(
+                   FHoveredStatement.Statement,
+                   FDedicatedStatement));
+        FUndoStack.Peek.Execute;
+      end;
     end;
   end;
 
@@ -473,7 +480,9 @@ implementation
   begin
     FCarryBlock.Destroy;
     FCarryBlock:= nil;
+
     FHoveredStatement.State := stCancel;
+    FHoveredStatement.Statement := nil;
 
     FPaintBox.Invalidate;
   end;
@@ -554,6 +563,6 @@ implementation
     TryDrawCarryBlock(AVisibleImageRect);
 
     FMainBlock.DrawBlock(AVisibleImageRect);
-    DrawCoordinates(FPaintBox.Canvas, 50);
+    //DrawCoordinates(FPaintBox.Canvas, 50);
   end;
 end.

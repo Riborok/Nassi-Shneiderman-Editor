@@ -1,10 +1,10 @@
-unit uBlockManager;
+锘縰nit uBlockManager;
 
 interface
 uses
   uBase, uCommands, uAutoClearStack, Vcl.ExtCtrls, uSwitchStatements,
   Winapi.Windows, uAdditionalTypes, uDrawShapes, Vcl.Graphics, frmGetAction,
-  frmGet補se裲nditions, uCaseBranching, uMinMaxInt, uStatementSearch, Types;
+  frmGet小ase小onditions, uCaseBranching, uMinMaxInt, uStatementSearch, Types;
 type
 
   TBlockManager = class
@@ -46,6 +46,7 @@ type
     destructor Destroy;
     property MainBlock: TBlock read FMainBlock;
     property BufferBlock: TBlock read FBufferBlock;
+
     property HighlightColor: TColor write FHighlightColor;
     property DedicatedStatement: TStatement read FDedicatedStatement write ChangeDedicated;
 
@@ -144,7 +145,7 @@ implementation
 
   procedure TBlockManager.TryCopyDedicated;
   begin
-    if FDedicatedStatement <> nil then
+    if (FDedicatedStatement <> nil) and not isDefaultStatement(FDedicatedStatement) then
     begin
       FBufferBlock.Destroy;
 
@@ -273,7 +274,7 @@ implementation
       begin
         var CaseBranching: TCaseBranching:= TCaseBranching(FDedicatedStatement);
         var Cond: TStringArr:= CaseBranching.Conds;
-        if (WriteAction.TryGetAction(Action)) and (Write補se裲nditions.TryGetCond(Cond)) then
+        if (WriteAction.TryGetAction(Action)) and (Write小ase小onditions.TryGetCond(Cond)) then
         begin
           FRedoStack.Clear;
           FUndoStack.Push(TCommnadChangeContent.Create(FDedicatedStatement, Action, Cond));
@@ -293,13 +294,15 @@ implementation
 
   procedure TBlockManager.SortDedicatedCase(const ASortNumber: Integer);
   begin
-    FRedoStack.Clear;
+    if FDedicatedStatement is TCaseBranching then
+    begin
+      FRedoStack.Clear;
+      FUndoStack.Push(TCommandCaseSort.Create(TCaseBranching(FDedicatedStatement),
+                      ASortNumber));
+      FUndoStack.Peek.Execute;
 
-    FUndoStack.Push(TCommandCaseSort.Create(TCaseBranching(FDedicatedStatement),
-                    ASortNumber));
-    FUndoStack.Peek.Execute;
-
-    FPaintBox.Invalidate;
+      FPaintBox.Invalidate;
+    end;
   end;
 
   procedure TBlockManager.ChangeDedicated(const AStatement: TStatement);
@@ -354,7 +357,7 @@ implementation
         var YLast: Integer := FHoveredStatement.Statement.YLast;
 
         if (FHoveredStatement.Statement is TOperator) and
-           not TOperator(FHoveredStatement.Statement).IsPre馩perator then
+           not TOperator(FHoveredStatement.Statement).IsPre褋Operator then
         begin
           YStart:= TOperator(FHoveredStatement.Statement).Blocks[0].Statements.GetLast.GetYBottom;
           YLast := FHoveredStatement.Statement.GetYBottom;
@@ -417,7 +420,7 @@ implementation
                      FHoveredStatement.Rect.Top + Offset,
                      clArrowColor);
             if (FHoveredStatement.Statement is TOperator) and
-                     TOperator(FHoveredStatement.Statement).IsPre馩perator then
+                     TOperator(FHoveredStatement.Statement).IsPre褋Operator then
             begin
               FHoveredStatement.Rect.Right:= FHoveredStatement.Statement.BaseBlock.XStart +
                                 TOperator(FHoveredStatement.Statement).GetOffsetFromXStart;
@@ -435,7 +438,7 @@ implementation
                      FHoveredStatement.Rect.Bottom - Offset,
                      clArrowColor);
             if (FHoveredStatement.Statement is TOperator) and
-                  not TOperator(FHoveredStatement.Statement).IsPre馩perator then
+                  not TOperator(FHoveredStatement.Statement).IsPre褋Operator then
             begin
               FHoveredStatement.Rect.Right:= FHoveredStatement.Statement.BaseBlock.XStart +
                                 TOperator(FHoveredStatement.Statement).GetOffsetFromXStart;
@@ -453,34 +456,22 @@ implementation
   end;
 
   procedure TBlockManager.TryTakeAction;
-  var
-    Block: TBlock;
-    Index: Integer;
   begin
     case FHoveredStatement.State of
-      stBefore:
+      stBefore, stAfter:
       begin
-        Block:= FHoveredStatement.Statement.BaseBlock;
-        Index:= Block.FindStatementIndex(FHoveredStatement.Statement.YStart) +
-                   Ord(FHoveredStatement.State);
-
         FRedoStack.Clear;
-        FUndoStack.Push(TCommandTransferAnotherBlock.Create(Block,
-                   Index + Ord((Block = FDedicatedStatement.BaseBlock) and
-                   (Index = -1)),
+        FUndoStack.Push(TCommandTransferAnotherBlock.Create(
+                   FHoveredStatement.Statement,
+                   Boolean(Ord(FHoveredStatement.State)),
                    FDedicatedStatement));
         FUndoStack.Peek.Execute;
       end;
-      stAfter:
+      stSwap:
       begin
-        Block:= FHoveredStatement.Statement.BaseBlock;
-        Index:= Block.FindStatementIndex(FHoveredStatement.Statement.YStart) +
-           Ord(FHoveredStatement.State);
-
         FRedoStack.Clear;
-        FUndoStack.Push(TCommandTransferAnotherBlock.Create(Block,
-                   Index - Ord((Block = FDedicatedStatement.BaseBlock) and
-                   (Block.Statements.Count - 1 = Index)),
+        FUndoStack.Push(TCommandSwapStatements.Create(
+                   FHoveredStatement.Statement,
                    FDedicatedStatement));
         FUndoStack.Peek.Execute;
       end;
@@ -512,7 +503,7 @@ implementation
       if AStatementClass = TCaseBranching then
       begin
         var Cond: TStringArr:= nil;
-        if Write補se裲nditions.TryGetCond(Cond) then
+        if Write小ase小onditions.TryGetCond(Cond) then
           Result:= TCaseBranching.Create(Action, Cond);
       end
       else
@@ -574,6 +565,6 @@ implementation
     TryDrawCarryBlock(AVisibleImageRect);
 
     FMainBlock.DrawBlock(AVisibleImageRect);
-    DrawCoordinates(FPaintBox.Canvas, 50);
+    //DrawCoordinates(FPaintBox.Canvas, 50);
   end;
 end.

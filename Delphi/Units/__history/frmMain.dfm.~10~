@@ -2139,9 +2139,9 @@ object NassiShneiderman: TNassiShneiderman
     Left = 0
     Top = 0
     Width = 977
-    Height = 41
+    Height = 35
     BorderWidth = 1
-    ButtonHeight = 33
+    ButtonHeight = 27
     ButtonWidth = 37
     Caption = 'tbSelectBlock'
     Color = clBtnFace
@@ -2154,44 +2154,143 @@ object NassiShneiderman: TNassiShneiderman
     ParentDoubleBuffered = False
     TabOrder = 0
     Transparent = False
-    object tbProcess: TToolButton
+    ExplicitLeft = 8
+    ExplicitTop = -1
+    object tbUndo: TToolButton
       Left = 0
+      Top = 0
+      Action = actUndo
+    end
+    object tbRedo: TToolButton
+      Left = 37
+      Top = 0
+      Action = actRedo
+    end
+    object sep4: TToolButton
+      Left = 74
+      Top = 0
+      Width = 8
+      Caption = 'sep4'
+      ImageIndex = 14
+      Style = tbsSeparator
+    end
+    object tbCut: TToolButton
+      Left = 82
+      Top = 0
+      Action = actCut
+    end
+    object tbCopy: TToolButton
+      Left = 119
+      Top = 0
+      Action = actCopy
+    end
+    object tbInsert: TToolButton
+      Left = 156
+      Top = 0
+      Action = actInsert
+    end
+    object sep3: TToolButton
+      Left = 193
+      Top = 0
+      Width = 8
+      Caption = 'sep3'
+      ImageIndex = 16
+      Style = tbsSeparator
+    end
+    object tbAction: TToolButton
+      Left = 201
+      Top = 0
+      Action = actChangeAction
+    end
+    object tbDelete: TToolButton
+      Left = 238
+      Top = 0
+      Action = actDelete
+    end
+    object sep2: TToolButton
+      Left = 275
+      Top = 0
+      Width = 8
+      Caption = 'sep2'
+      ImageIndex = 16
+      Style = tbsSeparator
+    end
+    object tbProcess: TToolButton
+      Left = 283
       Top = 0
       Action = actAfterProcess
     end
     object tbIfBranch: TToolButton
-      Left = 37
+      Left = 320
       Top = 0
       Action = actAfterIfBranch
     end
     object tbMultBranch: TToolButton
-      Left = 74
+      Left = 357
       Top = 0
       Action = actAfterMultBranch
     end
     object tbLoop: TToolButton
-      Left = 111
+      Left = 394
       Top = 0
       Action = actAfterLoop
     end
     object tbRevLoop: TToolButton
-      Left = 148
+      Left = 431
       Top = 0
       Action = actAfterRevLoop
+    end
+    object sep1: TToolButton
+      Left = 468
+      Top = 0
+      Width = 8
+      Caption = 'sep1'
+      ImageIndex = 5
+      Style = tbsSeparator
+    end
+    object tbSortAsc: TToolButton
+      Left = 476
+      Top = 0
+      Action = actSortAsc
+      Enabled = False
+    end
+    object tbSortDesc: TToolButton
+      Left = 513
+      Top = 0
+      Action = actSortDesc
+      Enabled = False
+    end
+    object sep5: TToolButton
+      Left = 550
+      Top = 0
+      Width = 8
+      Caption = 'sep5'
+      ImageIndex = 18
+      Style = tbsSeparator
+    end
+    object tbFont: TToolButton
+      Left = 558
+      Top = 0
+      Action = actChngFont
+    end
+    object tbPen: TToolButton
+      Left = 595
+      Top = 0
+      Action = actChngPen
     end
   end
   object ScrollBox: TScrollBox
     AlignWithMargins = True
     Left = 3
-    Top = 44
+    Top = 38
     Width = 971
-    Height = 550
+    Height = 556
+    HorzScrollBar.Tracking = True
+    VertScrollBar.Tracking = True
     Align = alClient
     Color = clWindow
     ParentColor = False
     TabOrder = 1
-    OnDblClick = DblClick
-    OnMouseDown = MouseDown
     OnMouseWheel = ScrollBoxMouseWheel
     object PaintBox: TPaintBox
       Left = 0
@@ -3108,13 +3207,6 @@ object NassiShneiderman: TNassiShneiderman
       ImageIndex = 15
       OnExecute = actChngPenExecute
     end
-  end
-  object tmRedrawingMovements: TTimer
-    Enabled = False
-    Interval = 5
-    OnTimer = tmRedrawingTimer
-    Left = 56
-    Top = 521
   end
   object MainMenu: TMainMenu
     Images = ilIcons

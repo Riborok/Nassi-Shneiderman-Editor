@@ -46,6 +46,7 @@ type
     destructor Destroy;
     property MainBlock: TBlock read FMainBlock;
     property BufferBlock: TBlock read FBufferBlock;
+
     property HighlightColor: TColor write FHighlightColor;
     property DedicatedStatement: TStatement read FDedicatedStatement write ChangeDedicated;
 
@@ -71,7 +72,7 @@ type
     procedure TryAddNewStatement(const AStatementClass: TStatementClass;
                                  const isAfterDedicated: Boolean);
 
-    procedure SortDedicatedCase(const ASortNumber: Integer);
+    procedure TrySortDedicatedCase(const ASortNumber: Integer);
 
     { CarryBlock }
     procedure CreateCarryBlock;
@@ -144,7 +145,7 @@ implementation
 
   procedure TBlockManager.TryCopyDedicated;
   begin
-    if FDedicatedStatement <> nil then
+    if (FDedicatedStatement <> nil) and not isDefaultStatement(FDedicatedStatement) then
     begin
       FBufferBlock.Destroy;
 
@@ -291,15 +292,17 @@ implementation
     end;
   end;
 
-  procedure TBlockManager.SortDedicatedCase(const ASortNumber: Integer);
+  procedure TBlockManager.TrySortDedicatedCase(const ASortNumber: Integer);
   begin
-    FRedoStack.Clear;
+    if FDedicatedStatement is TCaseBranching then
+    begin
+      FRedoStack.Clear;
+      FUndoStack.Push(TCommandCaseSort.Create(TCaseBranching(FDedicatedStatement),
+                      ASortNumber));
+      FUndoStack.Peek.Execute;
 
-    FUndoStack.Push(TCommandCaseSort.Create(TCaseBranching(FDedicatedStatement),
-                    ASortNumber));
-    FUndoStack.Peek.Execute;
-
-    FPaintBox.Invalidate;
+      FPaintBox.Invalidate;
+    end;
   end;
 
   procedure TBlockManager.ChangeDedicated(const AStatement: TStatement);
@@ -562,6 +565,6 @@ implementation
     TryDrawCarryBlock(AVisibleImageRect);
 
     FMainBlock.DrawBlock(AVisibleImageRect);
-    DrawCoordinates(FPaintBox.Canvas, 50);
+    //DrawCoordinates(FPaintBox.Canvas, 50);
   end;
 end.

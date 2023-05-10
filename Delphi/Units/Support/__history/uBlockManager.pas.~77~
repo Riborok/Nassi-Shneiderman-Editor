@@ -453,34 +453,22 @@ implementation
   end;
 
   procedure TBlockManager.TryTakeAction;
-  var
-    Block: TBlock;
-    Index: Integer;
   begin
     case FHoveredStatement.State of
-      stBefore:
+      stBefore, stAfter:
       begin
-        Block:= FHoveredStatement.Statement.BaseBlock;
-        Index:= Block.FindStatementIndex(FHoveredStatement.Statement.YStart) +
-                   Ord(FHoveredStatement.State) -
-                   Ord(Block = FDedicatedStatement.BaseBlock);
-
         FRedoStack.Clear;
-        FUndoStack.Push(TCommandTransferAnotherBlock.Create(Block,
-                   Index + Ord(Index = -1),
+        FUndoStack.Push(TCommandTransferAnotherBlock.Create(
+                   FHoveredStatement.Statement,
+                   Boolean(Ord(FHoveredStatement.State)),
                    FDedicatedStatement));
         FUndoStack.Peek.Execute;
       end;
-      stAfter:
+      stSwap:
       begin
-        Block:= FHoveredStatement.Statement.BaseBlock;
-        Index:= Block.FindStatementIndex(FHoveredStatement.Statement.YStart) +
-           Ord(FHoveredStatement.State);
-
         FRedoStack.Clear;
-        FUndoStack.Push(TCommandTransferAnotherBlock.Create(Block,
-                   Index - Ord((Block = FDedicatedStatement.BaseBlock) and
-                   (Block.Statements.Count = Index)),
+        FUndoStack.Push(TCommandSwapStatements.Create(
+                   FHoveredStatement.Statement,
                    FDedicatedStatement));
         FUndoStack.Peek.Execute;
       end;
