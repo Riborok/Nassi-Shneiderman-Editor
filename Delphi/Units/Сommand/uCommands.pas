@@ -81,7 +81,7 @@ type
       FOldBaseBlock : TBlock;
       procedure MoveChildrens(const AXLast, AOffset: Integer);
     public
-      constructor Create(const ABaseBlock: TBlock; AIndex : Integer;
+      constructor Create(const AHoveredStatement : TStatement; const isAfter: Boolean;
                          const AStatement: TStatement);
     procedure Execute;
     procedure Undo;
@@ -223,15 +223,29 @@ implementation
   end;
 
   { TCommandTransferAnotherBlock }
-  constructor TCommandTransferAnotherBlock.Create(const ABaseBlock: TBlock;
-                    AIndex : Integer; const AStatement: TStatement);
+  constructor TCommandTransferAnotherBlock.Create(const AHoveredStatement : TStatement;
+                  const isAfter: Boolean; const AStatement: TStatement);
+  var
+    NewIndex, OldIndex: Integer;
   begin
+    NewIndex:= AHoveredStatement.BaseBlock.
+                                   FindStatementIndex(AHoveredStatement.YStart);
     FOldBaseBlock:= AStatement.BaseBlock;
+    OldIndex := FOldBaseBlock.FindStatementIndex(AStatement.YStart);
 
+    if AHoveredStatement.BaseBlock = FOldBaseBlock then
+      case isAfter of
+        True:
+          Inc(NewIndex, Ord(OldIndex - 1 >= NewIndex));
+        False:
+          Dec(NewIndex, Ord(OldIndex + 1 <= NewIndex));
+      end
+    else
+      Inc(NewIndex, Ord(isAfter));
+
+    FCommandAddStatement:= TCommandAddStatement.Create(AHoveredStatement.BaseBlock,
+                                                       NewIndex, AStatement);
     FCommandDelStatement := TCommandDelStatement.Create(AStatement);
-    Dec(AIndex, Ord((ABaseBlock = AStatement.BaseBlock) and (AIndex <> 0) and
-        (AIndex - 1 <> FCommandDelStatement.FIndex)));
-    FCommandAddStatement:= TCommandAddStatement.Create(ABaseBlock, AIndex, AStatement);
   end;
 
   procedure TCommandTransferAnotherBlock.Execute;

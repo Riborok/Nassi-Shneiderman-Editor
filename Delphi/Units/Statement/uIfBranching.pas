@@ -11,7 +11,6 @@ type
     TrueCond, FalseCond: String;
   private
     FTrueSize, FFalseSize: TSize;
-    FSpaceSize : TSize;
     function GetAvailablePartWidth(const APartWidth, ATextHeight: Integer): Integer;
     function GetMinValidPartWidth(const ATextHeight, ATextWidth: Integer): Integer;
   protected
@@ -35,8 +34,6 @@ implementation
     FTrueSize := GetTextSize(BaseBlock.Canvas, TrueCond);
 
     FFalseSize := GetTextSize(BaseBlock.Canvas, FalseCond);
-
-    FSpaceSize := GetTextSize(BaseBlock.Canvas, Space);
   end;
 
   function TIfBranching.Clone: TStatement;

@@ -455,17 +455,15 @@ implementation
   procedure TBlockManager.TryTakeAction;
   begin
     case FHoveredStatement.State of
-      stAfter, stBefore:
+      stBefore, stAfter:
       begin
-        var Block : TBlock:= FHoveredStatement.Statement.BaseBlock;
         FRedoStack.Clear;
-        FUndoStack.Push(TCommandTransferAnotherBlock.Create(Block,
-                        Block.FindStatementIndex(FHoveredStatement.Statement.YStart) +
-                        Ord(FHoveredStatement.State),
-                        FDedicatedStatement));
+        FUndoStack.Push(TCommandTransferAnotherBlock.Create(
+                   FHoveredStatement.Statement,
+                   Boolean(Ord(FHoveredStatement.State)),
+                   FDedicatedStatement));
         FUndoStack.Peek.Execute;
       end;
-
     end;
   end;
 
@@ -556,6 +554,6 @@ implementation
     TryDrawCarryBlock(AVisibleImageRect);
 
     FMainBlock.DrawBlock(AVisibleImageRect);
-    DrawCoordinates(FPaintBox.Canvas, 50);
+    //DrawCoordinates(FPaintBox.Canvas, 50);
   end;
 end.
