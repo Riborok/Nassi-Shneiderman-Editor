@@ -2154,8 +2154,6 @@ object NassiShneiderman: TNassiShneiderman
     ParentDoubleBuffered = False
     TabOrder = 0
     Transparent = False
-    ExplicitLeft = 8
-    ExplicitTop = -1
     object tbUndo: TToolButton
       Left = 0
       Top = 0

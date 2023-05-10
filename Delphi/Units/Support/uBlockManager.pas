@@ -22,10 +22,10 @@ type
   private const
     SchemeInitialIndent = 10;
 
-    clrCancel: TColor = clRed;
-    clrOK: TColor = clGreen;
-
-    clArrowColor: TColor = clBlack;
+    InitiaCancelColor: TColor = clRed;
+    InitialOKColor: TColor = clGreen;
+    InitialArrowColor: TColor = clBlack;
+    InitialHighlightColor : TColor = clYellow;
   private
     FMainBlock : TBlock;
     FDedicatedStatement: TStatement;
@@ -35,14 +35,14 @@ type
     FCarryBlock: TBlock;
     FHoveredStatement: THoveredStatement;
 
-    FHighlightColor: TColor;
+    FHighlightColor, FArrowColor, FOKColor, FCancelColor: TColor;
 
     FUndoStack, FRedoStack: TAutoClearStack<ICommand>;
 
     { DedicatedStatement }
     procedure ChangeDedicated(const AStatement: TStatement);
   public
-    constructor Create(const APaintBox: TPaintBox; const AHighlightColor: TColor);
+    constructor Create(const APaintBox: TPaintBox);
     destructor Destroy;
     property MainBlock: TBlock read FMainBlock;
     property BufferBlock: TBlock read FBufferBlock;
@@ -110,10 +110,14 @@ implementation
     inherited;
   end;
 
-  constructor TBlockManager.Create(const APaintBox: TPaintBox; const AHighlightColor: TColor);
+  constructor TBlockManager.Create(const APaintBox: TPaintBox);
   begin
     FPaintBox:= APaintBox;
-    FHighlightColor:= AHighlightColor;
+
+    FHighlightColor := InitialHighlightColor;
+    FArrowColor := InitialArrowColor;
+    FOKColor := InitialOKColor;
+    FCancelColor := InitiaCancelColor;
 
     FUndoStack := TAutoClearStack<ICommand>.Create;
     FRedoStack := TAutoClearStack<ICommand>.Create;
@@ -412,13 +416,13 @@ implementation
         case FHoveredStatement.State of
           stAfter:
           begin
-            ColorizeRect(FPaintBox.Canvas, FHoveredStatement.Rect, clGreen);
+            ColorizeRect(FPaintBox.Canvas, FHoveredStatement.Rect, FOKColor);
             DrawArrow(FPaintBox.Canvas,
                      FHoveredStatement.Rect.Width shr 1 +
                      FHoveredStatement.Rect.Left,
                      FHoveredStatement.Rect.Bottom,
                      FHoveredStatement.Rect.Top + Offset,
-                     clArrowColor);
+                     FArrowColor);
             if (FHoveredStatement.Statement is TOperator) and
                      TOperator(FHoveredStatement.Statement).IsPreñOperator then
             begin
@@ -430,13 +434,13 @@ implementation
           end;
           stBefore:
           begin
-            ColorizeRect(FPaintBox.Canvas, FHoveredStatement.Rect, clGreen);
+            ColorizeRect(FPaintBox.Canvas, FHoveredStatement.Rect, FOKColor);
             DrawArrow(FPaintBox.Canvas,
                      FHoveredStatement.Rect.Width shr 1 +
                      FHoveredStatement.Rect.Left,
                      FHoveredStatement.Rect.Top,
                      FHoveredStatement.Rect.Bottom - Offset,
-                     clArrowColor);
+                     FArrowColor);
             if (FHoveredStatement.Statement is TOperator) and
                   not TOperator(FHoveredStatement.Statement).IsPreñOperator then
             begin
@@ -447,9 +451,9 @@ implementation
             end;
           end;
           stSwap:
-            ColorizeRect(FPaintBox.Canvas, FHoveredStatement.Rect, clGreen);
+            ColorizeRect(FPaintBox.Canvas, FHoveredStatement.Rect, FOKColor);
           stCancel:
-            ColorizeRect(FPaintBox.Canvas, FHoveredStatement.Rect, clRed);
+            ColorizeRect(FPaintBox.Canvas, FHoveredStatement.Rect, FCancelColor);
         end;
       FCarryBlock.DrawBlock(AVisibleImageRect);
     end;

@@ -215,7 +215,7 @@ implementation
 
     uBase.DefaultStatement:= TProcessStatement;
 
-    FBlockManager:= TBlockManager.Create(PaintBox, clYellow);
+    FBlockManager:= TBlockManager.Create(PaintBox);
 
     PaintBox.Invalidate;
   end;

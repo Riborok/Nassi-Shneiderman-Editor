@@ -2139,9 +2139,9 @@ object NassiShneiderman: TNassiShneiderman
     Left = 0
     Top = 0
     Width = 977
-    Height = 41
+    Height = 35
     BorderWidth = 1
-    ButtonHeight = 33
+    ButtonHeight = 27
     ButtonWidth = 37
     Caption = 'tbSelectBlock'
     Color = clBtnFace
@@ -2154,46 +2154,203 @@ object NassiShneiderman: TNassiShneiderman
     ParentDoubleBuffered = False
     TabOrder = 0
     Transparent = False
-    object tbProcess: TToolButton
+    ExplicitLeft = 8
+    ExplicitTop = -1
+    object tbUndo: TToolButton
       Left = 0
       Top = 0
-      Action = actAfterProcess
+      Hint = 'Undo the last action'
+      Action = actUndo
+      Enabled = False
+      ParentShowHint = False
+      ShowHint = True
     end
-    object tbIfBranch: TToolButton
+    object tbRedo: TToolButton
       Left = 37
       Top = 0
-      Action = actAfterIfBranch
+      Hint = 'Redo the last action'
+      Action = actRedo
+      Enabled = False
+      ParentShowHint = False
+      ShowHint = True
     end
-    object tbMultBranch: TToolButton
+    object sep4: TToolButton
       Left = 74
       Top = 0
+      Width = 8
+      Caption = 'sep4'
+      ImageIndex = 14
+      Style = tbsSeparator
+    end
+    object tbCut: TToolButton
+      Left = 82
+      Top = 0
+      Hint = 'Cut the seletced element'
+      Action = actCut
+      Enabled = False
+      ParentShowHint = False
+      ShowHint = True
+    end
+    object tbCopy: TToolButton
+      Left = 119
+      Top = 0
+      Hint = 'Copy the seletced element'
+      Action = actCopy
+      Enabled = False
+      ParentShowHint = False
+      ShowHint = True
+    end
+    object tbInsert: TToolButton
+      Left = 156
+      Top = 0
+      Hint = 'Paste the copied or cut element after the selected element'
+      Action = actInsert
+      Enabled = False
+      ParentShowHint = False
+      ShowHint = True
+    end
+    object sep3: TToolButton
+      Left = 193
+      Top = 0
+      Width = 8
+      Caption = 'sep3'
+      ImageIndex = 16
+      Style = tbsSeparator
+    end
+    object tbAction: TToolButton
+      Left = 201
+      Top = 0
+      Hint = 'Edit the selected element'
+      Action = actChangeAction
+      Enabled = False
+      ParentShowHint = False
+      ShowHint = True
+    end
+    object tbDelete: TToolButton
+      Left = 238
+      Top = 0
+      Hint = 'Delete the selected element'
+      Action = actDelete
+      Enabled = False
+      ParentShowHint = False
+      ShowHint = True
+    end
+    object sep2: TToolButton
+      Left = 275
+      Top = 0
+      Width = 8
+      Caption = 'sep2'
+      ImageIndex = 16
+      Style = tbsSeparator
+    end
+    object tbProcess: TToolButton
+      Left = 283
+      Top = 0
+      Hint = 'Insert a new process after the selected element'
+      Action = actAfterProcess
+      Enabled = False
+      ParentShowHint = False
+      ShowHint = True
+    end
+    object tbIfBranch: TToolButton
+      Left = 320
+      Top = 0
+      Hint = 'Insert a new branching block after the selected element'
+      Action = actAfterIfBranch
+      Enabled = False
+      ParentShowHint = False
+      ShowHint = True
+    end
+    object tbMultBranch: TToolButton
+      Left = 357
+      Top = 0
+      Hint = 'Insert a new multiple branching block after the selected element'
       Action = actAfterMultBranch
+      Enabled = False
+      ParentShowHint = False
+      ShowHint = True
     end
     object tbLoop: TToolButton
-      Left = 111
+      Left = 394
       Top = 0
+      Hint = 'Insert a new testing loop after the selected element'
       Action = actAfterLoop
+      Enabled = False
+      ParentShowHint = False
+      ShowHint = True
     end
     object tbRevLoop: TToolButton
-      Left = 148
+      Left = 431
       Top = 0
+      Hint = 'Insert a new reversed testing loop after the selected element'
       Action = actAfterRevLoop
+      Enabled = False
+      ParentShowHint = False
+      ShowHint = True
+    end
+    object sep1: TToolButton
+      Left = 468
+      Top = 0
+      Width = 8
+      Caption = 'sep1'
+      ImageIndex = 5
+      Style = tbsSeparator
+    end
+    object tbSortAsc: TToolButton
+      Left = 476
+      Top = 0
+      Hint = 'Sort case blocks in ascending order'
+      Action = actSortAsc
+      Enabled = False
+      ParentShowHint = False
+      ShowHint = True
+    end
+    object tbSortDesc: TToolButton
+      Left = 513
+      Top = 0
+      Hint = 'Sort case blocks in descending order'
+      Action = actSortDesc
+      Enabled = False
+      ParentShowHint = False
+      ShowHint = True
+    end
+    object sep5: TToolButton
+      Left = 550
+      Top = 0
+      Width = 8
+      Caption = 'sep5'
+      ImageIndex = 18
+      Style = tbsSeparator
+    end
+    object tbFont: TToolButton
+      Left = 558
+      Top = 0
+      Hint = 'Edit font'
+      Action = actChngFont
+      ParentShowHint = False
+      ShowHint = True
+    end
+    object tbPen: TToolButton
+      Left = 595
+      Top = 0
+      Hint = 'Edit pen'
+      Action = actChngPen
+      ParentShowHint = False
+      ShowHint = True
     end
   end
   object ScrollBox: TScrollBox
     AlignWithMargins = True
     Left = 3
-    Top = 44
+    Top = 38
     Width = 971
-    Height = 550
+    Height = 556
     HorzScrollBar.Tracking = True
     VertScrollBar.Tracking = True
     Align = alClient
     Color = clWindow
     ParentColor = False
     TabOrder = 1
-    OnDblClick = DblClick
-    OnMouseDown = MouseDown
     OnMouseWheel = ScrollBoxMouseWheel
     object PaintBox: TPaintBox
       Left = 0
@@ -3110,13 +3267,6 @@ object NassiShneiderman: TNassiShneiderman
       ImageIndex = 15
       OnExecute = actChngPenExecute
     end
-  end
-  object tmRedrawingMovements: TTimer
-    Enabled = False
-    Interval = 5
-    OnTimer = tmRedrawingTimer
-    Left = 56
-    Top = 521
   end
   object MainMenu: TMainMenu
     Images = ilIcons
