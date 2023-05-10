@@ -58,7 +58,7 @@ implementation
     LastBlock:= FBlocks[High(FBlocks)];
 
     // Decrease the last x by 1 to untie it from the base block
-    SetXLastForChildrens(LastBlock.XLast - 1);
+    LastBlock.ChangeXLastBlock(LastBlock.XLast - 1);
 
     // Set old values
     FConds:= AConds;
@@ -71,7 +71,8 @@ implementation
     LastBlock.SetOptimalXLastBlock;
 
     // Stretch the new last block to the base
-    SetXLastForChildrens(FBaseBlock.XLast);
+    LastBlock:= FBlocks[High(FBlocks)];
+    LastBlock.ChangeXLastBlock(FBaseBlock.XLast);
   end;
 
   procedure TCaseBranching.SortConditions(const SortNumber: Integer);
@@ -88,7 +89,7 @@ implementation
     LastBlock:= FBlocks[High(FBlocks)];
 
     // Decrease the last x by 1 to untie it from the base block
-    SetXLastForChildrens(LastBlock.XLast - 1);
+    LastBlock.ChangeXLastBlock(LastBlock.XLast - 1);
 
     // Sorting blocks
     QuickSort(FConds, FBlocks, Compare);
@@ -100,7 +101,8 @@ implementation
     LastBlock.SetOptimalXLastBlock;
 
     // Stretch the new last block to the base
-    SetXLastForChildrens(FBaseBlock.XLast);
+    LastBlock:= FBlocks[High(FBlocks)];
+    LastBlock.ChangeXLastBlock(FBaseBlock.XLast);
   end;
 
   procedure TCaseBranching.RestoreBlocksAfterRearrangement;

@@ -132,6 +132,9 @@ type
 
     function FindBlockIndex(const AXStart: Integer): Integer;
     function GetOffsetFromXStart: Integer; virtual;
+    procedure MoveRightChildrens(const AOffset : Integer);
+    procedure MoveDownChildrens(const AOffset : Integer);
+    procedure SetXLastForChildrens(const AXLast : Integer);
   end;
 
   { TBlock }
@@ -156,6 +159,12 @@ type
 
     procedure Insert(var AIndex: Integer;const AInsertedStatement: TStatement);
     procedure RemoveStatementAt(const Index: Integer);
+
+    procedure ChangeXStartBlock(const ANewXStart: Integer);
+
+    // After changing the Y coordinate, need to call the procedure in order to
+    // change the Y coordinates of others
+    procedure FixYStatementsPosition(const Index: Integer);
   public
     constructor Create(const ABaseOperator: TOperator); overload;
     constructor Create(const AXStart: Integer; const ACanvas: TCanvas); overload;
@@ -168,23 +177,20 @@ type
     property BaseOperator: TOperator read FBaseOperator;
     property Statements: TArrayList<TStatement> read FStatements;
 
+    procedure InsertBlock(AIndex: Integer; const AInsertedBlock: TBlock);
     procedure InsertWithResizing(AIndex: Integer;const AInsertedStatement: TStatement);
 
     procedure AddUnknownStatement(const AStatement: TStatement; const AYStart: Integer);
     procedure AddStatement(const AStatement: TStatement);
 
-    procedure InsertBlock(AIndex: Integer; const AInsertedBlock: TBlock);
-
     function Extract(const AStatement: TStatement): Integer;
     function ExtractStatementAt(const AIndex: Integer) : TStatement;
 
-    procedure SetOptimalXLastBlock;
-
-    procedure ChangeXStartBlock(const ANewXStart: Integer);
-    procedure ChangeXLastBlock(const ANewXLast: Integer);
-
     procedure MoveRight(const AOffset: Integer);
     procedure MoveDown(const AOffset: Integer);
+    procedure ChangeXLastBlock(const ANewXLast: Integer);
+
+    procedure SetOptimalXLastBlock;
 
     procedure DrawBlock(const AVisibleImageRect: TVisibleImageRect);
 
@@ -197,10 +203,6 @@ type
     // Set the dimensions after adding and if this statement is the last one,
     // it asks the previous to set the optimal height
     procedure Install(const Index: Integer);
-
-    // After changing the Y coordinate, need to call the procedure in order to
-    // change the Y coordinates of others
-    procedure FixYStatementsPosition(const Index: Integer);
 
     function GetMask(const AVisibleImageRect: TVisibleImageRect): Integer; inline;
   end;
@@ -562,34 +564,24 @@ implementation
 
   procedure TBlock.MoveRight(const AOffset: Integer);
   var
-    I, J: Integer;
-    Blocks: TBlockArr;
+    I: Integer;
   begin
     Inc(FXStart, AOffset);
     Inc(FXLast, AOffset);
     for I := 0 to FStatements.Count - 1 do
       if FStatements[I] is TOperator then
-      begin
-        Blocks:= TOperator(FStatements[I]).FBlocks;
-        for J := 0 to High(Blocks) do
-          Blocks[J].MoveRight(AOffset);
-      end;
+        TOperator(FStatements[I]).MoveRightChildrens(AOffset);
   end;
 
   procedure TBlock.MoveDown(const AOffset: Integer);
   var
-    I, J: Integer;
-    Blocks: TBlockArr;
+    I: Integer;
   begin
     for I := 0 to FStatements.Count - 1 do
     begin
       FStatements[I].Lower(AOffset);
       if FStatements[I] is TOperator then
-      begin
-        Blocks := TOperator(FStatements[I]).Blocks;
-        for J := 0 to High(Blocks) do
-          Blocks[J].MoveDown(AOffset);
-      end;
+        TOperator(FStatements[I]).MoveDownChildrens(AOffset);
     end;
   end;
 
@@ -857,8 +849,6 @@ implementation
     I: Integer;
     BlockYStart: Integer;
     procedure SetYPos(const ABlock: TBlock; const AYStart: Integer); inline;
-    var
-      I: Integer;
     begin
       ABlock.Statements[0].FYStart := AYStart;
       ABlock.Statements[0].SetOptimalYLast;
@@ -1055,4 +1045,26 @@ implementation
           TOperator(FBlocks[I].Statements[J]).SetBlockTextSize;
       end;
   end;
+
+  procedure TOperator.MoveRightChildrens(const AOffset : Integer);
+  var
+    I: Integer;
+  begin
+    for I := 0 to High(FBlocks) do
+      FBlocks[I].MoveRight(AOffset);
+  end;
+
+  procedure TOperator.MoveDownChildrens(const AOffset : Integer);
+  var
+    I: Integer;
+  begin
+    for I := 0 to High(FBlocks) do
+      FBlocks[I].MoveDown(AOffset);
+  end;
+
+  procedure TOperator.SetXLastForChildrens(const AXLast : Integer);
+  begin
+    FBlocks[High(FBlocks)].ChangeXLastBlock(AXLast);
+  end;
+
 end.

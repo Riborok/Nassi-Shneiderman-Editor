@@ -79,7 +79,6 @@ type
       FCommandAddStatement : TCommandAddStatement;
       FCommandDelStatement : TCommandDelStatement;
       FOldBaseBlock : TBlock;
-      procedure MoveChildrens(const AXLast, AOffset: Integer);
     public
       constructor Create(const AHoveredStatement : TStatement; const isAfter: Boolean;
                          const AStatement: TStatement);
@@ -252,8 +251,12 @@ implementation
   begin
     FCommandDelStatement.Execute;
     if FCommandAddStatement.FNewStatement is TOperator then
-      MoveChildrens(FCommandAddStatement.FBaseBlock.XLast,
-                 FCommandAddStatement.FBaseBlock.XStart - FOldBaseBlock.XStart);
+    begin
+      var CurrOperator: TOperator := TOperator(FCommandAddStatement.FNewStatement);
+      CurrOperator.MoveRightChildrens(FCommandAddStatement.FBaseBlock.XStart -
+                                      FOldBaseBlock.XStart);
+      CurrOperator.SetXLastForChildrens(FCommandAddStatement.FBaseBlock.XLast);
+    end;
     FCommandAddStatement.Execute;
   end;
 
@@ -261,21 +264,14 @@ implementation
   begin
     FCommandAddStatement.Undo;
     if FCommandAddStatement.FNewStatement is TOperator then
-      MoveChildrens(FOldBaseBlock.XLast,
-                 FOldBaseBlock.XStart - FCommandAddStatement.FBaseBlock.XStart);
+    begin
+      var CurrOperator: TOperator := TOperator(FCommandAddStatement.FNewStatement);
+      CurrOperator.MoveRightChildrens(FOldBaseBlock.XStart -
+                                      FCommandAddStatement.FBaseBlock.XStart);
+      CurrOperator.SetXLastForChildrens(FOldBaseBlock.XLast);
+    end;
     FCommandDelStatement.FStatement.BaseBlock := FOldBaseBlock;
     FCommandDelStatement.Undo;
-  end;
-
-  procedure TCommandTransferAnotherBlock.MoveChildrens(const AXLast, AOffset: Integer);
-  var
-    Blocks : TBlockArr;
-    J : Integer;
-  begin
-    Blocks:= TOperator(FCommandAddStatement.FNewStatement).Blocks;
-      for J := 0 to High(Blocks) do
-        Blocks[J].MoveRight(AOffset);
-    Blocks[High(Blocks)].ChangeXLastBlock(AXLast);
   end;
 
 end.
