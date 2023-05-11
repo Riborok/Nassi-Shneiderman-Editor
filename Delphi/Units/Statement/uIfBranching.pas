@@ -8,7 +8,7 @@ type
   private const
     FBlockCount = 2;
   private class var
-    TrueCond, FalseCond: String;
+    FTrueCond, FFalseCond: string;
   private
     FTrueSize, FFalseSize: TSize;
     function GetAvailablePartWidth(const APartWidth, ATextHeight: Integer): Integer;
@@ -22,8 +22,10 @@ type
     procedure Draw; override;
   public
     function IsPreсOperator: Boolean; override;
-    class procedure ChangeConditions(const ATrue, AFalse: String);
     function Clone: TStatement; override;
+
+    class property TrueCond: string read FTrueCond write FTrueCond;
+    class property FalseCond: string read FFalseCond write FFalseCond;
   end;
 
 implementation
@@ -31,9 +33,9 @@ implementation
   procedure TIfBranching.SetTextSize;
   begin
     inherited;
-    FTrueSize := GetTextSize(BaseBlock.Canvas, TrueCond);
+    FTrueSize := GetTextSize(BaseBlock.Canvas, FTrueCond);
 
-    FFalseSize := GetTextSize(BaseBlock.Canvas, FalseCond);
+    FFalseSize := GetTextSize(BaseBlock.Canvas, FFalseCond);
   end;
 
   function TIfBranching.Clone: TStatement;
@@ -46,12 +48,6 @@ implementation
     ResultIf.FTrueSize := Self.FTrueSize;
 
     ResultIf.FFalseSize := Self.FFalseSize;
-  end;
-
-  class procedure TIfBranching.ChangeConditions(const ATrue, AFalse: String);
-  begin
-    TrueCond:= ATrue;
-    FalseCond:= AFalse;
   end;
 
   function TIfBranching.GetOptimalYLast: Integer;
@@ -123,19 +119,19 @@ implementation
                     FBlocks[0].XStart + GetAvailablePartWidth(
                     FBlocks[0].XLast - FBlocks[0].XStart, FTrueSize.Height) shr 1 -
                     FTrueSize.Width shr 1,
-                    FYStart + FYIndentText shl 1 + FActionSize.Height, TrueCond);
+                    FYStart + FYIndentText shl 1 + FActionSize.Height, FTrueCond);
 
     // Drawing the False text
     DrawText(BaseBlock.Canvas,
                     FBlocks[1].XLast - GetAvailablePartWidth(
                     FBlocks[1].XLast - FBlocks[1].XStart, FFalseSize.Height) shr 1 -
                     FFalseSize.Width shr 1,
-                    FYStart + FYIndentText shl 1 + FActionSize.Height, FalseCond);
+                    FYStart + FYIndentText shl 1 + FActionSize.Height, FFalseCond);
   end;
 
 
   initialization
-  TIfBranching.TrueCond := 'False';
-  TIfBranching.FalseCond := 'True';
+  TIfBranching.FTrueCond := 'False';
+  TIfBranching.FFalseCond := 'True';
 
 end.

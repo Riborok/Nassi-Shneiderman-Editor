@@ -26,14 +26,14 @@ type
     InitialOKColor: TColor = clGreen;
     InitialArrowColor: TColor = clBlack;
     InitialHighlightColor : TColor = clYellow;
+  private class var
+    FBufferBlock: TBlock;
+    FCarryBlock: TBlock;
+    FHoveredStatement: THoveredStatement;
   private
     FMainBlock : TBlock;
     FDedicatedStatement: TStatement;
-    FBufferBlock: TBlock;
     FPaintBox: TPaintBox;
-
-    FCarryBlock: TBlock;
-    FHoveredStatement: THoveredStatement;
 
     FHighlightColor, FArrowColor, FOKColor, FCancelColor: TColor;
 
@@ -45,12 +45,11 @@ type
     constructor Create(const APaintBox: TPaintBox);
     destructor Destroy;
     property MainBlock: TBlock read FMainBlock;
-    property BufferBlock: TBlock read FBufferBlock;
 
     property HighlightColor: TColor write FHighlightColor;
     property DedicatedStatement: TStatement read FDedicatedStatement write ChangeDedicated;
 
-    property CarryBlock: TBlock read FCarryBlock;
+    class property CarryBlock: TBlock read FCarryBlock;
 
     property UndoStack: TAutoClearStack<ICommand> read FUndoStack;
     property RedoStack: TAutoClearStack<ICommand> read FRedoStack;
@@ -84,7 +83,7 @@ type
 
     { Interactions with statements }
     class function CreateStatement(const AStatementClass: TStatementClass;
-           const ABaseBlock: TBlock): TStatement;
+           const ABaseBlock: TBlock): TStatement; static;
 
     { Stacks }
     procedure TryUndo;

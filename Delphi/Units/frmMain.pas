@@ -141,7 +141,7 @@ type
 
     FBlockManager: TBlockManager;
 
-    class function ConvertToBlockType(const AIndex: Integer): TStatementClass;
+    class function ConvertToBlockType(const AIndex: Integer): TStatementClass; static;
 
     function GetVisibleImageScreen: TVisibleImageRect;
     procedure SetScrollPos(const AStatement: TStatement);
@@ -362,24 +362,28 @@ implementation
   begin
     FBlockManager.TryCutDedicated;
     UpdateForStack;
+    UpdateForDedicatedStatement;
   end;
 
   procedure TNassiShneiderman.MIInsetClick(Sender: TObject);
   begin
     FBlockManager.TryInsertBufferBlock;
     UpdateForStack;
+    UpdateForDedicatedStatement;
   end;
 
   procedure TNassiShneiderman.AddAfter(Sender: TObject);
   begin
     FBlockManager.TryAddNewStatement(ConvertToBlockType(TComponent(Sender).Tag), True);
     UpdateForStack;
+    UpdateForDedicatedStatement;
   end;
 
   procedure TNassiShneiderman.AddBefore(Sender: TObject);
   begin
     FBlockManager.TryAddNewStatement(ConvertToBlockType(TComponent(Sender).Tag), False);
     UpdateForStack;
+    UpdateForDedicatedStatement;
   end;
 
   procedure TNassiShneiderman.Sort(Sender: TObject);
@@ -392,18 +396,21 @@ implementation
   begin
     FBlockManager.TryRedo;
     UpdateForStack;
+    UpdateForDedicatedStatement;
   end;
 
   procedure TNassiShneiderman.actUndoExecute(Sender: TObject);
   begin
     FBlockManager.TryUndo;
     UpdateForStack;
+    UpdateForDedicatedStatement;
   end;
 
   procedure TNassiShneiderman.DeleteStatement(Sender: TObject);
   begin
     FBlockManager.TryDeleteDedicated;
     UpdateForStack;
+    UpdateForDedicatedStatement;
   end;
 
   procedure TNassiShneiderman.actChangeActionExecute(Sender: TObject);
@@ -441,12 +448,9 @@ implementation
   end;
 
   procedure TNassiShneiderman.UpdateForStack;
-  var
-    bool: Boolean;
   begin
-    bool := FBlockManager.UndoStack.Count <> 0;
-    tbUndo.Enabled:= bool;
-    tbRedo.Enabled:= bool;
+    tbUndo.Enabled:= FBlockManager.UndoStack.Count <> 0;
+    tbRedo.Enabled:= FBlockManager.RedoStack.Count <> 0;
   end;
 
   procedure TNassiShneiderman.UpdateForDedicatedStatement;
@@ -474,7 +478,7 @@ implementation
 
   function TNassiShneiderman.isDragging: Boolean;
   begin
-    Result:= FBlockManager.CarryBlock <> nil;
+    Result:= TBlockManager.CarryBlock <> nil;
   end;
 
   class function TNassiShneiderman.ConvertToBlockType(const AIndex: Integer): TStatementClass;
