@@ -7,7 +7,8 @@ uses
   Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls, Vcl.StdCtrls, Vcl.Menus, uConstants,
   uBase, uFirstLoop, uIfBranching, uCaseBranching, uLastLoop, uProcessStatement,
   uStatementSearch, System.Actions, Vcl.ActnList, Vcl.ToolWin, Types, uBlockManager,
-  Vcl.ComCtrls, uAdditionalTypes, frmPenSetting, System.ImageList, Vcl.ImgList;
+  Vcl.ComCtrls, uAdditionalTypes, frmPenSetting, System.ImageList, Vcl.ImgList,
+  frmGlobalSettings;
 
 type
   TNassiShneiderman = class(TForm)
@@ -97,6 +98,8 @@ type
     tbSortDesc: TToolButton;
     tbSortAsc: TToolButton;
     sep5: TToolButton;
+    actChngGlSettings: TAction;
+    ToolButton1: TToolButton;
 
     procedure FormCreate(Sender: TObject);
 
@@ -128,8 +131,10 @@ type
     procedure FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure actChngPenExecute(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure actChngGlSettingsExecute(Sender: TObject);
   private
     FPenDialog: TPenDialog;
+    FGlobalSettingsDialog: TGlobalSettingsDialog;
 
     FPrevMousePos: TPoint;
 
@@ -167,7 +172,6 @@ type
   private type
     TGlobalSettings = record
       glTrueCond, glFalseCond, glDefaultAction: ShortString;
-      glDefaultStatement: TStatementClass;
       glHighlightColor: TColor;
       glArrowColor, glOKColor, glCancelColor: TColor;
     end;
@@ -196,6 +200,7 @@ implementation
     MinFormHeight = 600;
   begin
     DownloadGlobalSettings;
+    DefaultStatement := TProcessStatement;
 
     SetThreadUILanguage(MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US));
     Self.DoubleBuffered := True;
@@ -215,6 +220,7 @@ implementation
     actSortDesc.ShortCut := ShortCut(VK_LEFT, [ssCtrl, ssShift]);
 
     FPenDialog:= TPenDialog.Create(Self, ColorDialog);
+    FGlobalSettingsDialog:= TGlobalSettingsDialog.Create(Self, ColorDialog, ResetSettings);
 
     FPen:= FPenDialog.Pen;
     FFont:= FontDialog.Font;
@@ -454,6 +460,15 @@ implementation
     end;
   end;
 
+  procedure TNassiShneiderman.actChngGlSettingsExecute(Sender: TObject);
+  var
+    PrevDefaultAction : String;
+  begin
+    PrevDefaultAction := DefaultAction;
+    if FGlobalSettingsDialog.Execute then
+      FBlockManager.SetNewActionForDefaultStatements(PrevDefaultAction);
+  end;
+
   { Private methods }
   destructor TNassiShneiderman.Destroy;
   begin
@@ -553,11 +568,10 @@ implementation
 
     with GlobalSettings do
     begin
-      DefaultStatement := glDefaultStatement;
-      DefaultAction := glDefaultAction;
+      DefaultAction := string(glDefaultAction);
 
-      TIfBranching.TrueCond := glTrueCond;
-      TIfBranching.FalseCond := glFalseCond;
+      TIfBranching.TrueCond := string(glTrueCond);
+      TIfBranching.FalseCond := string(glFalseCond);
 
       with TBlockManager do
       begin
@@ -577,11 +591,10 @@ implementation
 
     with GlobalSettings do
     begin
-      glDefaultStatement := DefaultStatement;
-      glDefaultAction := DefaultAction;
+      glDefaultAction := ShortString(DefaultAction);
 
-      glTrueCond := TIfBranching.TrueCond;
-      glFalseCond := TIfBranching.FalseCond;
+      glTrueCond := ShortString(TIfBranching.TrueCond);
+      glFalseCond := ShortString(TIfBranching.FalseCond);
 
       with TBlockManager do
       begin
@@ -599,19 +612,26 @@ implementation
   end;
 
   class procedure TNassiShneiderman.ResetSettings;
+  const
+    constIfTrueCond = 'True';
+    constIfFalseCond = 'False';
+    constDefaultAction = '';
+    constHighlightColor = clYellow;
+    constArrowColor = clBlack;
+    constOKColor = clGreen;
+    constCancelColor = clRed;
   begin
-    TIfBranching.TrueCond := 'True';
-    TIfBranching.FalseCond := 'False';
+    TIfBranching.TrueCond := constIfTrueCond;
+    TIfBranching.FalseCond := constIfFalseCond;
 
-    DefaultStatement := TProcessStatement;
-    DefaultAction := ' ';
+    DefaultAction := constDefaultAction;
 
     with TBlockManager do
     begin
-      HighlightColor := clYellow;
-      ArrowColor := clBlack;
-      OKColor := clGreen;
-      CancelColor := clRed;
+      HighlightColor := constHighlightColor;
+      ArrowColor := constArrowColor;
+      OKColor := constOKColor;
+      CancelColor := constCancelColor;
     end;
   end;
 

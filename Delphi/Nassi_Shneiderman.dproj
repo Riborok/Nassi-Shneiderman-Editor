@@ -137,6 +137,10 @@
             <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="Units\Support\uBlockManager.pas"/>
+        <DCCReference Include="Units\Forms\frmGlobalSettings.pas">
+            <Form>GlobalSettingsDialog</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>

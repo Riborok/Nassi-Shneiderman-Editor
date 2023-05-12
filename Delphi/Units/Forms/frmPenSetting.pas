@@ -4,7 +4,7 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls;
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls, Types;
 
 type
   TPenDialog = class(TForm)
@@ -29,7 +29,7 @@ type
   public
     { Public declarations }
     property Pen: TPen read FPen;
-    constructor Create(AOwner: TComponent; AColorDialog: TColorDialog);
+    constructor Create(const AOwner: TComponent; const AColorDialog: TColorDialog);
     destructor Destroy; override;
     function Execute: Boolean;
   end;
@@ -60,7 +60,7 @@ implementation
     end;
   end;
 
-  constructor TPenDialog.Create(AOwner: TComponent; AColorDialog: TColorDialog);
+  constructor TPenDialog.Create(const AOwner: TComponent; const AColorDialog: TColorDialog);
   begin
     inherited Create(AOwner);
     FPen:= TPen.Create;

@@ -226,11 +226,13 @@ implementation
   begin
     FAction := DefaultAction;
     FBaseBlock:= ABaseBlock;
+    inherited Create;
   end;
 
   constructor TStatement.Create(const AAction : String);
   begin
     FAction := AAction;
+    inherited Create;
   end;
 
   procedure TStatement.SetTextSize;

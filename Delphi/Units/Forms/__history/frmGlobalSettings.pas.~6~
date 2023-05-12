@@ -1,0 +1,45 @@
+unit frmGlobalSettings;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls, uConstants;
+
+type
+  TGlobalSettingsDialog = class(TForm)
+    btnOK: TButton;
+    btnCancel: TButton;
+    lbInfo: TLabel;
+    lbTrue: TLabel;
+    mmTrue: TMemo;
+    lbFalse: TLabel;
+    mmFalse: TMemo;
+    plIf: TPanel;
+    plDefault: TPanel;
+  private
+    FColorDialog : TColorDialog;
+    //procedure SetValues;
+  public
+    constructor Create(AOwner: TComponent; AColorDialog: TColorDialog);
+  end;
+
+implementation
+
+{$R *.dfm}
+
+  constructor TGlobalSettingsDialog.Create(AOwner: TComponent; AColorDialog: TColorDialog);
+  begin
+    inherited Create(AOwner);
+    FColorDialog:= AColorDialog;
+
+    mmTrue.MaxLength := MaxTextLength;
+    mmTrue.Font.Size := mmFontSize;
+    mmTrue.Font.Name := mmFontName;
+
+    mmFalse.MaxLength := MaxTextLength;
+    mmFalse.Font.Size := mmFontSize;
+    mmFalse.Font.Name := mmFontName;
+  end;
+
+end.

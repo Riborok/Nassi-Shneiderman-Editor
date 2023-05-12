@@ -2174,7 +2174,8 @@
     Font.Name = 'Times New Roman'
     Font.Style = []
     ParentFont = False
-    TabOrder = 0
+    TabOrder = 1
+    TabStop = False
     OnClick = btnAddClick
   end
   object btnDelete: TButton
@@ -2189,7 +2190,8 @@
     Font.Name = 'Times New Roman'
     Font.Style = []
     ParentFont = False
-    TabOrder = 1
+    TabOrder = 2
+    TabStop = False
     OnClick = btnDeleteClick
   end
   object btnCancel: TButton
@@ -2199,7 +2201,7 @@
     Height = 38
     Caption = 'Cancel'
     ModalResult = 2
-    TabOrder = 2
+    TabOrder = 3
   end
   object btnOK: TButton
     Left = 276
@@ -2208,7 +2210,7 @@
     Height = 38
     Caption = 'OK'
     ModalResult = 1
-    TabOrder = 3
+    TabOrder = 0
   end
   object ScrollBox: TScrollBox
     Left = 0

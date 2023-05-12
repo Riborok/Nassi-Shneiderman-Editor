@@ -1,0 +1,63 @@
+unit frmGlobalSettings;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls, uConstants;
+
+type
+  TGlobalSettingsDialog = class(TForm)
+    btnOK: TButton;
+    btnCancel: TButton;
+    lbInfo: TLabel;
+    lbTrue: TLabel;
+    mmTrue: TMemo;
+    lbFalse: TLabel;
+    mmFalse: TMemo;
+    plIf: TPanel;
+    plDefault: TPanel;
+    lbDefAct: TLabel;
+    mmDefAct: TMemo;
+  private type
+    TResetSettings = procedure;
+  private
+    FColorDialog : TColorDialog;
+    FResetSettings : TResetSettings;
+    //procedure SetValues;
+  public
+    constructor Create(const AOwner: TComponent; const AColorDialog: TColorDialog;
+                       const AResetSettings : TResetSettings);
+    procedure Execute;
+  end;
+
+implementation
+
+{$R *.dfm}
+
+  constructor TGlobalSettingsDialog.Create(const AOwner: TComponent; const AColorDialog: TColorDialog;
+                                           const AResetSettings : TResetSettings);
+  begin
+    inherited Create(AOwner);
+    FColorDialog := AColorDialog;
+    FResetSettings := AResetSettings;
+
+    mmTrue.MaxLength := MaxTextLength;
+    mmTrue.Font.Size := mmFontSize;
+    mmTrue.Font.Name := mmFontName;
+
+    mmFalse.MaxLength := MaxTextLength;
+    mmFalse.Font.Size := mmFontSize;
+    mmFalse.Font.Name := mmFontName;
+  end;
+
+  procedure TGlobalSettingsDialog.Execute;
+  begin
+    ShowModal;
+    if ModalResult = mrOk then
+    begin
+
+    end;
+  end;
+
+end.

@@ -54,6 +54,7 @@ type
 
     { MainBlock }
     procedure RedefineMainBlock;
+    procedure SetNewActionForDefaultStatements(const AOldDefaultAction: string);
 
     { BufferBlock }
     procedure TryCutDedicated;
@@ -129,6 +130,12 @@ implementation
   procedure TBlockManager.RedefineMainBlock;
   begin
     MainBlock.RedefineSizes;
+    FPaintBox.Invalidate;
+  end;
+
+  procedure TBlockManager.SetNewActionForDefaultStatements(const AOldDefaultAction: string);
+  begin
+    MainBlock.SetNewActionForDefaultStatements(AOldDefaultAction);
     FPaintBox.Invalidate;
   end;
 
