@@ -3,7 +3,7 @@ unit frmGetAction;
 interface
 
 uses
-  Winapi.Windows, System.Classes,
+  Winapi.Windows, System.Classes, uConstants,
   Vcl.Controls, Vcl.Forms, Vcl.StdCtrls, Vcl.ExtCtrls;
 
 type
@@ -14,6 +14,7 @@ type
     procedure MemoActionKeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
     procedure FormShow(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
   private
     { Private declarations }
   public
@@ -43,6 +44,13 @@ implementation
     end
     else
       Result:= False;
+  end;
+
+  procedure TWriteAction.FormCreate(Sender: TObject);
+  begin
+    MemoAction.MaxLength := MaxTextLength;
+    MemoAction.Font.Size := mmFontSize;
+    MemoAction.Font.Name := mmFontName;
   end;
 
   procedure TWriteAction.FormShow(Sender: TObject);

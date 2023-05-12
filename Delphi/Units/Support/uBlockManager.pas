@@ -21,21 +21,16 @@ type
     end;
   private const
     SchemeInitialIndent = 10;
-
-    InitiaCancelColor: TColor = clRed;
-    InitialOKColor: TColor = clGreen;
-    InitialArrowColor: TColor = clBlack;
-    InitialHighlightColor : TColor = clYellow;
   private class var
     FBufferBlock: TBlock;
     FCarryBlock: TBlock;
     FHoveredStatement: THoveredStatement;
+
+    FHighlightColor, FArrowColor, FOKColor, FCancelColor: TColor;
   private
     FMainBlock : TBlock;
     FDedicatedStatement: TStatement;
     FPaintBox: TPaintBox;
-
-    FHighlightColor, FArrowColor, FOKColor, FCancelColor: TColor;
 
     FUndoStack, FRedoStack: TAutoClearStack<ICommand>;
 
@@ -46,13 +41,16 @@ type
     destructor Destroy;
     property MainBlock: TBlock read FMainBlock;
 
-    property HighlightColor: TColor write FHighlightColor;
     property DedicatedStatement: TStatement read FDedicatedStatement write ChangeDedicated;
+    property UndoStack: TAutoClearStack<ICommand> read FUndoStack;
+    property RedoStack: TAutoClearStack<ICommand> read FRedoStack;
 
     class property CarryBlock: TBlock read FCarryBlock;
 
-    property UndoStack: TAutoClearStack<ICommand> read FUndoStack;
-    property RedoStack: TAutoClearStack<ICommand> read FRedoStack;
+    class property HighlightColor: TColor read FHighlightColor write FHighlightColor;
+    class property ArrowColor: TColor read FArrowColor write FArrowColor;
+    class property OKColor: TColor read FOKColor write FOKColor;
+    class property CancelColor: TColor read FCancelColor write FCancelColor;
 
     { MainBlock }
     procedure RedefineMainBlock;
@@ -112,11 +110,6 @@ implementation
   constructor TBlockManager.Create(const APaintBox: TPaintBox);
   begin
     FPaintBox:= APaintBox;
-
-    FHighlightColor := InitialHighlightColor;
-    FArrowColor := InitialArrowColor;
-    FOKColor := InitialOKColor;
-    FCancelColor := InitiaCancelColor;
 
     FUndoStack := TAutoClearStack<ICommand>.Create;
     FRedoStack := TAutoClearStack<ICommand>.Create;

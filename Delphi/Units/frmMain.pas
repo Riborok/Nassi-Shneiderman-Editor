@@ -127,6 +127,7 @@ type
     procedure FormShortCut(var Msg: TWMKey; var Handled: Boolean);
     procedure FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure actChngPenExecute(Sender: TObject);
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
     FPenDialog: TPenDialog;
 
@@ -142,6 +143,9 @@ type
     FBlockManager: TBlockManager;
 
     class function ConvertToBlockType(const AIndex: Integer): TStatementClass; static;
+    class procedure DownloadGlobalSettings; static;
+    class procedure LoadGlobalSettings; static;
+    class procedure ResetSettings; static;
 
     function GetVisibleImageScreen: TVisibleImageRect;
     procedure SetScrollPos(const AStatement: TStatement);
@@ -160,6 +164,13 @@ type
     SchemeInitialPenWidth = 1;
     SchemeInitialPenStyle: TPenStyle = psSolid;
     SchemeInitialPenMode: TPenMode = pmCopy;
+  private type
+    TGlobalSettings = record
+      glTrueCond, glFalseCond, glDefaultAction: ShortString;
+      glDefaultStatement: TStatementClass;
+      glHighlightColor: TColor;
+      glArrowColor, glOKColor, glCancelColor: TColor;
+    end;
   public
     destructor Destroy;
   end;
@@ -173,11 +184,19 @@ implementation
 
   { TNassiShneiderman }
 
+  procedure TNassiShneiderman.FormClose(Sender: TObject;
+  var Action: TCloseAction);
+  begin
+    LoadGlobalSettings;
+  end;
+
   procedure TNassiShneiderman.FormCreate(Sender: TObject);
   const
     MinFormWidth = 850;
     MinFormHeight = 600;
   begin
+    DownloadGlobalSettings;
+
     SetThreadUILanguage(MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US));
     Self.DoubleBuffered := True;
     FisZXCVPressed:= False;
@@ -212,8 +231,6 @@ implementation
 
     PaintBox.Canvas.Font := FFont;
     PaintBox.Canvas.Pen := FPen;
-
-    uBase.DefaultStatement:= TProcessStatement;
 
     FBlockManager:= TBlockManager.Create(PaintBox);
 
@@ -521,6 +538,80 @@ implementation
          AStatement.GetYBottom - VisibleImageScreen.FBottomRight.Y + Stock;
       $06 {1100}:
          ScrollBox.VertScrollBar.Position := AStatement.YStart - Stock;
+    end;
+  end;
+
+  class procedure TNassiShneiderman.DownloadGlobalSettings;
+  var
+    flGlobalSettings: file of TGlobalSettings;
+    GlobalSettings: TGlobalSettings;
+  begin
+    AssignFile(flGlobalSettings, 'GlobalSettings');
+    Reset(flGlobalSettings);
+    Read(flGlobalSettings, GlobalSettings);
+    CloseFile(flGlobalSettings);
+
+    with GlobalSettings do
+    begin
+      DefaultStatement := glDefaultStatement;
+      DefaultAction := glDefaultAction;
+
+      TIfBranching.TrueCond := glTrueCond;
+      TIfBranching.FalseCond := glFalseCond;
+
+      with TBlockManager do
+      begin
+        HighlightColor := glHighlightColor;
+        ArrowColor := glArrowColor;
+        OKColor := glOKColor;
+        CancelColor := glCancelColor;
+      end;
+    end;
+  end;
+
+  class procedure TNassiShneiderman.LoadGlobalSettings;
+  var
+    flGlobalSettings: file of TGlobalSettings;
+    GlobalSettings: TGlobalSettings;
+  begin
+
+    with GlobalSettings do
+    begin
+      glDefaultStatement := DefaultStatement;
+      glDefaultAction := DefaultAction;
+
+      glTrueCond := TIfBranching.TrueCond;
+      glFalseCond := TIfBranching.FalseCond;
+
+      with TBlockManager do
+      begin
+        glHighlightColor := HighlightColor;
+        glArrowColor := ArrowColor;
+        glOKColor := OKColor;
+        glCancelColor := CancelColor;
+      end;
+    end;
+
+    AssignFile(flGlobalSettings, 'GlobalSettings');
+    Rewrite(flGlobalSettings);
+    Write(flGlobalSettings, GlobalSettings);
+    CloseFile(flGlobalSettings);
+  end;
+
+  class procedure TNassiShneiderman.ResetSettings;
+  begin
+    TIfBranching.TrueCond := 'True';
+    TIfBranching.FalseCond := 'False';
+
+    DefaultStatement := TProcessStatement;
+    DefaultAction := ' ';
+
+    with TBlockManager do
+    begin
+      HighlightColor := clYellow;
+      ArrowColor := clBlack;
+      OKColor := clGreen;
+      CancelColor := clRed;
     end;
   end;
 

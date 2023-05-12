@@ -118,18 +118,14 @@ implementation
   end;
 
   procedure TWrite—ase—onditions.CreateMemo(const AText: string = '');
-  const
-    FontSize = 14;
-    FontName = 'Times New Roman';
-    MaxCondLength = 4242;
   var
     Memo: TMemo;
     LabelCaption: TLabel;
   begin
     LabelCaption := TLabel.Create(ScrollBox);
     LabelCaption.Parent := ScrollBox;
-    LabelCaption.Font.Size := FontSize;
-    LabelCaption.Font.Name := FontName;
+    LabelCaption.Font.Size := mmFontSize;
+    LabelCaption.Font.Name := mmFontName;
     LabelCaption.Caption := 'Condition ' + IntToStr(FMemoStack.Count);
     LabelCaption.AlignWithMargins := True;
     LabelCaption.Margins.Top := 20;
@@ -142,9 +138,9 @@ implementation
     Memo.ScrollBars := ssBoth;
     Memo.Text := AText;
     Memo.Align := alTop;
-    Memo.Font.Size := FontSize;
-    Memo.Font.Name := FontName;
-    Memo.MaxLength := MaxCondLength;
+    Memo.Font.Size := mmFontSize;
+    Memo.Font.Name := mmFontName;
+    Memo.MaxLength := MaxTextLength;
     Memo.Top:= FIndent;
     Inc(FIndent, Memo.Width);
 

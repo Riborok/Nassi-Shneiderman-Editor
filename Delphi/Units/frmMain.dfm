@@ -2129,6 +2129,7 @@ object NassiShneiderman: TNassiShneiderman
   Menu = MainMenu
   OldCreateOrder = False
   WindowState = wsMaximized
+  OnClose = FormClose
   OnCreate = FormCreate
   OnKeyDown = FormKeyDown
   OnKeyUp = FormKeyUp

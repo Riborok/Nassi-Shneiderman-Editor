@@ -12,8 +12,6 @@ type
   // DefaultSymbol is a constant field used to represent an unknown value
   // in the statement
   TStatement = class abstract
-  private const
-    DefaultSymbol = '';
   protected
 
     // FYStart and FYLast are used to store the Y position of the statement
@@ -200,6 +198,8 @@ type
 
     function FindStatementIndex(const AFYStart: Integer): Integer;
 
+    procedure SetNewActionForDefaultStatements(const AOldDefaultAction: string);
+
     // Set the dimensions after adding and if this statement is the last one,
     // it asks the previous to set the optimal height
     procedure Install(const Index: Integer);
@@ -209,13 +209,14 @@ type
 
   var
     DefaultStatement: TStatementClass = nil;
+    DefaultAction : string;
   function isDefaultStatement(const AStatement: TStatement): Boolean;
 
 implementation
 
   function isDefaultStatement(const AStatement: TStatement): Boolean;
   begin
-    Result:= (AStatement.FAction = TStatement.DefaultSymbol) and
+    Result:= (AStatement.FAction = DefaultAction) and
              (AStatement.ClassType = DefaultStatement);
   end;
 
@@ -223,7 +224,7 @@ implementation
 
   constructor TStatement.CreateDefault(const ABaseBlock: TBlock);
   begin
-    FAction := DefaultSymbol;
+    FAction := DefaultAction;
     FBaseBlock:= ABaseBlock;
   end;
 
@@ -653,6 +654,26 @@ implementation
     end;
   end;
 
+  procedure TBlock.SetNewActionForDefaultStatements(const AOldDefaultAction: string);
+  var
+    Blocks : TBlockArr;
+    I, J: Integer;
+  begin
+    for I := 0 to Statements.Count - 1 do
+    begin
+      if (Statements[I].FAction = AOldDefaultAction) and
+          (Statements[I].ClassType = DefaultStatement) then
+        Statements[I].ChangeAction(DefaultAction);
+
+      if Statements[I] is TOperator then
+      begin
+        Blocks := TOperator(Statements[I]).Blocks;
+        for J := 0 to High(Blocks) do
+          Blocks[J].SetNewActionForDefaultStatements(AOldDefaultAction);
+      end;
+    end;
+  end;
+
   function TBlock.FindStatementIndex(const AFYStart: Integer): Integer;
   var
     L, R, M: Integer;
@@ -708,6 +729,7 @@ implementation
     begin
       Blocks:= TOperator(FStatements[Index]).Blocks;
       Blocks[0].SetOptimalXLastBlock;
+      Blocks[0].GetLastStatement.SetYBottom(Blocks[0].GetLastStatement.GetOptimalYLast);
       for I := 1 to High(Blocks) - 1 do
       begin
         Blocks[I].SetOptimalXLastBlock;

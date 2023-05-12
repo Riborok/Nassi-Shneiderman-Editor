@@ -129,9 +129,4 @@ implementation
                     FYStart + FYIndentText shl 1 + FActionSize.Height, FFalseCond);
   end;
 
-
-  initialization
-  TIfBranching.FTrueCond := 'False';
-  TIfBranching.FFalseCond := 'True';
-
 end.
