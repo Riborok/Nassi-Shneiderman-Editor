@@ -8,7 +8,7 @@ uses
   uBase, uFirstLoop, uIfBranching, uCaseBranching, uLastLoop, uProcessStatement,
   uStatementSearch, System.Actions, Vcl.ActnList, Vcl.ToolWin, Types, uBlockManager,
   Vcl.ComCtrls, uAdditionalTypes, frmPenSetting, System.ImageList, Vcl.ImgList,
-  frmGlobalSettings, System.SysUtils;
+  frmGlobalSettings, System.SysUtils, uFileManager;
 
 type
   TNassiShneiderman = class(TForm)
@@ -101,6 +101,7 @@ type
     actChngGlSettings: TAction;
     ToolButton1: TToolButton;
     Globalsettings1: TMenuItem;
+    SaveDialog: TSaveDialog;
 
     procedure FormCreate(Sender: TObject);
 
@@ -146,9 +147,6 @@ type
     FBlockManager: TBlockManager;
 
     class function ConvertToBlockType(const AIndex: Integer): TStatementClass; static;
-    class procedure DownloadGlobalSettings; static;
-    class procedure LoadGlobalSettings; static;
-    class procedure ResetSettings; static;
 
     function GetVisibleImageScreen: TVisibleImageRect;
     procedure SetScrollPos(const AStatement: TStatement);
@@ -157,20 +155,6 @@ type
 
     procedure UpdateForDedicatedStatement;
     procedure UpdateForStack;
-  private const
-    constIfTrueCond = 'True';
-    constIfFalseCond = 'False';
-    constDefaultAction = '';
-    constHighlightColor = clYellow;
-    constArrowColor = clBlack;
-    constOKColor = clGreen;
-    constCancelColor = clRed;
-  private type
-    TGlobalSettings = record
-      glTrueCond, glFalseCond, glDefaultAction: ShortString;
-      glHighlightColor: TColor;
-      glArrowColor, glOKColor, glCancelColor: TColor;
-    end;
   public
     destructor Destroy;
   end;
@@ -187,7 +171,7 @@ implementation
   procedure TNassiShneiderman.FormClose(Sender: TObject;
   var Action: TCloseAction);
   begin
-    LoadGlobalSettings;
+    SaveGlobalSettings;
   end;
 
   procedure TNassiShneiderman.FormCreate(Sender: TObject);
@@ -195,7 +179,7 @@ implementation
     MinFormWidth = 850;
     MinFormHeight = 600;
   begin
-    DownloadGlobalSettings;
+    LoadGlobalSettings;
     DefaultStatement := TProcessStatement;
 
     SetThreadUILanguage(MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US));
@@ -217,7 +201,7 @@ implementation
     actSortDesc.ShortCut := ShortCut(VK_LEFT, [ssCtrl, ssShift]);
 
     FPenDialog:= TPenDialog.Create(Self, ColorDialog);
-    FGlobalSettingsDialog:= TGlobalSettingsDialog.Create(Self, ColorDialog, ResetSettings);
+    FGlobalSettingsDialog:= TGlobalSettingsDialog.Create(Self, ColorDialog);
 
     TBlockManager.BufferBlock := TBlock.Create(0, PaintBox.Canvas);
     TBlockManager.BufferBlock.AddStatement(uBase.DefaultStatement.Create(
@@ -244,7 +228,7 @@ implementation
     if FisZXCVPressed then
       Handled:= True
     else case Msg.CharCode of
-      VK_Z, VK_X, VK_C, VK_V:
+      VK_Z, VK_X, VK_C, VK_V, VK_RIGHT, VK_Left:
         FisZXCVPressed:= True;
     end;
   end;
@@ -445,7 +429,7 @@ implementation
   begin
     PrevDefaultAction := DefaultAction;
     if FGlobalSettingsDialog.Execute then
-      FBlockManager.ChangeGllobalSettings(PrevDefaultAction);
+      FBlockManager.ChangeGlobalSettings(PrevDefaultAction);
   end;
 
   { Private methods }
@@ -537,82 +521,6 @@ implementation
          AStatement.GetYBottom - VisibleImageScreen.FBottomRight.Y + Stock;
       $06 {1100}:
          ScrollBox.VertScrollBar.Position := AStatement.YStart - Stock;
-    end;
-  end;
-
-  class procedure TNassiShneiderman.DownloadGlobalSettings;
-  var
-    flGlobalSettings: file of TGlobalSettings;
-    GlobalSettings: TGlobalSettings;
-  begin
-    if FileExists('GlobalSettings') then
-    begin
-      AssignFile(flGlobalSettings, 'GlobalSettings');
-      Reset(flGlobalSettings);
-      Read(flGlobalSettings, GlobalSettings);
-      CloseFile(flGlobalSettings);
-
-      with GlobalSettings do
-      begin
-        DefaultAction := string(glDefaultAction);
-
-        TIfBranching.TrueCond := string(glTrueCond);
-        TIfBranching.FalseCond := string(glFalseCond);
-
-        with TBlockManager do
-        begin
-          HighlightColor := glHighlightColor;
-          ArrowColor := glArrowColor;
-          OKColor := glOKColor;
-          CancelColor := glCancelColor;
-        end;
-      end;
-    end
-    else
-      ResetSettings;
-  end;
-
-  class procedure TNassiShneiderman.LoadGlobalSettings;
-  var
-    flGlobalSettings: file of TGlobalSettings;
-    GlobalSettings: TGlobalSettings;
-  begin
-
-    with GlobalSettings do
-    begin
-      glDefaultAction := ShortString(DefaultAction);
-
-      glTrueCond := ShortString(TIfBranching.TrueCond);
-      glFalseCond := ShortString(TIfBranching.FalseCond);
-
-      with TBlockManager do
-      begin
-        glHighlightColor := HighlightColor;
-        glArrowColor := ArrowColor;
-        glOKColor := OKColor;
-        glCancelColor := CancelColor;
-      end;
-    end;
-
-    AssignFile(flGlobalSettings, 'GlobalSettings');
-    Rewrite(flGlobalSettings);
-    Write(flGlobalSettings, GlobalSettings);
-    CloseFile(flGlobalSettings);
-  end;
-
-  class procedure TNassiShneiderman.ResetSettings;
-  begin
-    TIfBranching.TrueCond := constIfTrueCond;
-    TIfBranching.FalseCond := constIfFalseCond;
-
-    DefaultAction := constDefaultAction;
-
-    with TBlockManager do
-    begin
-      HighlightColor := constHighlightColor;
-      ArrowColor := constArrowColor;
-      OKColor := constOKColor;
-      CancelColor := constCancelColor;
     end;
   end;
 

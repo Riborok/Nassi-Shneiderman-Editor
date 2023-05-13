@@ -71,7 +71,7 @@ type
 
     { MainBlock }
     procedure RedefineMainBlock;
-    procedure ChangeGllobalSettings(const AOldDefaultAction: string);
+    procedure ChangeGlobalSettings(const AOldDefaultAction: string);
 
     { BufferBlock }
     procedure TryCutDedicated;
@@ -165,7 +165,7 @@ implementation
     FPaintBox.Invalidate;
   end;
 
-  procedure TBlockManager.ChangeGllobalSettings(const AOldDefaultAction: string);
+  procedure TBlockManager.ChangeGlobalSettings(const AOldDefaultAction: string);
   begin
     if AOldDefaultAction <> DefaultAction then
     begin
@@ -610,6 +610,6 @@ implementation
     TryDrawCarryBlock(AVisibleImageRect);
 
     FMainBlock.DrawBlock(AVisibleImageRect);
-    DrawCoordinates(FPaintBox.Canvas, 50);
+    //DrawCoordinates(FPaintBox.Canvas, 50);
   end;
 end.

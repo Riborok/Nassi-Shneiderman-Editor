@@ -30,7 +30,8 @@ uses
   uAutoClearStack in 'Units\DataStructures\uAutoClearStack.pas',
   frmPenSetting in 'Units\Forms\frmPenSetting.pas' {PenDialog},
   frmGlobalSettings in 'Units\Forms\frmGlobalSettings.pas' {GlobalSettingsDialog},
-  uBlockManager in 'Units\BlockManager\uBlockManager.pas';
+  uBlockManager in 'Units\BlockManager\uBlockManager.pas',
+  uFileManager in 'Units\FileManager\uFileManager.pas';
 
 {$R *.res}
 

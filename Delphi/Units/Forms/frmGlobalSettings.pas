@@ -5,7 +5,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls,
-  uIfBranching, uConstants, uBase, uBlockManager, UITypes;
+  uIfBranching, uConstants, uBase, uBlockManager, UITypes, uFileManager;
 type
   TGlobalSettingsDialog = class(TForm)
     btnOK: TButton;
@@ -35,15 +35,11 @@ type
     procedure shpMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure KeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
-  private type
-    TResetSettings = procedure;
   private
     FColorDialog : TColorDialog;
-    FResetSettings : TResetSettings;
     procedure SetValues;
   public
-    constructor Create(const AOwner: TComponent; const AColorDialog: TColorDialog;
-                       const AResetSettings : TResetSettings);
+    constructor Create(const AOwner: TComponent; const AColorDialog: TColorDialog);
     function Execute: Boolean;
   end;
 
@@ -53,17 +49,15 @@ implementation
 
   procedure TGlobalSettingsDialog.btnRestoreClick(Sender: TObject);
   begin
-    FResetSettings;
+    ResetGlobalSettings;
     SetValues;
     btnOK.SetFocus;
   end;
 
-  constructor TGlobalSettingsDialog.Create(const AOwner: TComponent; const AColorDialog: TColorDialog;
-                                           const AResetSettings : TResetSettings);
+  constructor TGlobalSettingsDialog.Create(const AOwner: TComponent; const AColorDialog: TColorDialog);
   begin
     inherited Create(AOwner);
     FColorDialog := AColorDialog;
-    FResetSettings := AResetSettings;
 
     mmTrue.MaxLength := MaxTextLength;
     mmTrue.Font.Size := mmFontSize;
@@ -72,6 +66,10 @@ implementation
     mmFalse.MaxLength := MaxTextLength;
     mmFalse.Font.Size := mmFontSize;
     mmFalse.Font.Name := mmFontName;
+
+    mmDefAct.MaxLength := MaxTextLength;
+    mmDefAct.Font.Size := mmFontSize;
+    mmDefAct.Font.Name := mmFontName;
   end;
 
   procedure TGlobalSettingsDialog.SetValues;

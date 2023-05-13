@@ -3333,4 +3333,9 @@ object NassiShneiderman: TNassiShneiderman
     Left = 731
     Top = 516
   end
+  object SaveDialog: TSaveDialog
+    Options = [ofHideReadOnly, ofNoChangeDir, ofEnableSizing]
+    Left = 379
+    Top = 430
+  end
 end
