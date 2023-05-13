@@ -1,7 +1,7 @@
 unit uCommands;
 
 interface
-uses uAdditionalTypes, uBase, uStack, uCaseBranching;
+uses uAdditionalTypes, uBase, uStack, uCaseBranching, uMinMaxInt;
 type
 
   ICommand = interface
@@ -158,7 +158,7 @@ implementation
     WasDefaultStatementRemoved:= FIndex >= FBaseBlock.Statements.Count;
     Dec(FIndex, Ord(WasDefaultStatementRemoved));
     FBaseBlock.ExtractStatementAt(FIndex);
-    FBaseBlock.Install(FIndex);
+    FBaseBlock.Install(FIndex - Ord(FIndex = FBaseBlock.Statements.Count));
     Inc(FIndex, Ord(WasDefaultStatementRemoved));
   end;
 
@@ -171,7 +171,7 @@ implementation
   procedure TCommandDelStatement.Execute;
   begin
     FIndex:= FStatement.BaseBlock.Extract(FStatement);
-    FStatement.BaseBlock.Install(FIndex);
+    FStatement.BaseBlock.Install(FIndex - Ord(FIndex = FStatement.BaseBlock.Statements.Count));
   end;
 
   procedure TCommandDelStatement.Undo;
@@ -208,7 +208,7 @@ implementation
     Dec(FIndex, Ord(WasDefaultStatementRemoved));
     for I := 0 to FInsertedBlock.Statements.Count - 1 do
       FBaseBlock.ExtractStatementAt(FIndex + I);
-    FBaseBlock.Install(FIndex);
+    FBaseBlock.Install(FIndex - Ord(FIndex = FBaseBlock.Statements.Count));
     Inc(FIndex, Ord(WasDefaultStatementRemoved));
   end;
 
@@ -323,9 +323,9 @@ implementation
     TempIndex: Integer;
   begin
     SortStatements;
-    Offset := FFirstStatement.BaseBlock.XStart - FSecondStatement.BaseBlock.XStart;
 
     SecondBaseBlock := FSecondStatement.BaseBlock;
+    Offset := FFirstStatement.BaseBlock.XStart - SecondBaseBlock.XStart;
 
     FFirstStatement.BaseBlock.AssignStatement(FFirstIndex, FSecondStatement);
     SecondBaseBlock.AssignStatement(FSecondIndex, FFirstStatement);
@@ -339,7 +339,6 @@ implementation
       CurrOperator := TOperator(FFirstStatement);
       CurrOperator.MoveRightChildrens(-Offset);
       CurrOperator.SetXLastForChildrens(CurrOperator.BaseBlock.XLast);
-      CurrOperator.AlignBlocks;
     end;
 
     if FSecondStatement is TOperator then
@@ -347,10 +346,12 @@ implementation
       CurrOperator := TOperator(FSecondStatement);
       CurrOperator.MoveRightChildrens(Offset);
       CurrOperator.SetXLastForChildrens(CurrOperator.BaseBlock.XLast);
-      CurrOperator.AlignBlocks;
     end;
 
-    FFirstStatement.BaseBlock.Install(FFirstIndex);
+    if (SecondBaseBlock.BaseOperator = nil) and
+       (SecondBaseBlock = FSecondStatement.BaseBlock) then
+      FFirstStatement.SwapYStart(FSecondStatement);
+    SecondBaseBlock.Install(FFirstIndex);
     FSecondStatement.BaseBlock.Install(FSecondIndex);
   end;
 

@@ -103,7 +103,6 @@ implementation
 
   function TGlobalSettingsDialog.Execute : Boolean;
   begin
-    Result:= False;
     ShowModal;
     if ModalResult = mrOk then
     begin

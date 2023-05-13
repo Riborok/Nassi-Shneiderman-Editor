@@ -77,6 +77,8 @@ type
     // Set the optimal Y last
     procedure SetOptimalYLast;
 
+    procedure SwapYStart(const AStatement: TStatement);
+
     function Clone: TStatement; virtual;
 
   function GetMask(const AVisibleImageRect: TVisibleImageRect;
@@ -297,6 +299,15 @@ implementation
   begin
     SetOptimalYLast;
     BaseBlock.SetOptimalXLastBlock;
+  end;
+
+  procedure TStatement.SwapYStart(const AStatement: TStatement);
+  var
+    Temp: Integer;
+  begin
+    Temp := Self.YStart;
+    Self.FYStart := AStatement.FYStart;
+    AStatement.FYStart := Temp;
   end;
 
   function TStatement.Clone: TStatement;
@@ -740,12 +751,14 @@ implementation
   var
     I: Integer;
     Blocks: TBlockArr;
+    CurrOperator: TOperator;
   begin
     FStatements[Index].SetOptimalYLast;
 
     if FStatements[Index] is TOperator then
     begin
-      Blocks:= TOperator(FStatements[Index]).Blocks;
+      CurrOperator:= TOperator(FStatements[Index]);
+      Blocks:= CurrOperator.Blocks;
       Blocks[0].SetOptimalXLastBlock;
       Blocks[0].GetLastStatement.SetYBottom(Blocks[0].GetLastStatement.GetOptimalYLast);
       for I := 1 to High(Blocks) - 1 do
@@ -753,6 +766,7 @@ implementation
         Blocks[I].SetOptimalXLastBlock;
         Blocks[I].GetLastStatement.SetYBottom(Blocks[I].GetLastStatement.GetOptimalYLast);
       end;
+      CurrOperator.AlignBlocks;
     end
     else
       Self.SetOptimalXLastBlock;
