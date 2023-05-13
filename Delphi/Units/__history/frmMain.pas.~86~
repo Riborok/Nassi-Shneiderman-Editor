@@ -7,7 +7,8 @@ uses
   Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls, Vcl.StdCtrls, Vcl.Menus, uConstants,
   uBase, uFirstLoop, uIfBranching, uCaseBranching, uLastLoop, uProcessStatement,
   uStatementSearch, System.Actions, Vcl.ActnList, Vcl.ToolWin, Types, uBlockManager,
-  Vcl.ComCtrls, uAdditionalTypes, frmPenSetting, System.ImageList, Vcl.ImgList;
+  Vcl.ComCtrls, uAdditionalTypes, frmPenSetting, System.ImageList, Vcl.ImgList,
+  frmGlobalSettings;
 
 type
   TNassiShneiderman = class(TForm)
@@ -97,6 +98,9 @@ type
     tbSortDesc: TToolButton;
     tbSortAsc: TToolButton;
     sep5: TToolButton;
+    actChngGlSettings: TAction;
+    ToolButton1: TToolButton;
+    Globalsettings1: TMenuItem;
 
     procedure FormCreate(Sender: TObject);
 
@@ -128,8 +132,10 @@ type
     procedure FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure actChngPenExecute(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure actChngGlSettingsExecute(Sender: TObject);
   private
     FPenDialog: TPenDialog;
+    FGlobalSettingsDialog: TGlobalSettingsDialog;
 
     FPrevMousePos: TPoint;
 
@@ -145,7 +151,7 @@ type
     class function ConvertToBlockType(const AIndex: Integer): TStatementClass; static;
     class procedure DownloadGlobalSettings; static;
     class procedure LoadGlobalSettings; static;
-    class procedure ResetGlobalSettings; static;
+    class procedure ResetSettings; static;
 
     function GetVisibleImageScreen: TVisibleImageRect;
     procedure SetScrollPos(const AStatement: TStatement);
@@ -164,12 +170,19 @@ type
     SchemeInitialPenWidth = 1;
     SchemeInitialPenStyle: TPenStyle = psSolid;
     SchemeInitialPenMode: TPenMode = pmCopy;
+
+    constIfTrueCond = 'True';
+    constIfFalseCond = 'False';
+    constDefaultAction = '';
+    constHighlightColor = clYellow;
+    constArrowColor = clBlack;
+    constOKColor = clGreen;
+    constCancelColor = clRed;
   private type
     TGlobalSettings = record
       glTrueCond, glFalseCond, glDefaultAction: ShortString;
-      glDefaultStatement: TStatementClass;
       glHighlightColor: TColor;
-      ArrowColor, OKColor, CancelColor: TColor;
+      glArrowColor, glOKColor, glCancelColor: TColor;
     end;
   public
     destructor Destroy;
@@ -195,7 +208,8 @@ implementation
     MinFormWidth = 850;
     MinFormHeight = 600;
   begin
-    LoadGlobalSettings;
+    DownloadGlobalSettings;
+    DefaultStatement := TProcessStatement;
 
     SetThreadUILanguage(MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US));
     Self.DoubleBuffered := True;
@@ -211,10 +225,12 @@ implementation
     actRedo.ShortCut := ShortCut(VK_Z, [ssCtrl, ssShift]);
     actChngFont.ShortCut := ShortCut(VK_F, [ssShift, ssCtrl]);
     actChngPen.ShortCut := ShortCut(VK_P, [ssShift, ssCtrl]);
+    actChngGlSettings.ShortCut := ShortCut(VK_G, [ssCtrl, ssShift]);
     actSortAsc.ShortCut := ShortCut(VK_RIGHT, [ssCtrl, ssShift]);
     actSortDesc.ShortCut := ShortCut(VK_LEFT, [ssCtrl, ssShift]);
 
     FPenDialog:= TPenDialog.Create(Self, ColorDialog);
+    FGlobalSettingsDialog:= TGlobalSettingsDialog.Create(Self, ColorDialog, ResetSettings);
 
     FPen:= FPenDialog.Pen;
     FFont:= FontDialog.Font;
@@ -454,6 +470,15 @@ implementation
     end;
   end;
 
+  procedure TNassiShneiderman.actChngGlSettingsExecute(Sender: TObject);
+  var
+    PrevDefaultAction : String;
+  begin
+    PrevDefaultAction := DefaultAction;
+    if FGlobalSettingsDialog.Execute then
+      FBlockManager.ChangeGllobalSettings(PrevDefaultAction);
+  end;
+
   { Private methods }
   destructor TNassiShneiderman.Destroy;
   begin
@@ -551,35 +576,64 @@ implementation
     Read(flGlobalSettings, GlobalSettings);
     CloseFile(flGlobalSettings);
 
-    DefaultStatement := GlobalSettings.glDefaultStatement;
-    DefaultAction := GlobalSettings.glDefaultAction;
-
-    TIfBranching.TrueCond := GlobalSettings.glTrueCond;
-    TIfBranching.FalseCond := GlobalSettings.glFalseCond;
-
-    with TBlockManager do
+    with GlobalSettings do
     begin
-      HighlightColor := GlobalSettings.glHighlightColor;
-      ArrowColor := GlobalSettings.ArrowColor;
-      OKColor := GlobalSettings.OKColor;
-      CancelColor := GlobalSettings.CancelColor;
+      DefaultAction := string(glDefaultAction);
+
+      TIfBranching.TrueCond := string(glTrueCond);
+      TIfBranching.FalseCond := string(glFalseCond);
+
+      with TBlockManager do
+      begin
+        HighlightColor := glHighlightColor;
+        ArrowColor := glArrowColor;
+        OKColor := glOKColor;
+        CancelColor := glCancelColor;
+      end;
     end;
   end;
 
-  class procedure TNassiShneiderman.ResetGlobalSettings;
+  class procedure TNassiShneiderman.LoadGlobalSettings;
+  var
+    flGlobalSettings: file of TGlobalSettings;
+    GlobalSettings: TGlobalSettings;
   begin
-    TIfBranching.TrueCond := 'True';
-    TIfBranching.FalseCond := 'False';
 
-    DefaultStatement := TProcessStatement;
-    DefaultAction := ' ';
+    with GlobalSettings do
+    begin
+      glDefaultAction := ShortString(DefaultAction);
+
+      glTrueCond := ShortString(TIfBranching.TrueCond);
+      glFalseCond := ShortString(TIfBranching.FalseCond);
+
+      with TBlockManager do
+      begin
+        glHighlightColor := HighlightColor;
+        glArrowColor := ArrowColor;
+        glOKColor := OKColor;
+        glCancelColor := CancelColor;
+      end;
+    end;
+
+    AssignFile(flGlobalSettings, 'GlobalSettings');
+    Rewrite(flGlobalSettings);
+    Write(flGlobalSettings, GlobalSettings);
+    CloseFile(flGlobalSettings);
+  end;
+
+  class procedure TNassiShneiderman.ResetSettings;
+  begin
+    TIfBranching.TrueCond := constIfTrueCond;
+    TIfBranching.FalseCond := constIfFalseCond;
+
+    DefaultAction := constDefaultAction;
 
     with TBlockManager do
     begin
-      HighlightColor := clYellow;
-      ArrowColor := clBlack;
-      OKColor := clGreen;
-      CancelColor := clRed;
+      HighlightColor := constHighlightColor;
+      ArrowColor := constArrowColor;
+      OKColor := constOKColor;
+      CancelColor := constCancelColor;
     end;
   end;
 

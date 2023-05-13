@@ -8,7 +8,7 @@ uses
   uBase, uFirstLoop, uIfBranching, uCaseBranching, uLastLoop, uProcessStatement,
   uStatementSearch, System.Actions, Vcl.ActnList, Vcl.ToolWin, Types, uBlockManager,
   Vcl.ComCtrls, uAdditionalTypes, frmPenSetting, System.ImageList, Vcl.ImgList,
-  frmGlobalSettings;
+  frmGlobalSettings, System.SysUtils;
 
 type
   TNassiShneiderman = class(TForm)
@@ -571,26 +571,31 @@ implementation
     flGlobalSettings: file of TGlobalSettings;
     GlobalSettings: TGlobalSettings;
   begin
-    AssignFile(flGlobalSettings, 'GlobalSettings');
-    Reset(flGlobalSettings);
-    Read(flGlobalSettings, GlobalSettings);
-    CloseFile(flGlobalSettings);
-
-    with GlobalSettings do
+    if FileExists('GlobalSettings') then
     begin
-      DefaultAction := string(glDefaultAction);
+      AssignFile(flGlobalSettings, 'GlobalSettings');
+      Reset(flGlobalSettings);
+      Read(flGlobalSettings, GlobalSettings);
+      CloseFile(flGlobalSettings);
 
-      TIfBranching.TrueCond := string(glTrueCond);
-      TIfBranching.FalseCond := string(glFalseCond);
-
-      with TBlockManager do
+      with GlobalSettings do
       begin
-        HighlightColor := glHighlightColor;
-        ArrowColor := glArrowColor;
-        OKColor := glOKColor;
-        CancelColor := glCancelColor;
+        DefaultAction := string(glDefaultAction);
+
+        TIfBranching.TrueCond := string(glTrueCond);
+        TIfBranching.FalseCond := string(glFalseCond);
+
+        with TBlockManager do
+        begin
+          HighlightColor := glHighlightColor;
+          ArrowColor := glArrowColor;
+          OKColor := glOKColor;
+          CancelColor := glCancelColor;
+        end;
       end;
-    end;
+    end
+    else
+      ResetSettings;
   end;
 
   class procedure TNassiShneiderman.LoadGlobalSettings;
