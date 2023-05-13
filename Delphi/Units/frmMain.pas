@@ -219,7 +219,11 @@ implementation
     FPenDialog:= TPenDialog.Create(Self, ColorDialog);
     FGlobalSettingsDialog:= TGlobalSettingsDialog.Create(Self, ColorDialog, ResetSettings);
 
-    FBlockManager:= TBlockManager.Create(PaintBox, FPenDialog.Pen, FontDialog.Font);
+    TBlockManager.BufferBlock := TBlock.Create(0, PaintBox.Canvas);
+    TBlockManager.BufferBlock.AddStatement(uBase.DefaultStatement.Create(
+                                     DefaultAction, TBlockManager.BufferBlock));
+
+    FBlockManager:= TBlockManager.Create(PaintBox);
   end;
 
   procedure TNassiShneiderman.FormKeyDown(Sender: TObject; var Key: Word;
@@ -420,12 +424,17 @@ implementation
 
   procedure TNassiShneiderman.actChngFontExecute(Sender: TObject);
   begin
+    FontDialog.Font := FBlockManager.Font;
     if FontDialog.Execute then
+    begin
+      FBlockManager.Font.Assign(FontDialog.Font);
       FBlockManager.RedefineMainBlock;
+    end;
   end;
 
   procedure TNassiShneiderman.actChngPenExecute(Sender: TObject);
   begin
+    FPenDialog.Pen := FBlockManager.Pen;
     if FPenDialog.Execute then
       FBlockManager.RedefineMainBlock;
   end;
@@ -442,6 +451,10 @@ implementation
   { Private methods }
   destructor TNassiShneiderman.Destroy;
   begin
+    TBlockManager.BufferBlock.Destroy;
+    if TBlockManager.CarryBlock <> nil then
+      TBlockManager.CarryBlock.Destroy;
+
     FBlockManager.Destroy;
 
     FPenDialog.Destroy;

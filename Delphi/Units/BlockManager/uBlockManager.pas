@@ -50,7 +50,7 @@ type
     { DedicatedStatement }
     procedure ChangeDedicated(const AStatement: TStatement);
   public
-    constructor Create(const APaintBox: TPaintBox; const APen: TPen; const AFont: TFont);
+    constructor Create(const APaintBox: TPaintBox);
     destructor Destroy;
     property MainBlock: TBlock read FMainBlock;
 
@@ -58,7 +58,11 @@ type
     property UndoStack: TAutoClearStack<ICommand> read FUndoStack;
     property RedoStack: TAutoClearStack<ICommand> read FRedoStack;
 
+    property Font: TFont read FFont;
+    property Pen: TPen read FPen;
+
     class property CarryBlock: TBlock read FCarryBlock;
+    class property BufferBlock: TBlock read FBufferBlock write FBufferBlock;
 
     class property HighlightColor: TColor read FHighlightColor write FHighlightColor;
     class property ArrowColor: TColor read FArrowColor write FArrowColor;
@@ -110,22 +114,21 @@ implementation
   destructor TBlockManager.Destroy;
   begin
     FMainBlock.Destroy;
-    FBufferBlock.Destroy;
-
-    if FCarryBlock <> nil then
-      FCarryBlock.Destroy;
 
     FUndoStack.Destroy;
     FRedoStack.Destroy;
 
+    FPen.Destroy;
+    FFont.Destroy;
+
     inherited;
   end;
 
-  constructor TBlockManager.Create(const APaintBox: TPaintBox; const APen: TPen; const AFont: TFont);
+  constructor TBlockManager.Create(const APaintBox: TPaintBox);
   begin
     FPaintBox:= APaintBox;
-    FPen := APen;
-    FFont := AFont;
+    FPen := TPen.Create;
+    FFont := TFont.Create;
 
     FFont.Size := SchemeInitialFontSize;
     FFont.Name := SchemeInitialFont;
@@ -145,9 +148,6 @@ implementation
 
     FDedicatedStatement:= nil;
     FCarryBlock:= nil;
-
-    FBufferBlock:= TBlock.Create(0, FPaintBox.Canvas);
-    FBufferBlock.AddStatement(uBase.DefaultStatement.Create(DefaultAction, FBufferBlock));
 
     FMainBlock:= TBlock.Create(SchemeInitialIndent, FPaintBox.Canvas);
     FMainBlock.AddUnknownStatement(uBase.DefaultStatement.Create(DefaultAction, FMainBlock),

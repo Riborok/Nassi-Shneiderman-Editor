@@ -28,9 +28,8 @@ type
     class function GetStyle(const AIndex: Integer): TPenStyle;
   public
     { Public declarations }
-    property Pen: TPen read FPen;
+    property Pen: TPen write FPen;
     constructor Create(const AOwner: TComponent; const AColorDialog: TColorDialog);
-    destructor Destroy; override;
     function Execute: Boolean;
   end;
 
@@ -63,7 +62,6 @@ implementation
   constructor TPenDialog.Create(const AOwner: TComponent; const AColorDialog: TColorDialog);
   begin
     inherited Create(AOwner);
-    FPen:= TPen.Create;
     FColorDialog:= AColorDialog;
   end;
 
@@ -94,11 +92,6 @@ implementation
   begin
     if FColorDialog.Execute then
       CurrColor.Brush.Color:= FColorDialog.Color;
-  end;
-
-  destructor TPenDialog.Destroy;
-  begin
-    FPen.Destroy;
   end;
 
   function TPenDialog.Execute: Boolean;
