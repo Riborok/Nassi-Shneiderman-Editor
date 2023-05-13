@@ -54,7 +54,7 @@ type
 
     { MainBlock }
     procedure RedefineMainBlock;
-    procedure SetNewActionForDefaultStatements(const AOldDefaultAction: string);
+    procedure ChangeGllobalSettings(const AOldDefaultAction: string);
 
     { BufferBlock }
     procedure TryCutDedicated;
@@ -119,10 +119,10 @@ implementation
     FCarryBlock:= nil;
 
     FBufferBlock:= TBlock.Create(0, FPaintBox.Canvas);
-    FBufferBlock.AddStatement(uBase.DefaultStatement.CreateDefault(FBufferBlock));
+    FBufferBlock.AddStatement(uBase.DefaultStatement.Create(DefaultAction, FBufferBlock));
 
     FMainBlock:= TBlock.Create(SchemeInitialIndent, FPaintBox.Canvas);
-    FMainBlock.AddUnknownStatement(uBase.DefaultStatement.CreateDefault(FMainBlock),
+    FMainBlock.AddUnknownStatement(uBase.DefaultStatement.Create(DefaultAction, FMainBlock),
                                                             SchemeInitialIndent);
   end;
 
@@ -133,9 +133,16 @@ implementation
     FPaintBox.Invalidate;
   end;
 
-  procedure TBlockManager.SetNewActionForDefaultStatements(const AOldDefaultAction: string);
+  procedure TBlockManager.ChangeGllobalSettings(const AOldDefaultAction: string);
   begin
-    MainBlock.SetNewActionForDefaultStatements(AOldDefaultAction);
+    if AOldDefaultAction <> DefaultAction then
+    begin
+      if (FDedicatedStatement is DefaultStatement) and
+         (FDedicatedStatement.Action = DefaultAction) then
+        FDedicatedStatement := nil;
+      MainBlock.SetNewActionForDefaultStatements(AOldDefaultAction);
+    end;
+    MainBlock.RedefineSizes;
     FPaintBox.Invalidate;
   end;
 

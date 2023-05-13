@@ -3,7 +3,7 @@ object PenDialog: TPenDialog
   Top = 0
   BorderStyle = bsDialog
   Caption = 'Pen'
-  ClientHeight = 151
+  ClientHeight = 120
   ClientWidth = 433
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -18,7 +18,7 @@ object PenDialog: TPenDialog
   TextHeight = 13
   object CurrColor: TShape
     Left = 16
-    Top = 107
+    Top = 86
     Width = 113
     Height = 22
     OnMouseDown = CurrColorMouseDown
@@ -39,7 +39,7 @@ object PenDialog: TPenDialog
   end
   object lbColor: TLabel
     Left = 16
-    Top = 88
+    Top = 67
     Width = 29
     Height = 13
     Caption = 'Color:'

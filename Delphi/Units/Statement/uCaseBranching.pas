@@ -228,7 +228,7 @@ implementation
     for I := High(FBlocks) downto AStartIndex do
     begin
       FBlocks[I]:= TBlock.Create(MaxInt - (High(FBlocks) - I), Self);
-      FBlocks[I].Statements.Add(DefaultStatement.CreateDefault(FBlocks[I]));
+      FBlocks[I].Statements.Add(DefaultStatement.Create(DefaultAction, FBlocks[I]));
     end;
   end;
 

@@ -54,11 +54,9 @@ type
 
     procedure Initialize; virtual;
   public
-    // This constructor creates an default statement
-    constructor CreateDefault(const ABaseBlock: TBlock);
-
     // Create
-    constructor Create(const AAction : String); virtual;
+    constructor Create(const AAction : String; const ABaseBlock: TBlock); overload;
+    constructor Create(const AAction : String); overload; virtual;
 
     // These properties return the text of the statement and base block
     property Action: String read FAction;
@@ -217,16 +215,15 @@ implementation
   function isDefaultStatement(const AStatement: TStatement): Boolean;
   begin
     Result:= (AStatement.FAction = DefaultAction) and
-             (AStatement.ClassType = DefaultStatement);
+             (AStatement is DefaultStatement);
   end;
 
   { TStatement }
 
-  constructor TStatement.CreateDefault(const ABaseBlock: TBlock);
+  constructor TStatement.Create(const AAction : String; const ABaseBlock: TBlock);
   begin
-    FAction := DefaultAction;
     FBaseBlock:= ABaseBlock;
-    inherited Create;
+    Create(AAction);
   end;
 
   constructor TStatement.Create(const AAction : String);
@@ -304,7 +301,7 @@ implementation
 
   function TStatement.Clone: TStatement;
   begin
-    Result:= TStatementClass(Self.ClassType).CreateDefault(Self.BaseBlock);
+    Result:= TStatementClass(Self.ClassType).Create(DefaultAction, Self.BaseBlock);
 
     Result.FAction:= Self.FAction;
 
@@ -473,7 +470,7 @@ implementation
     FStatements.Delete(AIndex);
     if FStatements.Count = 0 then
     begin
-      AddStatement(DefaultStatement.CreateDefault(Self));
+      AddStatement(DefaultStatement.Create(DefaultAction, Self));
       FStatements[0].FYStart:= Result.FYStart;
     end
     else if (Result.BaseBlock.BaseOperator = nil) and (AIndex = 0) then
@@ -661,11 +658,9 @@ implementation
     Blocks : TBlockArr;
     I, J: Integer;
   begin
-    for I := 0 to Statements.Count - 1 do
+    I:= 0;
+    while I < Statements.Count - 1 do
     begin
-      if (Statements[I].FAction = AOldDefaultAction) and
-          (Statements[I].ClassType = DefaultStatement) then
-        Statements[I].ChangeAction(DefaultAction);
 
       if Statements[I] is TOperator then
       begin
@@ -673,6 +668,27 @@ implementation
         for J := 0 to High(Blocks) do
           Blocks[J].SetNewActionForDefaultStatements(AOldDefaultAction);
       end;
+
+      if Statements[I] is DefaultStatement then
+      begin
+        if Statements[I].FAction = AOldDefaultAction then
+          Statements[I].ChangeAction(DefaultAction)
+        else if Statements[I].FAction = DefaultAction then
+        begin
+          RemoveStatementAt(I);
+          Dec(I);
+        end;
+      end;
+
+      Inc(I);
+    end;
+    I:= Statements.Count - 1;
+    if Statements[I] is DefaultStatement then
+    begin
+      if Statements[I].FAction = AOldDefaultAction then
+        Statements[I].ChangeAction(DefaultAction)
+      else if Statements[I].FAction = DefaultAction then
+        RemoveStatementAt(I);
     end;
   end;
 

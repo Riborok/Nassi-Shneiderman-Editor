@@ -3,8 +3,8 @@ object GlobalSettingsDialog: TGlobalSettingsDialog
   Top = 0
   BorderStyle = bsDialog
   Caption = 'Global settings dialog'
-  ClientHeight = 333
-  ClientWidth = 829
+  ClientHeight = 342
+  ClientWidth = 786
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -16,7 +16,7 @@ object GlobalSettingsDialog: TGlobalSettingsDialog
   PixelsPerInch = 96
   TextHeight = 13
   object btnOK: TButton
-    Left = 744
+    Left = 700
     Top = 24
     Width = 65
     Height = 25
@@ -32,7 +32,7 @@ object GlobalSettingsDialog: TGlobalSettingsDialog
     TabOrder = 0
   end
   object btnCancel: TButton
-    Left = 744
+    Left = 700
     Top = 55
     Width = 65
     Height = 25
@@ -45,13 +45,13 @@ object GlobalSettingsDialog: TGlobalSettingsDialog
   object plIf: TPanel
     Left = 8
     Top = 8
-    Width = 354
-    Height = 317
+    Width = 669
+    Height = 161
     ParentBackground = False
     TabOrder = 2
     object lbFalse: TLabel
-      Left = 16
-      Top = 192
+      Left = 8
+      Top = 39
       Width = 102
       Height = 21
       Caption = 'Label FALSE'
@@ -63,8 +63,8 @@ object GlobalSettingsDialog: TGlobalSettingsDialog
       ParentFont = False
     end
     object lbInfo: TLabel
-      Left = 16
-      Top = 4
+      Left = 6
+      Top = 6
       Width = 261
       Height = 21
       Caption = #1057'onditions for the branching block'
@@ -76,8 +76,8 @@ object GlobalSettingsDialog: TGlobalSettingsDialog
       ParentFont = False
     end
     object lbTrue: TLabel
-      Left = 16
-      Top = 48
+      Left = 344
+      Top = 39
       Width = 95
       Height = 21
       Caption = 'Label TRUE'
@@ -89,10 +89,11 @@ object GlobalSettingsDialog: TGlobalSettingsDialog
       ParentFont = False
     end
     object mmFalse: TMemo
-      Left = 16
-      Top = 219
+      Left = 8
+      Top = 66
       Width = 313
       Height = 86
+      TabStop = False
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
       Font.Height = -19
@@ -103,12 +104,14 @@ object GlobalSettingsDialog: TGlobalSettingsDialog
       ParentFont = False
       ScrollBars = ssBoth
       TabOrder = 0
+      OnKeyDown = KeyDown
     end
     object mmTrue: TMemo
-      Left = 16
-      Top = 75
+      Left = 344
+      Top = 66
       Width = 313
       Height = 86
+      TabStop = False
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
       Font.Height = -19
@@ -119,13 +122,14 @@ object GlobalSettingsDialog: TGlobalSettingsDialog
       ParentFont = False
       ScrollBars = ssBoth
       TabOrder = 1
+      OnKeyDown = KeyDown
     end
   end
   object plDefault: TPanel
-    Left = 379
-    Top = 8
-    Width = 343
-    Height = 129
+    Left = 343
+    Top = 175
+    Width = 334
+    Height = 162
     TabOrder = 3
     object lbDefAct: TLabel
       Left = 16
@@ -141,10 +145,11 @@ object GlobalSettingsDialog: TGlobalSettingsDialog
       ParentFont = False
     end
     object mmDefAct: TMemo
-      Left = 8
+      Left = 16
       Top = 31
-      Width = 313
-      Height = 86
+      Width = 305
+      Height = 122
+      TabStop = False
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
       Font.Height = -19
@@ -155,13 +160,14 @@ object GlobalSettingsDialog: TGlobalSettingsDialog
       ParentFont = False
       ScrollBars = ssBoth
       TabOrder = 0
+      OnKeyDown = KeyDown
     end
   end
   object plColors: TPanel
-    Left = 379
-    Top = 146
-    Width = 343
-    Height = 179
+    Left = 8
+    Top = 175
+    Width = 329
+    Height = 162
     TabOrder = 4
     object lbColors: TLabel
       Left = 8
@@ -186,7 +192,7 @@ object GlobalSettingsDialog: TGlobalSettingsDialog
     object shpArrow: TShape
       Tag = 1
       Left = 8
-      Top = 147
+      Top = 131
       Width = 113
       Height = 22
       OnMouseDown = shpMouseDown
@@ -202,7 +208,7 @@ object GlobalSettingsDialog: TGlobalSettingsDialog
     object shpCancel: TShape
       Tag = 3
       Left = 200
-      Top = 147
+      Top = 131
       Width = 113
       Height = 22
       OnMouseDown = shpMouseDown
@@ -222,7 +228,7 @@ object GlobalSettingsDialog: TGlobalSettingsDialog
     end
     object lbArrow: TLabel
       Left = 8
-      Top = 120
+      Top = 104
       Width = 92
       Height = 21
       Caption = 'Arrow '#1089'olor'
@@ -248,7 +254,7 @@ object GlobalSettingsDialog: TGlobalSettingsDialog
     end
     object lbCancel: TLabel
       Left = 200
-      Top = 120
+      Top = 104
       Width = 95
       Height = 21
       Caption = 'Cancel color'
@@ -261,8 +267,8 @@ object GlobalSettingsDialog: TGlobalSettingsDialog
     end
   end
   object btnRestore: TButton
-    Left = 728
-    Top = 286
+    Left = 683
+    Top = 298
     Width = 97
     Height = 39
     Caption = 'Restore Defaults'

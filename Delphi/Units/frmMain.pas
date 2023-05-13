@@ -100,6 +100,7 @@ type
     sep5: TToolButton;
     actChngGlSettings: TAction;
     ToolButton1: TToolButton;
+    Globalsettings1: TMenuItem;
 
     procedure FormCreate(Sender: TObject);
 
@@ -169,6 +170,14 @@ type
     SchemeInitialPenWidth = 1;
     SchemeInitialPenStyle: TPenStyle = psSolid;
     SchemeInitialPenMode: TPenMode = pmCopy;
+
+    constIfTrueCond = 'True';
+    constIfFalseCond = 'False';
+    constDefaultAction = '';
+    constHighlightColor = clYellow;
+    constArrowColor = clBlack;
+    constOKColor = clGreen;
+    constCancelColor = clRed;
   private type
     TGlobalSettings = record
       glTrueCond, glFalseCond, glDefaultAction: ShortString;
@@ -216,6 +225,7 @@ implementation
     actRedo.ShortCut := ShortCut(VK_Z, [ssCtrl, ssShift]);
     actChngFont.ShortCut := ShortCut(VK_F, [ssShift, ssCtrl]);
     actChngPen.ShortCut := ShortCut(VK_P, [ssShift, ssCtrl]);
+    actChngGlSettings.ShortCut := ShortCut(VK_G, [ssCtrl, ssShift]);
     actSortAsc.ShortCut := ShortCut(VK_RIGHT, [ssCtrl, ssShift]);
     actSortDesc.ShortCut := ShortCut(VK_LEFT, [ssCtrl, ssShift]);
 
@@ -466,7 +476,7 @@ implementation
   begin
     PrevDefaultAction := DefaultAction;
     if FGlobalSettingsDialog.Execute then
-      FBlockManager.SetNewActionForDefaultStatements(PrevDefaultAction);
+      FBlockManager.ChangeGllobalSettings(PrevDefaultAction);
   end;
 
   { Private methods }
@@ -612,14 +622,6 @@ implementation
   end;
 
   class procedure TNassiShneiderman.ResetSettings;
-  const
-    constIfTrueCond = 'True';
-    constIfFalseCond = 'False';
-    constDefaultAction = '';
-    constHighlightColor = clYellow;
-    constArrowColor = clBlack;
-    constOKColor = clGreen;
-    constCancelColor = clRed;
   begin
     TIfBranching.TrueCond := constIfTrueCond;
     TIfBranching.FalseCond := constIfFalseCond;

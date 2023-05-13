@@ -2340,7 +2340,10 @@ object NassiShneiderman: TNassiShneiderman
     object ToolButton1: TToolButton
       Left = 632
       Top = 0
+      Hint = 'Global settings'
       Action = actChngGlSettings
+      ParentShowHint = False
+      ShowHint = True
     end
   end
   object ScrollBox: TScrollBox
@@ -3311,6 +3314,9 @@ object NassiShneiderman: TNassiShneiderman
       end
       object mnPen: TMenuItem
         Action = actChngPen
+      end
+      object Globalsettings1: TMenuItem
+        Action = actChngGlSettings
       end
     end
   end

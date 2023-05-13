@@ -34,6 +34,7 @@ type
     procedure FormShow(Sender: TObject);
     procedure shpMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
+    procedure KeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
   private type
     TResetSettings = procedure;
   private
@@ -100,20 +101,17 @@ implementation
       end;
   end;
 
-function TGlobalSettingsDialog.Execute : Boolean;
+  function TGlobalSettingsDialog.Execute : Boolean;
   begin
     Result:= False;
     ShowModal;
     if ModalResult = mrOk then
     begin
+      Result:= True;
+
       TIfBranching.TrueCond := mmTrue.Text;
       TIfBranching.FalseCond := mmFalse.Text;
-
-      if mmDefAct.Text <> DefaultAction then
-      begin
-        Result:= True;
-        DefaultAction := mmDefAct.Text;
-      end;
+      DefaultAction := mmDefAct.Text;
 
       with TBlockManager do
       begin
@@ -122,10 +120,21 @@ function TGlobalSettingsDialog.Execute : Boolean;
         OKColor := shpOK.Brush.Color;
         CancelColor := shpCancel.Brush.Color;
       end;
-    end;
+    end
+    else
+      Result:= False;
   end;
 
-  procedure TGlobalSettingsDialog.FormShow(Sender: TObject);
+  procedure TGlobalSettingsDialog.KeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+  begin
+    if Key = VK_ESCAPE then
+      ModalResult := mrCancel
+    else if (Key = VK_RETURN) and not (ssShift in Shift) then
+      ModalResult := mrOk;
+  end;
+
+procedure TGlobalSettingsDialog.FormShow(Sender: TObject);
   begin
     Left := (Screen.Width - Width) shr 1;
     Top := (Screen.Height - Height) shr 1;

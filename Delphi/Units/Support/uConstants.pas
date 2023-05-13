@@ -12,6 +12,7 @@ const
   VK_V = $56;
   VK_F = $46;
   VK_P = $50;
+  VK_G = $47;
 
 implementation
 
