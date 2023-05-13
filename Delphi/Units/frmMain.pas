@@ -139,9 +139,6 @@ type
 
     FPrevMousePos: TPoint;
 
-    FPen: TPen;
-    FFont: TFont;
-
     FisZXCVPressed: Boolean;
 
     FMayDrag, FWasDbClick: Boolean;
@@ -161,16 +158,6 @@ type
     procedure UpdateForDedicatedStatement;
     procedure UpdateForStack;
   private const
-    SchemeInitialFontSize = 13;
-    SchemeInitialFont = 'Courier new';
-    SchemeInitialFontColor: TColor = clBlack;
-    SchemeInitialFontStyles: TFontStyles = [];
-
-    SchemeInitialPenColor: TColor = clBlack;
-    SchemeInitialPenWidth = 1;
-    SchemeInitialPenStyle: TPenStyle = psSolid;
-    SchemeInitialPenMode: TPenMode = pmCopy;
-
     constIfTrueCond = 'True';
     constIfFalseCond = 'False';
     constDefaultAction = '';
@@ -232,25 +219,7 @@ implementation
     FPenDialog:= TPenDialog.Create(Self, ColorDialog);
     FGlobalSettingsDialog:= TGlobalSettingsDialog.Create(Self, ColorDialog, ResetSettings);
 
-    FPen:= FPenDialog.Pen;
-    FFont:= FontDialog.Font;
-
-    FFont.Size := SchemeInitialFontSize;
-    FFont.Name := SchemeInitialFont;
-    FFont.Color := SchemeInitialFontColor;
-    FFont.Style := SchemeInitialFontStyles;
-
-    FPen.Color := SchemeInitialPenColor;
-    FPen.Width := SchemeInitialPenWidth;
-    FPen.Style := SchemeInitialPenStyle;
-    FPen.Mode := SchemeInitialPenMode;
-
-    PaintBox.Canvas.Font := FFont;
-    PaintBox.Canvas.Pen := FPen;
-
-    FBlockManager:= TBlockManager.Create(PaintBox);
-
-    PaintBox.Invalidate;
+    FBlockManager:= TBlockManager.Create(PaintBox, FPenDialog.Pen, FontDialog.Font);
   end;
 
   procedure TNassiShneiderman.FormKeyDown(Sender: TObject; var Key: Word;
@@ -278,9 +247,6 @@ implementation
 
   procedure TNassiShneiderman.PaintBoxPaint(Sender: TObject);
   begin
-    PaintBox.Canvas.Font := FFont;
-    PaintBox.Canvas.Pen := FPen;
-
     FBlockManager.Draw(GetVisibleImageScreen);
   end;
 
@@ -455,19 +421,13 @@ implementation
   procedure TNassiShneiderman.actChngFontExecute(Sender: TObject);
   begin
     if FontDialog.Execute then
-    begin
-      PaintBox.Canvas.Font:= FFont;
       FBlockManager.RedefineMainBlock;
-    end;
   end;
 
   procedure TNassiShneiderman.actChngPenExecute(Sender: TObject);
   begin
     if FPenDialog.Execute then
-    begin
-      PaintBox.Canvas.Pen:= FPen;
       FBlockManager.RedefineMainBlock;
-    end;
   end;
 
   procedure TNassiShneiderman.actChngGlSettingsExecute(Sender: TObject);
@@ -485,6 +445,7 @@ implementation
     FBlockManager.Destroy;
 
     FPenDialog.Destroy;
+    FGlobalSettingsDialog.Destroy;
 
     inherited;
   end;

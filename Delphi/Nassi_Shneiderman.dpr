@@ -29,8 +29,8 @@ uses
   uCommands in 'Units\Ñommand\uCommands.pas',
   uAutoClearStack in 'Units\DataStructures\uAutoClearStack.pas',
   frmPenSetting in 'Units\Forms\frmPenSetting.pas' {PenDialog},
-  uBlockManager in 'Units\Support\uBlockManager.pas',
-  frmGlobalSettings in 'Units\Forms\frmGlobalSettings.pas' {GlobalSettingsDialog};
+  frmGlobalSettings in 'Units\Forms\frmGlobalSettings.pas' {GlobalSettingsDialog},
+  uBlockManager in 'Units\BlockManager\uBlockManager.pas';
 
 {$R *.res}
 
