@@ -14,7 +14,7 @@ const
   VK_P = $50;
   VK_G = $47;
 
-  PathToGitHubLicense = 'https://github.com/git/git-scm.com/blob/main/MIT-LICENSE.txt';
+  PathToGitHubLicense = 'https://github.com/Riborok/Nassi-Shneiderman-Editor/blob/main/LICENSE';
   PathToMITLicense = 'Help\MITLicense.txt';
 
   dirAppData = 'AppData';
