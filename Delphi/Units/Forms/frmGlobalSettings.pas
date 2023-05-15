@@ -5,7 +5,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls,
-  uIfBranching, uConstants, uBase, uBlockManager, UITypes, uFileManager;
+  uIfBranching, uConstants, uBase, uBlockManager, UITypes, uGlobalSave;
 type
   TGlobalSettingsDialog = class(TForm)
     btnOK: TButton;

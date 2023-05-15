@@ -2,6 +2,24 @@ program Nassi_Shneiderman;
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+{$R 'html.res' 'html.rc'}
+
 uses
   Vcl.Forms,
   frmMain in 'Units\frmMain.pas' {NassiShneiderman},
@@ -31,7 +49,9 @@ uses
   frmPenSetting in 'Units\Forms\frmPenSetting.pas' {PenDialog},
   frmGlobalSettings in 'Units\Forms\frmGlobalSettings.pas' {GlobalSettingsDialog},
   uBlockManager in 'Units\BlockManager\uBlockManager.pas',
-  uFileManager in 'Units\FileManager\uFileManager.pas';
+  uGlobalSave in 'Units\FileManager\uGlobalSave.pas',
+  uLocalSave in 'Units\FileManager\uLocalSave.pas',
+  frmHelp in 'Units\Forms\frmHelp.pas' {Help};
 
 {$R *.res}
 
@@ -41,5 +61,6 @@ begin
   Application.CreateForm(TNassiShneiderman, NassiShneiderman);
   Application.CreateForm(TWriteAction, WriteAction);
   Application.CreateForm(TWrite—ase—onditions, Write—ase—onditions);
+  Application.CreateForm(THelp, Help);
   Application.Run;
 end.

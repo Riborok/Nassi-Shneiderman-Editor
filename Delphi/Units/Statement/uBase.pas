@@ -216,8 +216,8 @@ implementation
 
   function isDefaultStatement(const AStatement: TStatement): Boolean;
   begin
-    Result:= (AStatement.FAction = DefaultAction) and
-             (AStatement is DefaultStatement);
+    Result:= (AStatement is DefaultStatement) and
+             (AStatement.FAction = DefaultAction);
   end;
 
   { TStatement }

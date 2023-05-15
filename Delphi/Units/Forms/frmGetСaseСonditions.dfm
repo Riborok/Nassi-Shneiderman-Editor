@@ -2,7 +2,7 @@
   Left = 0
   Top = 0
   BorderStyle = bsDialog
-  Caption = 'Write'#1057'ase'#1057'onditions'
+  Caption = 'Write '#1057'ase '#1057'onditions'
   ClientHeight = 680
   ClientWidth = 546
   Color = clBtnFace

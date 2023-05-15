@@ -2,7 +2,7 @@ object GlobalSettingsDialog: TGlobalSettingsDialog
   Left = 0
   Top = 0
   BorderStyle = bsDialog
-  Caption = 'Global settings dialog'
+  Caption = 'Global Settings Dialog'
   ClientHeight = 342
   ClientWidth = 786
   Color = clBtnFace

@@ -101,6 +101,9 @@
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
+        <RcCompile Include="html.rc">
+            <Form>html.res</Form>
+        </RcCompile>
         <DCCReference Include="Units\frmMain.pas">
             <Form>NassiShneiderman</Form>
             <FormType>dfm</FormType>
@@ -141,7 +144,12 @@
             <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="Units\BlockManager\uBlockManager.pas"/>
-        <DCCReference Include="Units\FileManager\uFileManager.pas"/>
+        <DCCReference Include="Units\FileManager\uGlobalSave.pas"/>
+        <DCCReference Include="Units\FileManager\uLocalSave.pas"/>
+        <DCCReference Include="Units\Forms\frmHelp.pas">
+            <Form>Help</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>

@@ -3,7 +3,7 @@ object WriteAction: TWriteAction
   Top = 0
   Anchors = [akLeft, akRight, akBottom]
   BorderStyle = bsDialog
-  Caption = 'WriteAction'
+  Caption = 'Write Action'
   ClientHeight = 272
   ClientWidth = 379
   Color = clBtnFace

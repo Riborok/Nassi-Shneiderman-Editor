@@ -7,8 +7,8 @@ uses
   Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls, Vcl.StdCtrls, Vcl.Menus, uConstants,
   uBase, uFirstLoop, uIfBranching, uCaseBranching, uLastLoop, uProcessStatement,
   uStatementSearch, System.Actions, Vcl.ActnList, Vcl.ToolWin, Types, uBlockManager,
-  Vcl.ComCtrls, uAdditionalTypes, frmPenSetting, System.ImageList, Vcl.ImgList,
-  frmGlobalSettings, System.SysUtils, uFileManager;
+  Vcl.ComCtrls, uAdditionalTypes, frmPenSetting, System.ImageList, Vcl.ImgList, frmGlobalSettings,
+  System.SysUtils, uGlobalSave, uLocalSave, frmHelp;
 
 type
   TNassiShneiderman = class(TForm)
@@ -54,7 +54,7 @@ type
     N1: TMenuItem;
     N3: TMenuItem;
     actDelete: TAction;
-    MIDel: TMenuItem;
+    MIDelete: TMenuItem;
     actSortAsc: TAction;
     actSortDesc: TAction;
     MIDescSort: TMenuItem;
@@ -102,6 +102,38 @@ type
     ToolButton1: TToolButton;
     Globalsettings1: TMenuItem;
     SaveDialog: TSaveDialog;
+    OpenDialog: TOpenDialog;
+    mnDiagram: TMenuItem;
+    mnAdd: TMenuItem;
+    mnAfter: TMenuItem;
+    mnBefore: TMenuItem;
+    mnAftProcess: TMenuItem;
+    mnAftBranchingBlock: TMenuItem;
+    mnAftMultBranchingBlock: TMenuItem;
+    mnAftReversedLoop: TMenuItem;
+    mnAftLoop: TMenuItem;
+    actBefProcess: TMenuItem;
+    mnBefBranchingBlock: TMenuItem;
+    mnBefMultBranchingBlock: TMenuItem;
+    mnBefLoop: TMenuItem;
+    mnBefReversedLoop: TMenuItem;
+    mnChangeAct: TMenuItem;
+    mnDelete: TMenuItem;
+    mnSortDesc: TMenuItem;
+    mnSortAsc: TMenuItem;
+    mnEdit: TMenuItem;
+    N5: TMenuItem;
+    mnUndo: TMenuItem;
+    mnRedo: TMenuItem;
+    N6: TMenuItem;
+    mnCut: TMenuItem;
+    mnCopy: TMenuItem;
+    mnInsert: TMenuItem;
+    mnHelp: TMenuItem;
+    mnUserGuide: TMenuItem;
+    mnAbout: TMenuItem;
+    actUserGuide: TAction;
+    actAbout: TAction;
 
     procedure FormCreate(Sender: TObject);
 
@@ -134,6 +166,9 @@ type
     procedure actChngPenExecute(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure actChngGlSettingsExecute(Sender: TObject);
+    procedure mnDiagramClick(Sender: TObject);
+    procedure mnEditClick(Sender: TObject);
+    procedure actAboutExecute(Sender: TObject);
   private
     FPenDialog: TPenDialog;
     FGlobalSettingsDialog: TGlobalSettingsDialog;
@@ -172,6 +207,7 @@ implementation
   var Action: TCloseAction);
   begin
     SaveGlobalSettings;
+    // SaveSchema(FBlockManager);
   end;
 
   procedure TNassiShneiderman.FormCreate(Sender: TObject);
@@ -228,8 +264,14 @@ implementation
     if FisZXCVPressed then
       Handled:= True
     else case Msg.CharCode of
-      VK_Z, VK_X, VK_C, VK_V, VK_RIGHT, VK_Left:
+      VK_Z, VK_X, VK_C, VK_V:
         FisZXCVPressed:= True;
+      VK_RIGHT, VK_Left:
+      begin
+        FisZXCVPressed:= True;
+        if (GetKeyState(VK_CONTROL) >= 0) or (GetKeyState(VK_SHIFT) >= 0 ) then
+          FormKeyDown(nil, Msg.CharCode, []);
+      end;
     end;
   end;
 
@@ -274,6 +316,11 @@ implementation
     bool := FBlockManager.UndoStack.Count <> 0;
     MIUndo.Enabled:= bool;
     MIRedo.Enabled:= bool;
+
+    bool := not isDefaultStatement(FBlockManager.DedicatedStatement);
+    MIDelete.Enabled := bool;
+    MICut.Enabled := bool;
+    MICopy.Enabled := bool;
   end;
 
   procedure TNassiShneiderman.DblClick(Sender: TObject);
@@ -400,7 +447,12 @@ implementation
     UpdateForDedicatedStatement;
   end;
 
-  procedure TNassiShneiderman.actChangeActionExecute(Sender: TObject);
+  procedure TNassiShneiderman.actAboutExecute(Sender: TObject);
+  begin
+    Help.Execute(rsAbout);
+  end;
+
+procedure TNassiShneiderman.actChangeActionExecute(Sender: TObject);
   begin
     FBlockManager.TryChangeDedicatedText;
     UpdateForStack;
@@ -430,6 +482,35 @@ implementation
     PrevDefaultAction := DefaultAction;
     if FGlobalSettingsDialog.Execute then
       FBlockManager.ChangeGlobalSettings(PrevDefaultAction);
+  end;
+
+  procedure TNassiShneiderman.mnDiagramClick(Sender: TObject);
+  var
+    bool: Boolean;
+  begin
+    bool:= FBlockManager.DedicatedStatement is TCaseBranching;
+    mnSortAsc.Enabled := bool;
+    mnSortDesc.Enabled := bool;
+
+    bool := FBlockManager.DedicatedStatement <> nil;
+    mnAdd.Enabled := bool;
+    mnChangeAct.Enabled := bool;
+    mnDelete.Enabled := bool and not isDefaultStatement(FBlockManager.DedicatedStatement);
+  end;
+
+  procedure TNassiShneiderman.mnEditClick(Sender: TObject);
+  var
+    bool: Boolean;
+  begin
+    mnUndo.Enabled:= FBlockManager.UndoStack.Count <> 0;
+    mnRedo.Enabled:= FBlockManager.RedoStack.Count <> 0;
+
+    bool := FBlockManager.DedicatedStatement <> nil;
+    mnInsert.Enabled := bool;
+
+    bool := bool and not isDefaultStatement(FBlockManager.DedicatedStatement);
+    mnCut.Enabled := bool;
+    mnCopy.Enabled := bool;
   end;
 
   { Private methods }
@@ -464,7 +545,6 @@ implementation
     bool := FBlockManager.DedicatedStatement <> nil;
     tbInsert.Enabled := bool;
     tbAction.Enabled := bool;
-    tbDelete.Enabled := bool;
     tbProcess.Enabled := bool;
     tbIfBranch.Enabled := bool;
     tbMultBranch.Enabled := bool;
@@ -474,6 +554,7 @@ implementation
     bool := bool and not isDefaultStatement(FBlockManager.DedicatedStatement);
     tbCut.Enabled := bool;
     tbCopy.Enabled := bool;
+    tbDelete.Enabled := bool;
   end;
 
   function TNassiShneiderman.isDragging: Boolean;

@@ -595,10 +595,10 @@ implementation
     FPaintBox.Canvas.Font := FFont;
     FPaintBox.Canvas.Pen := FPen;
 
-    FPaintBox.Width := Max(FMainBlock.XLast + Stock,
+    FPaintBox.Width := Max(FMainBlock.XLast,
                        AVisibleImageRect.FBottomRight.X -
                        AVisibleImageRect.FTopLeft.X - Correction);
-    FPaintBox.Height := Max(FMainBlock.Statements.GetLast.GetYBottom + Stock,
+    FPaintBox.Height := Max(FMainBlock.Statements.GetLast.GetYBottom,
                         AVisibleImageRect.FBottomRight.Y -
                         AVisibleImageRect.FTopLeft.Y - Correction);
 
