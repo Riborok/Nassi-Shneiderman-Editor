@@ -4,7 +4,7 @@ interface
 
 uses
   UBlockManager, uBase, System.JSON, uIfBranching, Vcl.Graphics, System.SysUtils,
-  System.IOUtils;
+  System.IOUtils, uConstants;
 
   procedure ResetGlobalSettings;
   procedure LoadGlobalSettings;
@@ -19,6 +19,7 @@ implementation
     constArrowColor = clBlack;
     constOKColor = clGreen;
     constCancelColor = clRed;
+
     constGlobalSettingsName = 'GlobalSettings.json';
 
   procedure ResetGlobalSettings;
@@ -40,10 +41,14 @@ implementation
   procedure LoadGlobalSettings;
   var
     Json: TJSONObject;
+    AppDataPath: string;
   begin
-    if FileExists(constGlobalSettingsName) then
+    AppDataPath := IncludeTrailingPathDelimiter(ExtractFilePath(ParamStr(0))) + dirAppData;
+    AppDataPath := TPath.Combine(AppDataPath, constGlobalSettingsName);
+
+    if FileExists(AppDataPath) then
     begin
-      Json := TJSONObject(TJSONObject.ParseJSONValue(TFile.ReadAllText(constGlobalSettingsName, TEncoding.UTF8)));
+      Json := TJSONObject(TJSONObject.ParseJSONValue(TFile.ReadAllText(AppDataPath, TEncoding.UTF8)));
       try
         with Json do
         begin
@@ -69,6 +74,7 @@ implementation
   procedure SaveGlobalSettings;
   var
     Json: TJSONObject;
+    AppDataPath: string;
   begin
     Json := TJSONObject.Create;
     try
@@ -85,7 +91,15 @@ implementation
           AddPair('CancelColor', ColorToString(CancelColor));
         end;
       end;
-      TFile.WriteAllText(constGlobalSettingsName, Json.ToJSON, TEncoding.UTF8);
+
+      AppDataPath := IncludeTrailingPathDelimiter(ExtractFilePath(ParamStr(0))) + dirAppData;
+
+      if not TDirectory.Exists(AppDataPath) then
+        TDirectory.CreateDirectory(AppDataPath);
+
+      AppDataPath := TPath.Combine(AppDataPath, constGlobalSettingsName);
+
+      TFile.WriteAllText(AppDataPath, Json.ToJSON, TEncoding.UTF8);
     finally
       Json.Destroy;
     end;

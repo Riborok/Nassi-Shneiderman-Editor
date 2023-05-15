@@ -2154,5 +2154,9 @@ object Help: THelp
       Caption = 'Close'
       OnClick = pmiCloseClick
     end
+    object pmLicense: TMenuItem
+      Caption = 'License'
+      OnClick = pmLicenseClick
+    end
   end
 end

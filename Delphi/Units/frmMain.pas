@@ -168,8 +168,7 @@ type
     procedure actChngGlSettingsExecute(Sender: TObject);
     procedure mnDiagramClick(Sender: TObject);
     procedure mnEditClick(Sender: TObject);
-    procedure actAboutExecute(Sender: TObject);
-    procedure actUserGuideExecute(Sender: TObject);
+    procedure actHelpExecute(Sender: TObject);
   private
     FPenDialog: TPenDialog;
     FGlobalSettingsDialog: TGlobalSettingsDialog;
@@ -451,14 +450,12 @@ implementation
     UpdateForDedicatedStatement;
   end;
 
-  procedure TNassiShneiderman.actAboutExecute(Sender: TObject);
+  procedure TNassiShneiderman.actHelpExecute(Sender: TObject);
   begin
-    Help.Execute(rsAbout);
-  end;
-
-  procedure TNassiShneiderman.actUserGuideExecute(Sender: TObject);
-  begin
-    Help.Execute(rsUseGuide);
+    case TComponent(Sender).Tag of
+      0: Help.Execute(rsUseGuide);
+      1: Help.Execute(rsAbout);
+    end;
   end;
 
   procedure TNassiShneiderman.actChangeActionExecute(Sender: TObject);

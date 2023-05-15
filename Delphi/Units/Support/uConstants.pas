@@ -14,6 +14,11 @@ const
   VK_P = $50;
   VK_G = $47;
 
+  PathToGitHubLicense = 'https://github.com/git/git-scm.com/blob/main/MIT-LICENSE.txt';
+  PathToMITLicense = 'Help\MITLicense.txt';
+
+  dirAppData = 'AppData';
+
 resourcestring
   rsUseGuide = 'UserGuide';
   rsAbout = 'AboutProgram';

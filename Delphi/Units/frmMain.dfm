@@ -2,7 +2,7 @@ object NassiShneiderman: TNassiShneiderman
   Left = 0
   Top = 0
   BorderIcons = [biSystemMenu, biMinimize, biMaximize, biHelp]
-  Caption = 'NassiShneiderman'
+  Caption = 'Nassi Shneiderman'
   ClientHeight = 637
   ClientWidth = 977
   Color = clCream
@@ -3283,13 +3283,14 @@ object NassiShneiderman: TNassiShneiderman
       Caption = 'User Guide'
       ImageIndex = 17
       ShortCut = 112
-      OnExecute = actUserGuideExecute
+      OnExecute = actHelpExecute
     end
     object actAbout: TAction
+      Tag = 1
       Caption = 'About ...'
       ImageIndex = 18
       ShortCut = 8304
-      OnExecute = actAboutExecute
+      OnExecute = actHelpExecute
     end
   end
   object MainMenu: TMainMenu

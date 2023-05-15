@@ -4,27 +4,28 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.Menus, Vcl.OleCtrls, SHDocVw, ShellAPI;
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.Menus, Vcl.OleCtrls, SHDocVw, ShellAPI, uConstants, System.IOUtils;
 
 type
   THelp = class(TForm)
     WebBrowser: TWebBrowser;
     pmHtmlMenu: TPopupMenu;
     pmiClose: TMenuItem;
+    pmLicense: TMenuItem;
     procedure pmiCloseClick(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure WebBrowserBeforeNavigate2(ASender: TObject;
       const pDisp: IDispatch; const URL, Flags, TargetFrameName, PostData,
       Headers: OleVariant; var Cancel: WordBool);
+    procedure pmLicenseClick(Sender: TObject);
   private const
     MinFormWidth = 750;
     MinFormHeight = 400;
   private
     procedure WMMouseActivate(var Msg: TMessage); message WM_MOUSEACTIVATE;
-    procedure OpenURL(const URL: string);
   public
-    procedure Execute(AName: string);
+    procedure Execute(AName: WideString);
   end;
 
 var
@@ -78,18 +79,28 @@ procedure THelp.WMMouseActivate(var Msg: TMessage);
     Close;
   end;
 
-  procedure THelp.Execute(AName: string);
+  procedure THelp.pmLicenseClick(Sender: TObject);
+  var
+    FilePath: string;
+  begin
+    FilePath := IncludeTrailingPathDelimiter(
+                ExtractFileDir(ExtractFileDir(ExtractFileDir(
+                IncludeTrailingPathDelimiter(
+                ExtractFileDir(ParamStr(0))))))) + PathToMITLicense;
+
+    if FileExists(FilePath) then
+      ShowMessage(TFile.ReadAllText(FilePath))
+    else
+      ShellExecuteW(Handle, 'open', PathToGitHubLicense, nil, nil, SW_SHOWNORMAL);
+  end;
+
+  procedure THelp.Execute(AName: WideString);
   var
     Flags, TargetFrameName, PostData, Headers: OleVariant;
   begin
     WebBrowser.Navigate('res://' + Application.ExeName + '/' + AName,
-                        Flags, TargetFrameName, PostData, Headers);
+                         Flags, TargetFrameName, PostData, Headers);
     ShowModal;
-  end;
-
-  procedure THelp.OpenURL(const URL: string);
-  begin
-    ShellExecute(0, 'open', PChar(URL), nil, nil, SW_SHOWNORMAL);
   end;
 
 end.
