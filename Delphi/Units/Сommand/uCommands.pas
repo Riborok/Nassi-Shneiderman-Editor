@@ -348,9 +348,7 @@ implementation
       CurrOperator.SetXLastForChildrens(CurrOperator.BaseBlock.XLast);
     end;
 
-    if (SecondBaseBlock.BaseOperator = nil) and
-       (SecondBaseBlock = FSecondStatement.BaseBlock) then
-      FFirstStatement.SwapYStart(FSecondStatement);
+    FFirstStatement.SwapYStart(FSecondStatement);
     SecondBaseBlock.Install(FFirstIndex);
     FSecondStatement.BaseBlock.Install(FSecondIndex);
   end;

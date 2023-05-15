@@ -3283,6 +3283,7 @@ object NassiShneiderman: TNassiShneiderman
       Caption = 'User Guide'
       ImageIndex = 17
       ShortCut = 112
+      OnExecute = actUserGuideExecute
     end
     object actAbout: TAction
       Caption = 'About ...'
@@ -3391,11 +3392,11 @@ object NassiShneiderman: TNassiShneiderman
       object N5: TMenuItem
         Caption = '-'
       end
-      object mnSortDesc: TMenuItem
-        Action = actSortDesc
-      end
       object mnSortAsc: TMenuItem
         Action = actSortAsc
+      end
+      object mnSortDesc: TMenuItem
+        Action = actSortDesc
       end
     end
     object mnPrefer: TMenuItem

@@ -467,7 +467,7 @@ implementation
               FHoveredStatement.Rect.Right:= FHoveredStatement.Statement.BaseBlock.XStart +
                                 TOperator(FHoveredStatement.Statement).GetOffsetFromXStart;
               FHoveredStatement.Rect.Bottom:= FHoveredStatement.Statement.GetYBottom;
-              ColorizeRect(FPaintBox.Canvas, FHoveredStatement.Rect, clGreen);
+              ColorizeRect(FPaintBox.Canvas, FHoveredStatement.Rect, FOKColor);
             end;
           end;
           stBefore:
@@ -485,7 +485,7 @@ implementation
               FHoveredStatement.Rect.Right:= FHoveredStatement.Statement.BaseBlock.XStart +
                                 TOperator(FHoveredStatement.Statement).GetOffsetFromXStart;
               FHoveredStatement.Rect.Top:= FHoveredStatement.Statement.YStart;
-              ColorizeRect(FPaintBox.Canvas, FHoveredStatement.Rect, clGreen);
+              ColorizeRect(FPaintBox.Canvas, FHoveredStatement.Rect, FOKColor);
             end;
           end;
           stSwap:
@@ -589,16 +589,16 @@ implementation
   { View update }
   procedure TBlockManager.Draw(const AVisibleImageRect: TVisibleImageRect);
   const
-    Stock = 420;
+    Stock = 42 shl 2;
     Correction = 5;
   begin
     FPaintBox.Canvas.Font := FFont;
     FPaintBox.Canvas.Pen := FPen;
 
-    FPaintBox.Width := Max(FMainBlock.XLast,
+    FPaintBox.Width := Max(FMainBlock.XLast + Stock,
                        AVisibleImageRect.FBottomRight.X -
                        AVisibleImageRect.FTopLeft.X - Correction);
-    FPaintBox.Height := Max(FMainBlock.Statements.GetLast.GetYBottom,
+    FPaintBox.Height := Max(FMainBlock.Statements.GetLast.GetYBottom + Stock,
                         AVisibleImageRect.FBottomRight.Y -
                         AVisibleImageRect.FTopLeft.Y - Correction);
 

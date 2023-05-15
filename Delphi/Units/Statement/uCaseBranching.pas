@@ -115,6 +115,8 @@ implementation
       FBlocks[I].MoveRight(FBlocks[I - 1].XLast - FBlocks[I].XStart);
       SetCondSize(I);
     end;
+
+    FBlocks[High(FBlocks)].ChangeXLastBlock(BaseBlock.XLast);
   end;
 
   procedure TCaseBranching.SetTextSize;

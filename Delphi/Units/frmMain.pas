@@ -169,13 +169,14 @@ type
     procedure mnDiagramClick(Sender: TObject);
     procedure mnEditClick(Sender: TObject);
     procedure actAboutExecute(Sender: TObject);
+    procedure actUserGuideExecute(Sender: TObject);
   private
     FPenDialog: TPenDialog;
     FGlobalSettingsDialog: TGlobalSettingsDialog;
 
     FPrevMousePos: TPoint;
 
-    FisZXCVPressed: Boolean;
+    FisPressed: Boolean;
 
     FMayDrag, FWasDbClick: Boolean;
 
@@ -220,7 +221,7 @@ implementation
 
     SetThreadUILanguage(MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US));
     Self.DoubleBuffered := True;
-    FisZXCVPressed:= False;
+    FisPressed:= False;
     FMayDrag:= False;
     FWasDbClick:= False;
     Constraints.MinWidth := MinFormWidth;
@@ -256,23 +257,26 @@ implementation
   procedure TNassiShneiderman.FormKeyUp(Sender: TObject; var Key: Word;
   Shift: TShiftState);
   begin
-    FisZXCVPressed:= False;
+    FisPressed:= False;
   end;
 
   procedure TNassiShneiderman.FormShortCut(var Msg: TWMKey; var Handled: Boolean);
   begin
-    if FisZXCVPressed then
+    if FisPressed then
       Handled:= True
+    else if GetKeyState(VK_RETURN) < 0 then
+      FisPressed:= True
     else case Msg.CharCode of
       VK_Z, VK_X, VK_C, VK_V:
-        FisZXCVPressed:= True;
+        FisPressed:= True;
       VK_RIGHT, VK_Left:
       begin
-        FisZXCVPressed:= True;
+        FisPressed:= True;
         if (GetKeyState(VK_CONTROL) >= 0) or (GetKeyState(VK_SHIFT) >= 0 ) then
           FormKeyDown(nil, Msg.CharCode, []);
       end;
-    end;
+    end
+
   end;
 
   procedure TNassiShneiderman.PaintBoxPaint(Sender: TObject);
@@ -452,7 +456,12 @@ implementation
     Help.Execute(rsAbout);
   end;
 
-procedure TNassiShneiderman.actChangeActionExecute(Sender: TObject);
+  procedure TNassiShneiderman.actUserGuideExecute(Sender: TObject);
+  begin
+    Help.Execute(rsUseGuide);
+  end;
+
+  procedure TNassiShneiderman.actChangeActionExecute(Sender: TObject);
   begin
     FBlockManager.TryChangeDedicatedText;
     UpdateForStack;

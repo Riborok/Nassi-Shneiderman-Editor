@@ -18,13 +18,13 @@ type
       const pDisp: IDispatch; const URL, Flags, TargetFrameName, PostData,
       Headers: OleVariant; var Cancel: WordBool);
   private const
-    MinFormWidth = 642;
-    MinFormHeight = 342;
+    MinFormWidth = 750;
+    MinFormHeight = 400;
   private
     procedure WMMouseActivate(var Msg: TMessage); message WM_MOUSEACTIVATE;
     procedure OpenURL(const URL: string);
   public
-    procedure Execute(AName: WideString);
+    procedure Execute(AName: string);
   end;
 
 var
@@ -78,7 +78,7 @@ procedure THelp.WMMouseActivate(var Msg: TMessage);
     Close;
   end;
 
-  procedure THelp.Execute(AName: WideString);
+  procedure THelp.Execute(AName: string);
   var
     Flags, TargetFrameName, PostData, Headers: OleVariant;
   begin

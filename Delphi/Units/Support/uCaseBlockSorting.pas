@@ -67,15 +67,23 @@ implementation
 
       if IndexRange.LeftIndex < J then
       begin
+        I:= IndexRange.RightIndex;
         IndexRange.RightIndex := J;
-        IndexRange.LeftIndex := IndexRange.LeftIndex;
         Stack.Push(IndexRange);
-      end;
 
-      if IndexRange.RightIndex > I then
+        IndexRange.LeftIndex := IndexRange.RightIndex + 1;
+        IndexRange.RightIndex := I;
+        Stack.Push(IndexRange);
+      end
+
+      else if IndexRange.RightIndex > I then
       begin
+        J := IndexRange.LeftIndex;
         IndexRange.LeftIndex := I;
-        IndexRange.RightIndex := IndexRange.RightIndex;
+        Stack.Push(IndexRange);
+
+        IndexRange.RightIndex := IndexRange.LeftIndex - 1;
+        IndexRange.LeftIndex := J;
         Stack.Push(IndexRange);
       end;
     end;
