@@ -16,6 +16,7 @@ type
     lbDel: TLabel;
     btnDelete: TButton;
     btnCancel: TButton;
+    Panel: TPanel;
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure FormCreate(Sender: TObject);
     procedure btnAddClick(Sender: TObject);
@@ -24,10 +25,14 @@ type
     procedure btnDeleteClick(Sender: TObject);
     destructor Destroy;
     procedure FormShow(Sender: TObject);
+  private type
+    TCondSet = record
+      LabelCaption : TLabel;
+      Memo : TMemo;
+    end;
   private
     { Private declarations }
-    FMemoStack: TStack<TMemo>;
-    FLabelStack: TStack<TLabel>;
+    FCondSetStack: TStack<TCondSet>;
     FIndent: Integer;
     procedure CreateMemo(const AText: string = '');
   public
@@ -47,7 +52,7 @@ implementation
   function TWriteÑaseÑonditions.TryGetCond(var ACond: TStringArr): Boolean;
   var
     I: Integer;
-    Memo: TMemo;
+    CondSet: TCondSet;
   begin
     FIndent:= 0;
     for I := 0 to High(ACond) do
@@ -56,8 +61,8 @@ implementation
     for I := Length(ACond) + 1 to MinAmount do
       CreateMemo;
 
-    FMemoStack.Peek.SelStart := 0;
-    FMemoStack.Peek.SelLength := Length(FMemoStack.Peek.Text);
+    FCondSetStack.Peek.Memo.SelStart := 0;
+    FCondSetStack.Peek.Memo.SelLength := Length(FCondSetStack.Peek.Memo.Text);
 
     ShowModal;
 
@@ -65,30 +70,32 @@ implementation
     begin
       Result:= True;
 
-      SetLength(ACond, FMemoStack.Count);
+      SetLength(ACond, FCondSetStack.Count);
 
-      for I := FMemoStack.Count - 1 downto 0 do
+      for I := FCondSetStack.Count - 1 downto 0 do
       begin
-        Memo:= FMemoStack.Pop;
-        ACond[I]:= Memo.Lines.Text;
-        Memo.Destroy;
+        CondSet:= FCondSetStack.Pop;
+        ACond[I]:= CondSet.Memo.Lines.Text;
+        CondSet.Memo.Destroy;
+        CondSet.LabelCaption.Destroy;
       end;
     end
     else
+    begin
       Result:= False;
 
-    for I:= FMemoStack.Count - 1 downto 0 do
-      FMemoStack.Pop.Destroy;
-
-    for I:= FLabelStack.Count - 1 downto 0 do
-      FLabelStack.Pop.Destroy;
-
+      for I:= FCondSetStack.Count - 1 downto 0 do
+      begin
+        CondSet:= FCondSetStack.Pop;
+        CondSet.Memo.Destroy;
+        CondSet.LabelCaption.Destroy;
+      end;
+    end;
   end;
 
   destructor TWriteÑaseÑonditions.Destroy;
   begin
-    FMemoStack.Destroy;
-    FLabelStack.Destroy;
+    FCondSetStack.Destroy;
 
     inherited;
   end;
@@ -104,63 +111,75 @@ implementation
 
   procedure TWriteÑaseÑonditions.btnAddClick(Sender: TObject);
   begin
-    if FMemoStack.Count <= MaxAmount then
+    if FCondSetStack.Count <= MaxAmount then
       CreateMemo;
   end;
 
   procedure TWriteÑaseÑonditions.btnDeleteClick(Sender: TObject);
+  var
+    CondSet: TCondSet;
   begin
-    if FMemoStack.Count > MinAmount then
+    if FCondSetStack.Count > MinAmount then
     begin
-      FMemoStack.Pop.Destroy;
-      FLabelStack.Pop.Destroy;
+      CondSet:= FCondSetStack.Pop;
+      CondSet.LabelCaption.Destroy;
+      CondSet.Memo.Destroy;
     end;
   end;
 
   procedure TWriteÑaseÑonditions.CreateMemo(const AText: string = '');
   var
-    Memo: TMemo;
-    LabelCaption: TLabel;
+    CondSet: TCondSet;
   begin
-    LabelCaption := TLabel.Create(ScrollBox);
-    LabelCaption.Parent := ScrollBox;
-    LabelCaption.Font.Size := mmFontSize;
-    LabelCaption.Font.Name := mmFontName;
-    LabelCaption.Caption := 'Condition ' + IntToStr(FMemoStack.Count);
-    LabelCaption.AlignWithMargins := True;
-    LabelCaption.Margins.Top := 20;
-    LabelCaption.Align := alTop;
-    LabelCaption.Top := FIndent;
-    Inc(FIndent, LabelCaption.Width);
+    with CondSet do
+    begin
+      LabelCaption := TLabel.Create(ScrollBox);
+      LabelCaption.Parent := ScrollBox;
+      LabelCaption.Font.Size := mmFontSize;
+      LabelCaption.Font.Name := mmFontName;
+      LabelCaption.Caption := 'Condition ' + IntToStr(FCondSetStack.Count);
+      LabelCaption.AlignWithMargins := True;
+      LabelCaption.Margins.Top := 20;
+      LabelCaption.Align := alTop;
+      LabelCaption.Top := FIndent;
+      Inc(FIndent, LabelCaption.Width);
 
-    Memo := TMemo.Create(ScrollBox);
-    Memo.Parent := ScrollBox;
-    Memo.ScrollBars := ssBoth;
-    Memo.Text := AText;
-    Memo.Align := alTop;
-    Memo.Font.Size := mmFontSize;
-    Memo.Font.Name := mmFontName;
-    Memo.MaxLength := MaxTextLength;
-    Memo.Top:= FIndent;
-    Inc(FIndent, Memo.Width);
+      Memo := TMemo.Create(ScrollBox);
+      Memo.Parent := ScrollBox;
+      Memo.ScrollBars := ssBoth;
+      Memo.Text := AText;
+      Memo.Align := alTop;
+      Memo.Font.Size := mmFontSize;
+      Memo.Font.Name := mmFontName;
+      Memo.MaxLength := MaxTextLength;
+      Memo.Top:= FIndent;
+      Inc(FIndent, Memo.Width);
+    end;
 
-    FMemoStack.Push(Memo);
-    FLabelStack.Push(LabelCaption);
+    FCondSetStack.Push(CondSet);
 
     ScrollBox.VertScrollBar.Position := ScrollBox.VertScrollBar.Range;
   end;
 
   procedure TWriteÑaseÑonditions.FormCreate(Sender: TObject);
   begin
-    FMemoStack:= TStack<TMemo>.Create;
-    FLabelStack:= TStack<TLabel>.Create;
+    FCondSetStack:= TStack<TCondSet>.Create;
+
+    Self.Width := (lbAdd.Width + lbDel.Width) shl 1;
+    Self.Height := Round(Screen.Height / 1.55);
+
+    btnOK.Width := Round(Self.Width / 2.1);
+    btnCancel.Width := btnOK.Width;
+
+    btnOK.Height := Round(Self.Height / 18.34);
+    btnCancel.Height := btnOK.Height;
   end;
 
   procedure TWriteÑaseÑonditions.FormShow(Sender: TObject);
   begin
     Left := (Screen.Width - Width) shr 1;
     Top := (Screen.Height - Height) shr 1;
-    FMemoStack.Peek.SetFocus;
+    FCondSetStack.Peek.Memo.SetFocus;
   end;
 
   procedure TWriteÑaseÑonditions.ScrollBoxMouseWheel(Sender: TObject;

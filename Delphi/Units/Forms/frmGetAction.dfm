@@ -2131,20 +2131,25 @@ object WriteAction: TWriteAction
   OldCreateOrder = False
   OnCreate = FormCreate
   OnShow = FormShow
-  DesignSize = (
-    379
-    272)
   PixelsPerInch = 96
   TextHeight = 13
   object btnOK: TButton
-    Left = 192
-    Top = 230
+    AlignWithMargins = True
+    Left = 195
+    Top = 229
     Width = 179
     Height = 38
-    Anchors = [akLeft, akRight, akBottom]
+    Margins.Left = 5
+    Margins.Top = 5
+    Margins.Right = 5
+    Margins.Bottom = 5
+    Align = alRight
     Caption = 'OK'
     ModalResult = 1
     TabOrder = 0
+    ExplicitLeft = 197
+    ExplicitTop = 227
+    ExplicitHeight = 30
   end
   object MemoAction: TMemo
     Left = 0
@@ -2166,13 +2171,20 @@ object WriteAction: TWriteAction
     OnKeyDown = MemoActionKeyDown
   end
   object btnCancel: TButton
-    Left = 8
-    Top = 230
+    AlignWithMargins = True
+    Left = 5
+    Top = 229
     Width = 179
     Height = 38
-    Anchors = [akLeft, akRight, akBottom]
+    Margins.Left = 5
+    Margins.Top = 5
+    Margins.Right = 5
+    Margins.Bottom = 5
+    Align = alLeft
     Caption = 'Cancel'
     ModalResult = 2
     TabOrder = 2
+    ExplicitLeft = 8
+    ExplicitTop = 230
   end
 end

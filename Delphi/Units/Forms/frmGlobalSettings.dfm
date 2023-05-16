@@ -16,10 +16,10 @@ object GlobalSettingsDialog: TGlobalSettingsDialog
   PixelsPerInch = 96
   TextHeight = 13
   object btnOK: TButton
-    Left = 700
-    Top = 24
-    Width = 65
-    Height = 25
+    Left = 695
+    Top = 14
+    Width = 78
+    Height = 30
     Caption = 'OK'
     Default = True
     Font.Charset = DEFAULT_CHARSET
@@ -32,10 +32,10 @@ object GlobalSettingsDialog: TGlobalSettingsDialog
     TabOrder = 0
   end
   object btnCancel: TButton
-    Left = 700
-    Top = 55
-    Width = 65
-    Height = 25
+    Left = 695
+    Top = 50
+    Width = 78
+    Height = 30
     Cancel = True
     Caption = 'Cancel'
     ModalResult = 2
@@ -132,7 +132,7 @@ object GlobalSettingsDialog: TGlobalSettingsDialog
     Height = 162
     TabOrder = 3
     object lbDefAct: TLabel
-      Left = 16
+      Left = 9
       Top = 4
       Width = 103
       Height = 21
@@ -145,9 +145,9 @@ object GlobalSettingsDialog: TGlobalSettingsDialog
       ParentFont = False
     end
     object mmDefAct: TMemo
-      Left = 16
+      Left = 9
       Top = 31
-      Width = 305
+      Width = 313
       Height = 122
       TabStop = False
       Font.Charset = DEFAULT_CHARSET

@@ -3,8 +3,8 @@ object PenDialog: TPenDialog
   Top = 0
   BorderStyle = bsDialog
   Caption = 'Pen'
-  ClientHeight = 120
-  ClientWidth = 433
+  ClientHeight = 130
+  ClientWidth = 396
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -18,42 +18,60 @@ object PenDialog: TPenDialog
   TextHeight = 13
   object CurrColor: TShape
     Left = 16
-    Top = 86
+    Top = 96
     Width = 113
-    Height = 22
+    Height = 24
     OnMouseDown = CurrColorMouseDown
   end
   object lbLineType: TLabel
     Left = 16
     Top = 8
-    Width = 48
-    Height = 13
+    Width = 70
+    Height = 19
     Caption = 'Line type:'
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -16
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    ParentFont = False
   end
   object lbThickness: TLabel
     Left = 168
     Top = 8
-    Width = 50
-    Height = 13
+    Width = 75
+    Height = 19
     Caption = 'Thickness:'
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -16
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    ParentFont = False
   end
   object lbColor: TLabel
     Left = 16
-    Top = 67
-    Width = 29
-    Height = 13
+    Top = 71
+    Width = 44
+    Height = 19
     Caption = 'Color:'
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -16
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    ParentFont = False
   end
   object btnOK: TButton
-    Left = 352
-    Top = 24
-    Width = 65
-    Height = 25
+    Left = 300
+    Top = 31
+    Width = 77
+    Height = 30
     Caption = 'OK'
     Default = True
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
-    Font.Height = -11
+    Font.Height = -13
     Font.Name = 'Tahoma'
     Font.Style = []
     ModalResult = 1
@@ -61,21 +79,33 @@ object PenDialog: TPenDialog
     TabOrder = 0
   end
   object btnCancel: TButton
-    Left = 352
-    Top = 55
-    Width = 65
-    Height = 25
+    Left = 300
+    Top = 67
+    Width = 77
+    Height = 30
     Cancel = True
     Caption = 'Cancel'
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -13
+    Font.Name = 'Tahoma'
+    Font.Style = []
     ModalResult = 2
+    ParentFont = False
     TabOrder = 1
   end
   object cbLineType: TComboBox
     Left = 16
-    Top = 27
+    Top = 34
     Width = 113
-    Height = 21
+    Height = 24
     Style = csDropDownList
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -13
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    ParentFont = False
     TabOrder = 2
     Items.Strings = (
       'Solid'
@@ -86,10 +116,16 @@ object PenDialog: TPenDialog
   end
   object cbThickness: TComboBox
     Left = 168
-    Top = 27
+    Top = 33
     Width = 113
-    Height = 21
+    Height = 24
     Style = csDropDownList
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -13
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    ParentFont = False
     TabOrder = 3
     OnChange = cbThicknessChange
     Items.Strings = (

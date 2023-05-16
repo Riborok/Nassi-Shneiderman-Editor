@@ -3428,20 +3428,20 @@ object NassiShneiderman: TNassiShneiderman
     Font.Height = -11
     Font.Name = 'Tahoma'
     Font.Style = []
-    Left = 843
-    Top = 516
+    Left = 915
+    Top = 292
   end
   object ColorDialog: TColorDialog
-    Left = 731
-    Top = 516
+    Left = 915
+    Top = 348
   end
   object SaveDialog: TSaveDialog
     Options = [ofHideReadOnly, ofNoChangeDir, ofEnableSizing]
-    Left = 379
-    Top = 430
+    Left = 779
+    Top = 230
   end
   object OpenDialog: TOpenDialog
-    Left = 275
-    Top = 430
+    Left = 851
+    Top = 230
   end
 end
