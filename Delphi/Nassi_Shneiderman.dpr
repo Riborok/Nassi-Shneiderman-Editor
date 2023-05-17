@@ -51,7 +51,8 @@ uses
   uBlockManager in 'Units\BlockManager\uBlockManager.pas',
   uGlobalSave in 'Units\FileManager\uGlobalSave.pas',
   uLocalSave in 'Units\FileManager\uLocalSave.pas',
-  frmHelp in 'Units\Forms\frmHelp.pas' {Help};
+  frmHelp in 'Units\Forms\frmHelp.pas' {Help},
+  uStatementConverter in 'Units\Support\uStatementConverter.pas';
 
 {$R *.res}
 

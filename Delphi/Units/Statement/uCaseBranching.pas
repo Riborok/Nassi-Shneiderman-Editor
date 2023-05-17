@@ -32,7 +32,7 @@ type
     procedure SortConditions(const SortNumber: Integer);
     procedure RestoreСonditions(const AConds: TStringArr; const ABlocks: TBlockArr);
 
-    property Conds: TStringArr read FConds;
+    property Conds: TStringArr read FConds write FConds;
     property CondsSizes: TSizeArr read FCondsSizes;
   end;
 
@@ -96,11 +96,11 @@ implementation
     // Move the blocks in a new order
     RestoreBlocksAfterRearrangement;
 
-    // Set the optimal length for the last block before sorting
-    LastBlock.SetOptimalXLastBlock;
-
     // Stretch the new last block to the base
     SetXLastForChildrens(FBaseBlock.XLast);
+
+    // Set the optimal length for the last block before sorting
+    LastBlock.SetOptimalXLastBlock;
   end;
 
   procedure TCaseBranching.RestoreBlocksAfterRearrangement;
@@ -115,8 +115,6 @@ implementation
       FBlocks[I].MoveRight(FBlocks[I - 1].XLast - FBlocks[I].XStart);
       SetCondSize(I);
     end;
-
-    FBlocks[High(FBlocks)].ChangeXLastBlock(BaseBlock.XLast);
   end;
 
   procedure TCaseBranching.SetTextSize;

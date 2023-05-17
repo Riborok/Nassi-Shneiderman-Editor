@@ -68,6 +68,8 @@ type
 
     property YIndentText: Integer read FYIndentText;
 
+    procedure SetCoords(const AYStart, AYLast: Integer);
+
     // Returns the Y coordinate of the bottommost part
     function GetYBottom: Integer; virtual;
 
@@ -166,6 +168,8 @@ type
     constructor Create(const ABaseOperator: TOperator); overload;
     constructor Create(const AXStart: Integer; const ACanvas: TCanvas); overload;
     constructor Create(const AXStart: Integer; const ABaseOperator: TOperator); overload;
+    constructor Create(const AXStart, AXLast: Integer; const ABaseOperator: TOperator;
+                       const ACanvas: TCanvas); overload;
     destructor Destroy; override;
 
     property XStart: Integer read FXStart;
@@ -231,7 +235,6 @@ implementation
   constructor TStatement.Create(const AAction : String);
   begin
     FAction := AAction;
-    inherited Create;
   end;
 
   procedure TStatement.SetTextSize;
@@ -267,6 +270,12 @@ implementation
     BaseBlock.SetOptimalXLastBlock;
     SetOptimalYLast;
     BaseBlock.FixYStatementsPosition(BaseBlock.FindStatementIndex(FYStart));
+  end;
+
+  procedure TStatement.SetCoords(const AYStart, AYLast: Integer);
+  begin
+    Self.FYStart := AYStart;
+    Self.FYLast := AYLast;
   end;
 
   function TStatement.GetYBottom: Integer;
@@ -374,9 +383,16 @@ implementation
 
   constructor TBlock.Create(const AXStart: Integer; const ABaseOperator: TOperator);
   begin
-    FStatements := TArrayList<TStatement>.Create(14);
+    Create(ABaseOperator);
     FXStart := AXStart;
-    FBaseOperator := ABaseOperator;
+  end;
+
+  constructor TBlock.Create(const AXStart, AXLast: Integer; const ABaseOperator: TOperator;
+                            const ACanvas: TCanvas);
+  begin
+    Create(AXStart, ABaseOperator);
+    FXLast := AXLast;
+    FCanvas := ACanvas;
   end;
 
   procedure TBlock.RedefineSizes(const AIndex: Integer = 0);

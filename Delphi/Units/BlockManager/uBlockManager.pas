@@ -52,7 +52,7 @@ type
   public
     constructor Create(const APaintBox: TPaintBox);
     destructor Destroy;
-    property MainBlock: TBlock read FMainBlock;
+    property MainBlock: TBlock read FMainBlock write FMainBlock;
 
     property DedicatedStatement: TStatement read FDedicatedStatement write ChangeDedicated;
     property UndoStack: TAutoClearStack<ICommand> read FUndoStack;
@@ -60,6 +60,7 @@ type
 
     property Font: TFont read FFont;
     property Pen: TPen read FPen;
+    property PaintBox: TPaintBox read FPaintBox;
 
     class property CarryBlock: TBlock read FCarryBlock;
     class property BufferBlock: TBlock read FBufferBlock write FBufferBlock;
@@ -72,6 +73,7 @@ type
     { MainBlock }
     procedure RedefineMainBlock;
     procedure ChangeGlobalSettings(const AOldDefaultAction: string);
+    procedure InitializeMainBlock;
 
     { BufferBlock }
     procedure TryCutDedicated;
@@ -149,11 +151,14 @@ implementation
     FDedicatedStatement:= nil;
     FCarryBlock:= nil;
 
+    FPaintBox.Invalidate;
+  end;
+
+  procedure TBlockManager.InitializeMainBlock;
+  begin
     FMainBlock:= TBlock.Create(SchemeInitialIndent, FPaintBox.Canvas);
     FMainBlock.AddUnknownStatement(uBase.DefaultStatement.Create(DefaultAction, FMainBlock),
                                                             SchemeInitialIndent);
-
-    FPaintBox.Invalidate;
   end;
 
   { MainBlock }

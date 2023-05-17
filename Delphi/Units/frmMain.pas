@@ -8,7 +8,7 @@ uses
   uBase, uFirstLoop, uIfBranching, uCaseBranching, uLastLoop, uProcessStatement,
   uStatementSearch, System.Actions, Vcl.ActnList, Vcl.ToolWin, Types, uBlockManager,
   Vcl.ComCtrls, uAdditionalTypes, frmPenSetting, System.ImageList, Vcl.ImgList, frmGlobalSettings,
-  System.SysUtils, uGlobalSave, uLocalSave, frmHelp;
+  System.SysUtils, uGlobalSave, uLocalSave, frmHelp, uStatementConverter;
 
 type
   TNassiShneiderman = class(TForm)
@@ -181,8 +181,6 @@ type
 
     FBlockManager: TBlockManager;
 
-    class function ConvertToBlockType(const AIndex: Integer): TStatementClass; static;
-
     function GetVisibleImageScreen: TVisibleImageRect;
     procedure SetScrollPos(const AStatement: TStatement);
 
@@ -207,7 +205,9 @@ implementation
   var Action: TCloseAction);
   begin
     SaveGlobalSettings;
-    // SaveSchema(FBlockManager);
+
+    { Temp }
+    //SaveSchema(FBlockManager);
   end;
 
   procedure TNassiShneiderman.FormCreate(Sender: TObject);
@@ -244,6 +244,10 @@ implementation
                                      DefaultAction, TBlockManager.BufferBlock));
 
     FBlockManager:= TBlockManager.Create(PaintBox);
+    FBlockManager.InitializeMainBlock;
+
+    { Temp }
+    //LoadSchema(FBlockManager);
   end;
 
   procedure TNassiShneiderman.FormKeyDown(Sender: TObject; var Key: Word;
@@ -411,14 +415,14 @@ implementation
 
   procedure TNassiShneiderman.AddAfter(Sender: TObject);
   begin
-    FBlockManager.TryAddNewStatement(ConvertToBlockType(TComponent(Sender).Tag), True);
+    FBlockManager.TryAddNewStatement(ConvertToStatementType(TComponent(Sender).Tag), True);
     UpdateForStack;
     UpdateForDedicatedStatement;
   end;
 
   procedure TNassiShneiderman.AddBefore(Sender: TObject);
   begin
-    FBlockManager.TryAddNewStatement(ConvertToBlockType(TComponent(Sender).Tag), False);
+    FBlockManager.TryAddNewStatement(ConvertToStatementType(TComponent(Sender).Tag), False);
     UpdateForStack;
     UpdateForDedicatedStatement;
   end;
@@ -566,17 +570,6 @@ implementation
   function TNassiShneiderman.isDragging: Boolean;
   begin
     Result:= TBlockManager.CarryBlock <> nil;
-  end;
-
-  class function TNassiShneiderman.ConvertToBlockType(const AIndex: Integer): TStatementClass;
-  begin
-    case AIndex of
-      0 : Result:= TProcessStatement;
-      1 : Result:= TIfBranching;
-      2 : Result:= TCaseBranching;
-      3 : Result:= TFirstLoop;
-      4 : Result:= TLastLoop;
-    end;
   end;
 
   function TNassiShneiderman.GetVisibleImageScreen: TVisibleImageRect;
