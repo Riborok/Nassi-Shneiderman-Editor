@@ -23,6 +23,12 @@ resourcestring
   rsUseGuide = 'UserGuide';
   rsAbout = 'AboutProgram';
 
+  rsFMJSON = 'JSON Files (*.json)|*.json';
+  rsFMSVG = 'SVG Files (*.svg)|*.svg';
+  rsFMBmp = 'Bitmap Files (*.bmp)|*.bmp';
+  rsFMPng = 'PNG Files (*.png)|*.png';
+  rsFMAll = 'All Files (*.*)|*.*';
+
 implementation
 
 end.

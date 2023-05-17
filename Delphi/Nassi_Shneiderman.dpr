@@ -52,7 +52,8 @@ uses
   uGlobalSave in 'Units\FileManager\uGlobalSave.pas',
   uLocalSave in 'Units\FileManager\uLocalSave.pas',
   frmHelp in 'Units\Forms\frmHelp.pas' {Help},
-  uStatementConverter in 'Units\Support\uStatementConverter.pas';
+  uStatementConverter in 'Units\Support\uStatementConverter.pas',
+  uDialogMessages in 'Units\Support\uDialogMessages.pas';
 
 {$R *.res}
 

@@ -209,20 +209,23 @@ implementation
   var
     Json: TJSONObject;
   begin
-    Json := TJSONObject.Create;
-    try
-      with Json do
-      begin
-        with ABlockManager do
+    if ABlockManager.PathToFile <> '' then
+    begin
+      Json := TJSONObject.Create;
+      try
+        with Json do
         begin
-          AddPair('Pen', PenToJSON(Pen));
-          AddPair('Font', FontToJSON(Font));
-          AddPair('MainBlock', BlockToJSON(MainBlock));
+          with ABlockManager do
+          begin
+            AddPair('Pen', PenToJSON(Pen));
+            AddPair('Font', FontToJSON(Font));
+            AddPair('MainBlock', BlockToJSON(MainBlock));
+          end;
         end;
+        TFile.WriteAllText(ABlockManager.PathToFile, Json.ToJSON, TEncoding.UTF8);
+      finally
+        Json.Destroy;
       end;
-      TFile.WriteAllText('Temp.json', Json.ToJSON, TEncoding.UTF8);
-    finally
-      Json.Destroy;
     end;
   end;
 
@@ -231,9 +234,10 @@ implementation
   var
     Json: TJSONObject;
   begin
-    if TFile.Exists('Temp.json') then
+    if TFile.Exists(ABlockManager.PathToFile) and
+       SameText(TPath.GetExtension(ABlockManager.PathToFile), '.json') then
     begin
-      Json := TJSONObject.ParseJSONValue(TFile.ReadAllText('Temp.json', TEncoding.UTF8)) as TJSONObject;
+      Json := TJSONObject(TJSONObject.ParseJSONValue(TFile.ReadAllText(ABlockManager.PathToFile, TEncoding.UTF8)));
       try
         with Json do
         begin
@@ -242,6 +246,7 @@ implementation
             JSONToPen(TJSONObject(GetValue('Pen')), Pen);
             JSONToFont(TJSONObject(GetValue('Font')), Font);
             MainBlock := JSONToBlock(TJSONObject(GetValue('MainBlock')), nil, PaintBox.Canvas);
+            RedefineMainBlock;
           end;
         end;
       finally
