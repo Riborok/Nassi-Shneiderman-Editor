@@ -84,14 +84,12 @@ type
     procedure RedefineMainBlock;
     procedure ChangeGlobalSettings(const AOldDefaultAction: string);
     procedure InitializeMainBlock;
-    procedure SetInitialIndent;
     function isDefaultMainBlock: Boolean;
 
     { BufferBlock }
     procedure TryCutDedicated;
     procedure TryCopyDedicated;
     procedure TryDeleteDedicated;
-
     procedure TryInsertBufferBlock;
 
     { DedicatedStatement }
@@ -220,11 +218,6 @@ implementation
     FMainBlock:= TBlock.Create(SchemeInitialIndent, FPaintBox.Canvas);
     FMainBlock.AddUnknownStatement(uBase.DefaultStatement.Create(DefaultAction, FMainBlock),
                                                             SchemeInitialIndent);
-  end;
-
-  procedure TBlockManager.SetInitialIndent;
-  begin
-    //
   end;
 
   function TBlockManager.isDefaultMainBlock: Boolean;
