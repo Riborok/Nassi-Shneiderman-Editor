@@ -54,11 +54,9 @@ type
 
     procedure Initialize; virtual;
   public
-    // This constructor creates an default statement
-    constructor CreateDefault(const ABaseBlock: TBlock);
-
     // Create
-    constructor Create(const AAction : String); virtual;
+    constructor Create(const AAction : String; const ABaseBlock: TBlock); overload;
+    constructor Create(const AAction : String); overload; virtual;
 
     // These properties return the text of the statement and base block
     property Action: String read FAction;
@@ -70,6 +68,8 @@ type
 
     property YIndentText: Integer read FYIndentText;
 
+    procedure SetCoords(const AYStart, AYLast: Integer);
+
     // Returns the Y coordinate of the bottommost part
     function GetYBottom: Integer; virtual;
 
@@ -79,9 +79,11 @@ type
     // Set the optimal Y last
     procedure SetOptimalYLast;
 
+    procedure SwapYStart(const AStatement: TStatement);
+
     function Clone: TStatement; virtual;
 
-  function GetMask(const AVisibleImageRect: TVisibleImageRect;
+    function GetMask(const AVisibleImageRect: TVisibleImageRect;
                    const isTOperator: Boolean): Integer; inline;
   end;
 
@@ -144,8 +146,6 @@ type
     FStatements: TArrayList<TStatement>;
     FBaseOperator: TOperator;
 
-    procedure ChangeYStatement(AIndex: Integer = 0);
-
     procedure MoveRightExceptXLast(const AOffset: Integer);
 
     function FindOptimalXLast: Integer;
@@ -161,11 +161,16 @@ type
 
     // After changing the Y coordinate, need to call the procedure in order to
     // change the Y coordinates of others
-    procedure FixYStatementsPosition(const Index: Integer);
+    procedure FixYInBlock(const Index: Integer);
+    procedure PromptFixYInBaseBlocks;
+
+    procedure FixYStatement(AIndex: Integer = 0);
   public
     constructor Create(const ABaseOperator: TOperator); overload;
     constructor Create(const AXStart: Integer; const ACanvas: TCanvas); overload;
     constructor Create(const AXStart: Integer; const ABaseOperator: TOperator); overload;
+    constructor Create(const AXStart, AXLast: Integer; const ABaseOperator: TOperator;
+                       const ACanvas: TCanvas); overload;
     destructor Destroy; override;
 
     property XStart: Integer read FXStart;
@@ -194,7 +199,8 @@ type
 
     procedure Assign(const ASource: TBlock);
 
-    procedure RedefineSizes(const AIndex: Integer = 0);
+    procedure GlueAfterRedefine;
+    procedure RedefineBlock(const AIndex: Integer = 0);
 
     function FindStatementIndex(const AFYStart: Integer): Integer;
 
@@ -216,16 +222,16 @@ implementation
 
   function isDefaultStatement(const AStatement: TStatement): Boolean;
   begin
-    Result:= (AStatement.FAction = DefaultAction) and
-             (AStatement.ClassType = DefaultStatement);
+    Result:= (AStatement is DefaultStatement) and
+             (AStatement.FAction = DefaultAction);
   end;
 
   { TStatement }
 
-  constructor TStatement.CreateDefault(const ABaseBlock: TBlock);
+  constructor TStatement.Create(const AAction : String; const ABaseBlock: TBlock);
   begin
-    FAction := DefaultAction;
     FBaseBlock:= ABaseBlock;
+    Create(AAction);
   end;
 
   constructor TStatement.Create(const AAction : String);
@@ -265,7 +271,15 @@ implementation
 
     BaseBlock.SetOptimalXLastBlock;
     SetOptimalYLast;
-    BaseBlock.FixYStatementsPosition(BaseBlock.FindStatementIndex(FYStart));
+
+    BaseBlock.FixYInBlock(BaseBlock.FindStatementIndex(FYStart));
+    BaseBlock.PromptFixYInBaseBlocks;
+  end;
+
+  procedure TStatement.SetCoords(const AYStart, AYLast: Integer);
+  begin
+    Self.FYStart := AYStart;
+    Self.FYLast := AYLast;
   end;
 
   function TStatement.GetYBottom: Integer;
@@ -300,9 +314,18 @@ implementation
     BaseBlock.SetOptimalXLastBlock;
   end;
 
+  procedure TStatement.SwapYStart(const AStatement: TStatement);
+  var
+    Temp: Integer;
+  begin
+    Temp := Self.YStart;
+    Self.FYStart := AStatement.FYStart;
+    AStatement.FYStart := Temp;
+  end;
+
   function TStatement.Clone: TStatement;
   begin
-    Result:= TStatementClass(Self.ClassType).CreateDefault(Self.BaseBlock);
+    Result:= TStatementClass(Self.ClassType).Create(DefaultAction, Self.BaseBlock);
 
     Result.FAction:= Self.FAction;
 
@@ -364,19 +387,37 @@ implementation
 
   constructor TBlock.Create(const AXStart: Integer; const ABaseOperator: TOperator);
   begin
-    FStatements := TArrayList<TStatement>.Create(14);
+    Create(ABaseOperator);
     FXStart := AXStart;
-    FBaseOperator := ABaseOperator;
   end;
 
-  procedure TBlock.RedefineSizes(const AIndex: Integer = 0);
+  constructor TBlock.Create(const AXStart, AXLast: Integer; const ABaseOperator: TOperator;
+                            const ACanvas: TCanvas);
+  begin
+    Create(AXStart, ABaseOperator);
+    FXLast := AXLast;
+    FCanvas := ACanvas;
+  end;
+
+  procedure TBlock.GlueAfterRedefine;
+  var
+    I, Offset : Integer;
+  begin
+    for I := 1 to FStatements.Count - 1 do
+    begin
+      Offset:= FStatements[I - 1].GetYBottom - FStatements[I].FYStart;
+      FStatements[I].Lower(Offset);
+      if FStatements[I] is TOperator then
+        TOperator(FStatements[I]).MoveDownChildrens(Offset);
+    end;
+  end;
+
+  procedure TBlock.RedefineBlock(const AIndex: Integer = 0);
   var
     I: Integer;
   begin
     for I := AIndex to FStatements.Count - 1 do
       FStatements[I].RedefineStatement;
-
-    FixYStatementsPosition(AIndex);
 
     SetOptimalXLastBlock;
   end;
@@ -411,7 +452,8 @@ implementation
 
     AInsertedStatement.Initialize;
 
-    FixYStatementsPosition(AIndex + 1);
+    FixYInBlock(AIndex + 1);
+    PromptFixYInBaseBlocks;
   end;
 
   procedure TBlock.AddUnknownStatement(const AStatement: TStatement; const AYStart: Integer);
@@ -422,7 +464,8 @@ implementation
 
     AStatement.Initialize;
 
-    FixYStatementsPosition(0);
+    FixYInBlock(0);
+    PromptFixYInBaseBlocks;
   end;
 
   procedure TBlock.AddStatement(const AStatement: TStatement);
@@ -455,7 +498,9 @@ implementation
     end;
     Dec(AIndex, AInsertedBlock.FStatements.Count - 1);
 
-    RedefineSizes(AIndex);
+    RedefineBlock(AIndex);
+    FixYInBlock(AIndex);
+    PromptFixYInBaseBlocks;
   end;
 
   function TBlock.Extract(const AStatement: TStatement): Integer;
@@ -471,7 +516,7 @@ implementation
     FStatements.Delete(AIndex);
     if FStatements.Count = 0 then
     begin
-      AddStatement(DefaultStatement.CreateDefault(Self));
+      AddStatement(DefaultStatement.Create(DefaultAction, Self));
       FStatements[0].FYStart:= Result.FYStart;
     end
     else if (Result.BaseBlock.BaseOperator = nil) and (AIndex = 0) then
@@ -483,10 +528,16 @@ implementation
     ExtractStatementAt(Index).Destroy;
   end;
 
-  procedure TBlock.ChangeYStatement(AIndex: Integer = 0);
+  procedure TBlock.FixYStatement(AIndex: Integer = 0);
   var
-    I, J: Integer;
-    Blocks: TBlockArr;
+    I: Integer;
+    procedure FixYBlocks(const ABlocks: TBlockArr); inline;
+    var
+      I: Integer;
+    begin
+      for I := 0 to High(ABlocks) do
+        ABlocks[I].FixYStatement;
+    end;
   begin
     if AIndex = 0 then
     begin
@@ -494,11 +545,7 @@ implementation
         FStatements[AIndex].Lower(BaseOperator.GetBlockYStart - FStatements[AIndex].FYStart);
 
       if FStatements[AIndex] is TOperator then
-      begin
-        Blocks:= TOperator(FStatements[AIndex]).FBlocks;
-        for J := 0 to High(Blocks) do
-          Blocks[J].ChangeYStatement;
-      end;
+        FixYBlocks(TOperator(FStatements[AIndex]).FBlocks);
 
       Inc(AIndex);
     end;
@@ -508,11 +555,7 @@ implementation
       FStatements[I].Lower(FStatements[I - 1].GetYBottom - FStatements[I].FYStart);
 
       if FStatements[I] is TOperator then
-      begin
-        Blocks:= TOperator(FStatements[I]).FBlocks;
-        for J := 0 to High(Blocks) do
-          Blocks[J].ChangeYStatement;
-      end;
+        FixYBlocks(TOperator(FStatements[I]).FBlocks);
     end;
 
     if (BaseOperator <> nil) and not BaseOperator.IsPreсOperator then
@@ -659,11 +702,9 @@ implementation
     Blocks : TBlockArr;
     I, J: Integer;
   begin
-    for I := 0 to Statements.Count - 1 do
+    I:= 0;
+    while I < Statements.Count - 1 do
     begin
-      if (Statements[I].FAction = AOldDefaultAction) and
-          (Statements[I].ClassType = DefaultStatement) then
-        Statements[I].ChangeAction(DefaultAction);
 
       if Statements[I] is TOperator then
       begin
@@ -671,6 +712,27 @@ implementation
         for J := 0 to High(Blocks) do
           Blocks[J].SetNewActionForDefaultStatements(AOldDefaultAction);
       end;
+
+      if Statements[I] is DefaultStatement then
+      begin
+        if Statements[I].FAction = AOldDefaultAction then
+          Statements[I].ChangeAction(DefaultAction)
+        else if Statements[I].FAction = DefaultAction then
+        begin
+          RemoveStatementAt(I);
+          Dec(I);
+        end;
+      end;
+
+      Inc(I);
+    end;
+    I:= Statements.Count - 1;
+    if Statements[I] is DefaultStatement then
+    begin
+      if Statements[I].FAction = AOldDefaultAction then
+        Statements[I].ChangeAction(DefaultAction)
+      else if Statements[I].FAction = DefaultAction then
+        RemoveStatementAt(I);
     end;
   end;
 
@@ -693,19 +755,11 @@ implementation
     end;
   end;
 
-  procedure TBlock.FixYStatementsPosition(const Index: Integer);
+  procedure TBlock.PromptFixYInBaseBlocks;
   var
     CurrBlock: TBlock;
     CurrOperator: TOperator;
   begin
-
-    // Shift all statements after and childrens
-    ChangeYStatement(Index);
-
-    if FStatements[Index] is TOperator then
-      TOperator(FStatements[Index]).AlignBlocks;
-
-    // Next, shift the statements in all basic blocks
     CurrBlock:= Self;
     while CurrBlock.BaseOperator <> nil do
     begin
@@ -714,20 +768,31 @@ implementation
 
       CurrOperator.AlignBlocks;
 
-      CurrBlock.ChangeYStatement(CurrBlock.FindStatementIndex(CurrOperator.FYStart) + 1);
+      CurrBlock.FixYStatement(CurrBlock.FindStatementIndex(CurrOperator.FYStart) + 1);
     end;
+  end;
+
+  procedure TBlock.FixYInBlock(const Index: Integer);
+  begin
+    // Shift all statements after and childrens
+    FixYStatement(Index);
+
+    if FStatements[Index] is TOperator then
+      TOperator(FStatements[Index]).AlignBlocks;
   end;
 
   procedure TBlock.Install(const Index: Integer);
   var
     I: Integer;
     Blocks: TBlockArr;
+    CurrOperator: TOperator;
   begin
     FStatements[Index].SetOptimalYLast;
 
     if FStatements[Index] is TOperator then
     begin
-      Blocks:= TOperator(FStatements[Index]).Blocks;
+      CurrOperator:= TOperator(FStatements[Index]);
+      Blocks:= CurrOperator.Blocks;
       Blocks[0].SetOptimalXLastBlock;
       Blocks[0].GetLastStatement.SetYBottom(Blocks[0].GetLastStatement.GetOptimalYLast);
       for I := 1 to High(Blocks) - 1 do
@@ -735,11 +800,13 @@ implementation
         Blocks[I].SetOptimalXLastBlock;
         Blocks[I].GetLastStatement.SetYBottom(Blocks[I].GetLastStatement.GetOptimalYLast);
       end;
+      CurrOperator.AlignBlocks;
     end
     else
       Self.SetOptimalXLastBlock;
 
-    FixYStatementsPosition(Index);
+    FixYInBlock(Index);
+    PromptFixYInBaseBlocks;
   end;
 
   procedure TBlock.DrawBlock(const AVisibleImageRect: TVisibleImageRect);
@@ -884,7 +951,7 @@ implementation
     begin
       ABlock.Statements[0].FYStart := AYStart;
       ABlock.Statements[0].SetOptimalYLast;
-      ABlock.ChangeYStatement(0);
+      ABlock.FixYStatement;
     end;
   begin
     InstallCanvas(FBaseBlock.FCanvas);
@@ -1021,17 +1088,61 @@ implementation
   end;
 
   procedure TOperator.RedefineStatement;
-  var
-    I, CurrXStart: Integer;
+    procedure GlueBlock(const ABlock: TBlock); forward;
+    procedure GlueOperator(const ABlocks: TBlockArr); inline;
+    var
+      I: Integer;
+    begin
+      for I := 0 to High(ABlocks) do
+        GlueBlock(ABlocks[I]);
+    end;
+    procedure GlueBlock(const ABlock: TBlock); inline;
+    var
+      I: Integer;
+    begin
+      with ABlock do
+      begin
+        FStatements[0].Lower(BaseOperator.GetBlockYStart - FStatements[0].FYStart);
+
+        if FStatements[0] is TOperator then
+          GlueOperator(TOperator(FStatements[0]).Blocks);
+
+        for I := 1 to FStatements.Count - 1 do
+        begin
+          FStatements[I].Lower(FStatements[I - 1].GetYBottom - FStatements[I].FYStart);
+          if FStatements[I] is TOperator then
+            GlueOperator(TOperator(FStatements[I]).Blocks);
+        end;
+      end;
+    end;
+    procedure RedefineYBlocks;
+    var
+      I, CurrXStart: Integer;
+    begin
+      CurrXStart:= BaseBlock.FXStart + GetOffsetFromXStart;
+      if CurrXStart <> FBlocks[0].FXStart then
+        FBlocks[0].ChangeXStartBlock(CurrXStart);
+      for I := 0 to High(FBlocks) do
+      begin
+        FBlocks[I].RedefineBlock;
+        GlueBlock(FBlocks[I]);
+      end;
+      AlignBlocks;
+    end;
   begin
-    inherited;
-
-    CurrXStart:= BaseBlock.FXStart + GetOffsetFromXStart;
-    if CurrXStart <> FBlocks[0].FXStart then
-      FBlocks[0].ChangeXStartBlock(CurrXStart);
-
-    for I := 0 to High(FBlocks) do
-      FBlocks[I].RedefineSizes;
+    SetTextSize;
+    case Self.IsPreсOperator of
+      True:
+      begin
+        SetOptimalYLast;
+        RedefineYBlocks;
+      end;
+      False:
+      begin
+        RedefineYBlocks;
+        SetOptimalYLast;
+      end;
+    end;
   end;
 
   function TOperator.Clone: TStatement;

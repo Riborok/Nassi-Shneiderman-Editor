@@ -90,7 +90,6 @@ type
     procedure TryCutDedicated;
     procedure TryCopyDedicated;
     procedure TryDeleteDedicated;
-
     procedure TryInsertBufferBlock;
 
     { DedicatedStatement }

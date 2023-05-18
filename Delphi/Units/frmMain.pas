@@ -7,8 +7,9 @@ uses
   Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls, Vcl.StdCtrls, Vcl.Menus, uConstants,
   uBase, uFirstLoop, uIfBranching, uCaseBranching, uLastLoop, uProcessStatement,
   uStatementSearch, System.Actions, Vcl.ActnList, Vcl.ToolWin, Types, uBlockManager,
-  Vcl.ComCtrls, uAdditionalTypes, frmPenSetting, System.ImageList, Vcl.ImgList, frmGlobalSettings,
-  System.SysUtils, uGlobalSave, uLocalSave, frmHelp, uStatementConverter, uDialogMessages;
+  Vcl.ComCtrls, uAdditionalTypes, frmPenSetting, System.ImageList, Vcl.ImgList,
+  System.SysUtils, uGlobalSave, uLocalSave, frmHelp, uStatementConverter, uDialogMessages,
+  frmGlobalSettings, System.UITypes;
 
 type
   TNassiShneiderman = class(TForm)
@@ -321,8 +322,9 @@ implementation
         if (GetKeyState(VK_CONTROL) >= 0) or (GetKeyState(VK_SHIFT) >= 0 ) then
           FormKeyDown(nil, Msg.CharCode, []);
       end;
-    end
-
+    end;
+    if isDragging then
+      FBlockManager.DestroyCarryBlock;
   end;
 
   procedure TNassiShneiderman.PaintBoxPaint(Sender: TObject);
@@ -394,7 +396,11 @@ implementation
           FPrevMousePos := Point(X, Y);
         end;
         mbRight:
+        begin
+          if isDragging then
+            FBlockManager.DestroyCarryBlock;
           PopupMenu.Popup(Mouse.CursorPos.X, Mouse.CursorPos.Y);
+        end;
       end;
     end;
 
@@ -415,7 +421,8 @@ implementation
       FPrevMousePos := Point(X, Y);
     end
     else if FMayDrag and ((Abs(FPrevMousePos.X - X) > AmountPixelToMove) or
-                          (Abs(FPrevMousePos.Y - Y) > AmountPixelToMove)) then
+         (Abs(FPrevMousePos.Y - Y) > AmountPixelToMove)) and
+         (FBlockManager.DedicatedStatement <> nil) then
     begin
       FMayDrag:= False;
       if isDragging then

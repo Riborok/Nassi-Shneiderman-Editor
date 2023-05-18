@@ -54,6 +54,8 @@ type
 
     procedure ChangeDedicated(const AStatement: TStatement);
     procedure ChangeMainBlock(const ANewBlock: TBlock);
+
+    procedure SetPathToFile(const APath: string);
   public
     constructor Create(const APaintBox: TPaintBox);
     destructor Destroy;
@@ -67,7 +69,8 @@ type
     property Pen: TPen read FPen;
     property PaintBox: TPaintBox read FPaintBox;
 
-    property PathToFile: string read FPathToFile write FPathToFile;
+    property PathToFile: string read FPathToFile write SetPathToFile;
+    property isSaved: Boolean read FisSaved;
 
     class property CarryBlock: TBlock read FCarryBlock;
     class property BufferBlock: TBlock read FBufferBlock write FBufferBlock;
@@ -87,7 +90,6 @@ type
     procedure TryCutDedicated;
     procedure TryCopyDedicated;
     procedure TryDeleteDedicated;
-
     procedure TryInsertBufferBlock;
 
     { DedicatedStatement }
@@ -120,6 +122,13 @@ type
   end;
 
 implementation
+
+  procedure TBlockManager.SetPathToFile(const APath: string);
+  begin
+    FisSaved:= True;
+
+    FPathToFile:= APath;
+  end;
 
   procedure TBlockManager.AddToUndoStack(ACommand: ICommand);
   begin
@@ -180,6 +189,7 @@ implementation
     FPaintBox.Canvas.Font:= FFont;
     FPaintBox.Canvas.Pen:= FPen;
     MainBlock.RedefineSizes;
+    MainBlock.FixYStatementsPosition;
     FPaintBox.Invalidate;
   end;
 
@@ -193,6 +203,7 @@ implementation
       MainBlock.SetNewActionForDefaultStatements(AOldDefaultAction);
     end;
     MainBlock.RedefineSizes;
+    MainBlock.FixYStatementsPosition;
     FPaintBox.Invalidate;
   end;
 
@@ -632,6 +643,6 @@ implementation
     TryDrawCarryBlock(AVisibleImageRect);
 
     FMainBlock.DrawBlock(AVisibleImageRect);
-    //DrawCoordinates(FPaintBox.Canvas, 50);
+    DrawCoordinates(FPaintBox.Canvas, 50);
   end;
 end.

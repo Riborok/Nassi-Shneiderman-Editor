@@ -47,10 +47,15 @@ type
     FPen: TPen;
     FFont: TFont;
 
-    FPathToSave: string;
+    FPathToFile: string;
+    FisSaved: Boolean;
+
+    procedure AddToUndoStack(ACommand: ICommand);
 
     procedure ChangeDedicated(const AStatement: TStatement);
     procedure ChangeMainBlock(const ANewBlock: TBlock);
+
+    procedure SetPathToFile(const APath: string);
   public
     constructor Create(const APaintBox: TPaintBox);
     destructor Destroy;
@@ -64,7 +69,8 @@ type
     property Pen: TPen read FPen;
     property PaintBox: TPaintBox read FPaintBox;
 
-    property PathToFile: string read FPathToSave write FPathToSave;
+    property PathToFile: string read FPathToFile write SetPathToFile;
+    property isSaved: Boolean read FisSaved;
 
     class property CarryBlock: TBlock read FCarryBlock;
     class property BufferBlock: TBlock read FBufferBlock write FBufferBlock;
@@ -78,12 +84,12 @@ type
     procedure RedefineMainBlock;
     procedure ChangeGlobalSettings(const AOldDefaultAction: string);
     procedure InitializeMainBlock;
+    function isDefaultMainBlock: Boolean;
 
     { BufferBlock }
     procedure TryCutDedicated;
     procedure TryCopyDedicated;
     procedure TryDeleteDedicated;
-
     procedure TryInsertBufferBlock;
 
     { DedicatedStatement }
@@ -116,6 +122,22 @@ type
   end;
 
 implementation
+
+  procedure TBlockManager.SetPathToFile(const APath: string);
+  begin
+    FisSaved:= True;
+
+    FPathToFile:= APath;
+  end;
+
+  procedure TBlockManager.AddToUndoStack(ACommand: ICommand);
+  begin
+    FisSaved:= False;
+
+    FRedoStack.Clear;
+    FUndoStack.Push(ACommand);
+    FUndoStack.Peek.Execute;
+  end;
 
   destructor TBlockManager.Destroy;
   begin
@@ -156,6 +178,7 @@ implementation
     FCarryBlock:= nil;
     FMainBlock:= nil;
     PathToFile:= '';
+    FisSaved:= False;
 
     FPaintBox.Invalidate;
   end;
@@ -166,6 +189,7 @@ implementation
     FPaintBox.Canvas.Font:= FFont;
     FPaintBox.Canvas.Pen:= FPen;
     MainBlock.RedefineSizes;
+    MainBlock.GlueAfterRedefine;
     FPaintBox.Invalidate;
   end;
 
@@ -179,6 +203,7 @@ implementation
       MainBlock.SetNewActionForDefaultStatements(AOldDefaultAction);
     end;
     MainBlock.RedefineSizes;
+    MainBlock.GlueAfterRedefine;
     FPaintBox.Invalidate;
   end;
 
@@ -195,6 +220,11 @@ implementation
     FMainBlock:= TBlock.Create(SchemeInitialIndent, FPaintBox.Canvas);
     FMainBlock.AddUnknownStatement(uBase.DefaultStatement.Create(DefaultAction, FMainBlock),
                                                             SchemeInitialIndent);
+  end;
+
+  function TBlockManager.isDefaultMainBlock: Boolean;
+  begin
+    Result:= isDefaultStatement(FMainBlock.Statements[0]);
   end;
 
   { BufferBlock }
@@ -221,9 +251,7 @@ implementation
   begin
     if (FDedicatedStatement <> nil) and not isDefaultStatement(FDedicatedStatement) then
     begin
-      FRedoStack.Clear;
-      FUndoStack.Push(TCommandDelStatement.Create(FDedicatedStatement));
-      FUndoStack.Peek.Execute;
+      AddToUndoStack(TCommandDelStatement.Create(FDedicatedStatement));
 
       FDedicatedStatement:= nil;
       FPaintBox.Invalidate;
@@ -248,11 +276,9 @@ implementation
       begin
         BaseBlock:= FDedicatedStatement.BaseBlock;
 
-        FRedoStack.Clear;
-        FUndoStack.Push(TCommandAddBlock.Create(BaseBlock,
-                        BaseBlock.FindStatementIndex(FDedicatedStatement.YStart) + 1,
-                        FBufferBlock));
-        FUndoStack.Peek.Execute;
+        AddToUndoStack(TCommandAddBlock.Create(BaseBlock,
+                       BaseBlock.FindStatementIndex(FDedicatedStatement.YStart) + 1,
+                       FBufferBlock));
 
         FDedicatedStatement:= FBufferBlock.Statements.GetLast;
 
@@ -309,13 +335,11 @@ implementation
 
       if (NewStatement <> nil) and not isDefaultStatement(NewStatement) then
       begin
-        FRedoStack.Clear;
         Block:= FDedicatedStatement.BaseBlock;
-        FUndoStack.Push(TCommandAddStatement.Create(Block,
+        AddToUndoStack(TCommandAddStatement.Create(Block,
                         Block.FindStatementIndex(FDedicatedStatement.YStart) +
                         Ord(isAfterDedicated),
                         NewStatement));
-        FUndoStack.Peek.Execute;
 
         FDedicatedStatement:= NewStatement;
       end;
@@ -337,17 +361,13 @@ implementation
         var Cond: TStringArr:= CaseBranching.Conds;
         if (WriteAction.TryGetAction(Action)) and (Write—ase—onditions.TryGetCond(Cond)) then
         begin
-          FRedoStack.Clear;
-          FUndoStack.Push(TCommnadChangeContent.Create(FDedicatedStatement, Action, Cond));
-          FUndoStack.Peek.Execute;
+          AddToUndoStack(TCommnadChangeContent.Create(FDedicatedStatement, Action, Cond));
           FPaintBox.Invalidate;
         end;
       end
       else if WriteAction.TryGetAction(Action) then
       begin
-        FRedoStack.Clear;
-        FUndoStack.Push(TCommnadChangeContent.Create(FDedicatedStatement, Action, nil));
-        FUndoStack.Peek.Execute;
+        AddToUndoStack(TCommnadChangeContent.Create(FDedicatedStatement, Action, nil));
         FPaintBox.Invalidate;
       end;
     end;
@@ -357,10 +377,8 @@ implementation
   begin
     if FDedicatedStatement is TCaseBranching then
     begin
-      FRedoStack.Clear;
-      FUndoStack.Push(TCommandCaseSort.Create(TCaseBranching(FDedicatedStatement),
-                      ASortNumber));
-      FUndoStack.Peek.Execute;
+      AddToUndoStack(TCommandCaseSort.Create(TCaseBranching(FDedicatedStatement),
+                     ASortNumber));
 
       FPaintBox.Invalidate;
     end;
@@ -520,22 +538,14 @@ implementation
   begin
     case FHoveredStatement.State of
       stBefore, stAfter:
-      begin
-        FRedoStack.Clear;
-        FUndoStack.Push(TCommandTransferAnotherBlock.Create(
-                   FHoveredStatement.Statement,
-                   Boolean(Ord(FHoveredStatement.State)),
-                   FDedicatedStatement));
-        FUndoStack.Peek.Execute;
-      end;
+        AddToUndoStack(TCommandTransferAnotherBlock.Create(
+                       FHoveredStatement.Statement,
+                       Boolean(Ord(FHoveredStatement.State)),
+                       FDedicatedStatement));
       stSwap:
-      begin
-        FRedoStack.Clear;
-        FUndoStack.Push(TCommandSwapStatements.Create(
-                   FHoveredStatement.Statement,
-                   FDedicatedStatement));
-        FUndoStack.Peek.Execute;
-      end;
+        AddToUndoStack(TCommandSwapStatements.Create(
+                       FHoveredStatement.Statement,
+                       FDedicatedStatement));
     end;
   end;
 
@@ -579,6 +589,8 @@ implementation
   begin
     if FUndoStack.Count <> 0 then
     begin
+      FisSaved:= False;
+
       Commamd:= FUndoStack.Pop;
       Commamd.Undo;
       FRedoStack.Push(Commamd);
@@ -595,6 +607,8 @@ implementation
   begin
     if FRedoStack.Count <> 0 then
     begin
+      FisSaved:= False;
+
       Commamd:= FRedoStack.Pop;
       Commamd.Execute;
       FUndoStack.Push(Commamd);
@@ -629,6 +643,6 @@ implementation
     TryDrawCarryBlock(AVisibleImageRect);
 
     FMainBlock.DrawBlock(AVisibleImageRect);
-    //DrawCoordinates(FPaintBox.Canvas, 50);
+    DrawCoordinates(FPaintBox.Canvas, 50);
   end;
 end.
