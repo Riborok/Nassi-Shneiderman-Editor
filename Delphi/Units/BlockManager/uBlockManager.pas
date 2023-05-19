@@ -4,7 +4,8 @@ interface
 uses
   uBase, uCommands, uAutoClearStack, Vcl.ExtCtrls, uSwitchStatements,
   Winapi.Windows, uAdditionalTypes, uDrawShapes, Vcl.Graphics, frmGetAction,
-  frmGet—ase—onditions, uCaseBranching, uMinMaxInt, uStatementSearch, Types;
+  frmGet—ase—onditions, uCaseBranching, uMinMaxInt, uStatementSearch, Types,
+  uIfBranching;
 type
 
   TBlockManager = class
@@ -201,7 +202,7 @@ implementation
         FDedicatedStatement := nil;
       MainBlock.SetNewActionForDefaultStatements(AOldDefaultAction);
     end;
-    MainBlock.RedefineSizes;
+    TIfBranching.RedefineSizesForIfBranching(MainBlock);
     FPaintBox.Invalidate;
   end;
 
@@ -258,7 +259,7 @@ implementation
 
   procedure TBlockManager.TryInsertBufferBlock;
   var
-    BaseBlock: TBlock;
+    Statement: TStatement;
     I: Integer;
   begin
     if (FBufferBlock.Statements.Count <> 0) and (FDedicatedStatement <> nil) then
@@ -272,13 +273,12 @@ implementation
 
       if (FBufferBlock.Statements.Count <> 1) or not isDefaultStatement(FBufferBlock.Statements[0]) then
       begin
-        BaseBlock:= FDedicatedStatement.BaseBlock;
-
-        AddToUndoStack(TCommandAddBlock.Create(BaseBlock,
-                       BaseBlock.FindStatementIndex(FDedicatedStatement.YStart) + 1,
-                       FBufferBlock));
-
+        Statement:= FDedicatedStatement;
         FDedicatedStatement:= FBufferBlock.Statements.GetLast;
+
+        AddToUndoStack(TCommandAddBlock.Create(Statement.BaseBlock,
+                       Statement.BaseBlock.FindStatementIndex(Statement.YStart) + 1,
+                       FBufferBlock));
 
         FBufferBlock := TBlock.Create(nil);
         FBufferBlock.Assign(FDedicatedStatement.BaseBlock);

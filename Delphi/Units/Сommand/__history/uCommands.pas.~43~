@@ -1,7 +1,7 @@
 unit uCommands;
 
 interface
-uses uAdditionalTypes, uBase, uStack, uCaseBranching;
+uses uAdditionalTypes, uBase, uStack, uCaseBranching, uMinMaxInt;
 type
 
   ICommand = interface
@@ -158,7 +158,7 @@ implementation
     WasDefaultStatementRemoved:= FIndex >= FBaseBlock.Statements.Count;
     Dec(FIndex, Ord(WasDefaultStatementRemoved));
     FBaseBlock.ExtractStatementAt(FIndex);
-    FBaseBlock.Install(FIndex);
+    FBaseBlock.Install(FIndex - Ord(FIndex = FBaseBlock.Statements.Count));
     Inc(FIndex, Ord(WasDefaultStatementRemoved));
   end;
 
@@ -171,7 +171,7 @@ implementation
   procedure TCommandDelStatement.Execute;
   begin
     FIndex:= FStatement.BaseBlock.Extract(FStatement);
-    FStatement.BaseBlock.Install(FIndex);
+    FStatement.BaseBlock.Install(FIndex - Ord(FIndex = FStatement.BaseBlock.Statements.Count));
   end;
 
   procedure TCommandDelStatement.Undo;
@@ -208,7 +208,7 @@ implementation
     Dec(FIndex, Ord(WasDefaultStatementRemoved));
     for I := 0 to FInsertedBlock.Statements.Count - 1 do
       FBaseBlock.ExtractStatementAt(FIndex + I);
-    FBaseBlock.Install(FIndex);
+    FBaseBlock.Install(FIndex - Ord(FIndex = FBaseBlock.Statements.Count));
     Inc(FIndex, Ord(WasDefaultStatementRemoved));
   end;
 
@@ -295,7 +295,7 @@ implementation
     FFirstIndex := FFirstStatement.BaseBlock.FindStatementIndex(FFirstStatement.YStart);
 
     FSecondStatement := ASecondStatement;
-    FSecondIndex := FSecondStatement.BaseBlock.FindStatementIndex(FFirstStatement.YStart);
+    FSecondIndex := FSecondStatement.BaseBlock.FindStatementIndex(FSecondStatement.YStart);
   end;
 
   procedure TCommandSwapStatements.SortStatements;
@@ -323,9 +323,9 @@ implementation
     TempIndex: Integer;
   begin
     SortStatements;
-    Offset := FFirstStatement.BaseBlock.XStart - FSecondStatement.BaseBlock.XStart;
 
     SecondBaseBlock := FSecondStatement.BaseBlock;
+    Offset := FFirstStatement.BaseBlock.XStart - SecondBaseBlock.XStart;
 
     FFirstStatement.BaseBlock.AssignStatement(FFirstIndex, FSecondStatement);
     SecondBaseBlock.AssignStatement(FSecondIndex, FFirstStatement);
@@ -348,7 +348,8 @@ implementation
       CurrOperator.SetXLastForChildrens(CurrOperator.BaseBlock.XLast);
     end;
 
-    FFirstStatement.BaseBlock.Install(FFirstIndex);
+    FFirstStatement.SwapYStart(FSecondStatement);
+    SecondBaseBlock.Install(FFirstIndex);
     FSecondStatement.BaseBlock.Install(FSecondIndex);
   end;
 

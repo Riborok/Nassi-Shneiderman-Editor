@@ -7,8 +7,9 @@ uses
   Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls, Vcl.StdCtrls, Vcl.Menus, uConstants,
   uBase, uFirstLoop, uIfBranching, uCaseBranching, uLastLoop, uProcessStatement,
   uStatementSearch, System.Actions, Vcl.ActnList, Vcl.ToolWin, Types, uBlockManager,
-  Vcl.ComCtrls, uAdditionalTypes, frmPenSetting, System.ImageList, Vcl.ImgList, frmGlobalSettings,
-  System.SysUtils, uGlobalSave, uLocalSave, frmHelp, uStatementConverter;
+  Vcl.ComCtrls, uAdditionalTypes, frmPenSetting, System.ImageList, Vcl.ImgList,
+  System.SysUtils, uGlobalSave, uLocalSave, frmHelp, uStatementConverter, uDialogMessages,
+  frmGlobalSettings, System.UITypes;
 
 type
   TNassiShneiderman = class(TForm)
@@ -99,7 +100,6 @@ type
     tbSortAsc: TToolButton;
     sep5: TToolButton;
     actChngGlSettings: TAction;
-    ToolButton1: TToolButton;
     Globalsettings1: TMenuItem;
     SaveDialog: TSaveDialog;
     OpenDialog: TOpenDialog;
@@ -135,13 +135,19 @@ type
     actUserGuide: TAction;
     actAbout: TAction;
     sep6: TToolButton;
-    ToolButton2: TToolButton;
-    ToolButton3: TToolButton;
+    tbUserGuide: TToolButton;
+    tbAbout: TToolButton;
     actExit: TAction;
     Exit1: TMenuItem;
     actSaveAs: TAction;
     actSave: TAction;
     actOpen: TAction;
+    actNew: TAction;
+    tbGlSettings: TToolButton;
+    sep7: TToolButton;
+    tbSaveAs: TToolButton;
+    tbOpen: TToolButton;
+    tbNew: TToolButton;
 
     procedure FormCreate(Sender: TObject);
 
@@ -181,6 +187,9 @@ type
     procedure actSaveAsExecute(Sender: TObject);
     procedure actSaveExecute(Sender: TObject);
     procedure actOpenExecute(Sender: TObject);
+    procedure actNewExecute(Sender: TObject);
+  private type
+    TFileMode = (fmJSON, fmSvg, fmBmp, fmPng, fmAll);
   private
     FPenDialog: TPenDialog;
     FGlobalSettingsDialog: TGlobalSettingsDialog;
@@ -200,6 +209,11 @@ type
 
     procedure UpdateForDedicatedStatement;
     procedure UpdateForStack;
+
+    procedure SetOpenFileMode(mode: TFileMode);
+    procedure SetSaveFileMode(mode: TFileMode);
+
+    function PromptSaveCurrentScheme: Boolean;
   public
     destructor Destroy;
   end;
@@ -215,25 +229,40 @@ implementation
 
   procedure TNassiShneiderman.FormClose(Sender: TObject;
   var Action: TCloseAction);
+  var
+    Answer: integer;
   begin
     SaveGlobalSettings;
+    if not (FBlockManager.isSaved or FBlockManager.isDefaultMainBlock) then
+    begin
+      Answer := MessageDlg(rsExitDlg, mtWarning, [mbYes,mbNo,mbCancel], 0);
+      case Answer of
+        mrYes:
+        begin
+          SetSaveFileMode(fmJSON);
 
-    { Temp }
-    //SaveSchema(FBlockManager);
+          if SaveDialog.Execute then
+          begin
+            FBlockManager.PathToFile := SaveDialog.FileName;
+            SaveSchema(FBlockManager);
+            Action := caFree;
+          end
+          else
+            Action := caNone;
+        end;
+        mrNo: Action := caFree;
+        mrCancel: Action := caNone;
+      end;
+    end;
   end;
 
   procedure TNassiShneiderman.FormCreate(Sender: TObject);
   const
-    MinFormWidth = 850;
-    MinFormHeight = 600;
+    MinFormWidth = 850 + 42;
+    MinFormHeight = 550 + 42;
   begin
     SaveDialog.Title := 'Save As';
-    SaveDialog.DefaultExt := '.json';
-    SaveDialog.Filter := 'JSON Files (*.json)|*.json';
-
     OpenDialog.Title := 'Open';
-    OpenDialog.DefaultExt := '.json';
-    OpenDialog.Filter := 'JSON Files (*.json)|*.json';
 
     LoadGlobalSettings;
     DefaultStatement := TProcessStatement;
@@ -265,9 +294,6 @@ implementation
 
     FBlockManager:= TBlockManager.Create(PaintBox);
     FBlockManager.InitializeMainBlock;
-
-    { Temp }
-    //LoadSchema(FBlockManager);
   end;
 
   procedure TNassiShneiderman.FormKeyDown(Sender: TObject; var Key: Word;
@@ -303,8 +329,9 @@ implementation
         if (GetKeyState(VK_CONTROL) >= 0) or (GetKeyState(VK_SHIFT) >= 0 ) then
           FormKeyDown(nil, Msg.CharCode, []);
       end;
-    end
-
+    end;
+    if isDragging then
+      FBlockManager.DestroyCarryBlock;
   end;
 
   procedure TNassiShneiderman.PaintBoxPaint(Sender: TObject);
@@ -314,7 +341,7 @@ implementation
 
   procedure TNassiShneiderman.ScrollBoxMouseWheel(Sender: TObject;
   Shift: TShiftState; WheelDelta: Integer; MousePos: TPoint;
-    var Handled: Boolean);
+  var Handled: Boolean);
   const
     ScrotStep = 42 shl 1;
   begin
@@ -376,7 +403,11 @@ implementation
           FPrevMousePos := Point(X, Y);
         end;
         mbRight:
+        begin
+          if isDragging then
+            FBlockManager.DestroyCarryBlock;
           PopupMenu.Popup(Mouse.CursorPos.X, Mouse.CursorPos.Y);
+        end;
       end;
     end;
 
@@ -397,7 +428,8 @@ implementation
       FPrevMousePos := Point(X, Y);
     end
     else if FMayDrag and ((Abs(FPrevMousePos.X - X) > AmountPixelToMove) or
-                          (Abs(FPrevMousePos.Y - Y) > AmountPixelToMove)) then
+         (Abs(FPrevMousePos.Y - Y) > AmountPixelToMove)) and
+         (FBlockManager.DedicatedStatement <> nil) then
     begin
       FMayDrag:= False;
       if isDragging then
@@ -466,29 +498,44 @@ implementation
   end;
 
   procedure TNassiShneiderman.actOpenExecute(Sender: TObject);
+  var
+    isOK: Boolean;
   begin
+    isOK:= FBlockManager.isSaved and PromptSaveCurrentScheme;
+
+    SetOpenFileMode(fmJSON);
     if OpenDialog.Execute then
     begin
-      FBlockManager.PathToSave := OpenDialog.FileName;
+      FBlockManager.PathToFile := OpenDialog.FileName;
       LoadSchema(FBlockManager);
     end;
   end;
 
   procedure TNassiShneiderman.actSaveAsExecute(Sender: TObject);
   begin
+    SetSaveFileMode(fmAll);
     if SaveDialog.Execute then
     begin
-      FBlockManager.PathToSave := SaveDialog.FileName;
+      FBlockManager.PathToFile := SaveDialog.FileName;
       SaveSchema(FBlockManager);
     end;
+    tbSaveAs.Enabled := not FBlockManager.isSaved;
   end;
 
   procedure TNassiShneiderman.actSaveExecute(Sender: TObject);
   begin
-    if FBlockManager.PathToSave <> '' then
-      SaveSchema(FBlockManager)
+    if FBlockManager.PathToFile <> '' then
+    begin
+      SaveSchema(FBlockManager);
+    end
     else
       actSaveAsExecute(Sender);
+    tbSaveAs.Enabled := not FBlockManager.isSaved;
+  end;
+
+  procedure TNassiShneiderman.actNewExecute(Sender: TObject);
+  begin
+    //
   end;
 
   procedure TNassiShneiderman.actUndoExecute(Sender: TObject);
@@ -589,10 +636,78 @@ implementation
     inherited;
   end;
 
+  function TNassiShneiderman.PromptSaveCurrentScheme: Boolean;
+  var
+    Answer: Integer;
+  begin
+    Answer := MessageDlg(rsExitDlg, mtWarning, [mbYes,mbNo,mbCancel], 0);
+    case Answer of
+      mrYes:
+      begin
+        SetSaveFileMode(fmJSON);
+
+        if SaveDialog.Execute then
+        begin
+          FBlockManager.PathToFile := SaveDialog.FileName;
+          SaveSchema(FBlockManager);
+          Result:= True;
+        end
+        else
+          Result:= False;
+      end;
+      mrNo:
+        Result:= True;
+      mrCancel:
+        Result:= False;
+    end;
+  end;
+
   procedure TNassiShneiderman.UpdateForStack;
   begin
     tbUndo.Enabled:= FBlockManager.UndoStack.Count <> 0;
     tbRedo.Enabled:= FBlockManager.RedoStack.Count <> 0;
+  end;
+
+  procedure TNassiShneiderman.SetOpenFileMode(mode: TFileMode);
+  begin
+    case mode of
+      fmAll:
+      begin
+        OpenDialog.DefaultExt := '.json';
+        OpenDialog.Filter := rsFMJSON + '|' + rsFMSVG + '|' + rsFMBmp + '|' + rsFMPng + '|' + rsFMAll;
+      end;
+    end;
+  end;
+
+  procedure TNassiShneiderman.SetSaveFileMode(mode: TFileMode);
+  begin
+    case mode of
+      fmJSON:
+      begin
+        SaveDialog.DefaultExt := '.json';
+        SaveDialog.Filter := rsFMJSON;
+      end;
+      fmSvg:
+      begin
+        SaveDialog.DefaultExt := '.svg';
+        SaveDialog.Filter := rsFMSVG;
+      end;
+      fmBmp:
+      begin
+        SaveDialog.DefaultExt := '.bmp';
+        SaveDialog.Filter := rsFMBmp;
+      end;
+      fmPng:
+      begin
+        SaveDialog.DefaultExt := '.png';
+        SaveDialog.Filter := rsFMPng;
+      end;
+      fmAll:
+      begin
+        SaveDialog.DefaultExt := '.json';
+        SaveDialog.Filter := rsFMJSON + '|' + rsFMSVG + '|' + rsFMBmp + '|' + rsFMPng + '|' + rsFMAll;
+      end;
+    end;
   end;
 
   procedure TNassiShneiderman.UpdateForDedicatedStatement;
@@ -616,6 +731,8 @@ implementation
     tbCut.Enabled := bool;
     tbCopy.Enabled := bool;
     tbDelete.Enabled := bool;
+
+    tbSaveAs.Enabled := not FBlockManager.isSaved;
   end;
 
   function TNassiShneiderman.isDragging: Boolean;

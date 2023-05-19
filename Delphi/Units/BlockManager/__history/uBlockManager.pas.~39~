@@ -4,7 +4,8 @@ interface
 uses
   uBase, uCommands, uAutoClearStack, Vcl.ExtCtrls, uSwitchStatements,
   Winapi.Windows, uAdditionalTypes, uDrawShapes, Vcl.Graphics, frmGetAction,
-  frmGet—ase—onditions, uCaseBranching, uMinMaxInt, uStatementSearch, Types;
+  frmGet—ase—onditions, uCaseBranching, uMinMaxInt, uStatementSearch, Types,
+  uIfBranching;
 type
 
   TBlockManager = class
@@ -189,7 +190,6 @@ implementation
     FPaintBox.Canvas.Font:= FFont;
     FPaintBox.Canvas.Pen:= FPen;
     MainBlock.RedefineSizes;
-    MainBlock.ChangeYStatement;
     FPaintBox.Invalidate;
   end;
 
@@ -202,8 +202,7 @@ implementation
         FDedicatedStatement := nil;
       MainBlock.SetNewActionForDefaultStatements(AOldDefaultAction);
     end;
-    MainBlock.RedefineSizes;
-    MainBlock.ChangeYStatement;
+    TIfBranching.RedefineSizesForIfBranching(MainBlock);
     FPaintBox.Invalidate;
   end;
 

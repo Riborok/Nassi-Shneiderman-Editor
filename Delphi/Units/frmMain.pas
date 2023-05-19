@@ -100,7 +100,6 @@ type
     tbSortAsc: TToolButton;
     sep5: TToolButton;
     actChngGlSettings: TAction;
-    ToolButton1: TToolButton;
     Globalsettings1: TMenuItem;
     SaveDialog: TSaveDialog;
     OpenDialog: TOpenDialog;
@@ -136,14 +135,19 @@ type
     actUserGuide: TAction;
     actAbout: TAction;
     sep6: TToolButton;
-    ToolButton2: TToolButton;
-    ToolButton3: TToolButton;
+    tbUserGuide: TToolButton;
+    tbAbout: TToolButton;
     actExit: TAction;
     Exit1: TMenuItem;
     actSaveAs: TAction;
     actSave: TAction;
     actOpen: TAction;
     actNew: TAction;
+    tbGlSettings: TToolButton;
+    sep7: TToolButton;
+    tbSaveAs: TToolButton;
+    tbOpen: TToolButton;
+    tbNew: TToolButton;
 
     procedure FormCreate(Sender: TObject);
 
@@ -183,6 +187,7 @@ type
     procedure actSaveAsExecute(Sender: TObject);
     procedure actSaveExecute(Sender: TObject);
     procedure actOpenExecute(Sender: TObject);
+    procedure actNewExecute(Sender: TObject);
   private type
     TFileMode = (fmJSON, fmSvg, fmBmp, fmPng, fmAll);
   private
@@ -207,6 +212,8 @@ type
 
     procedure SetOpenFileMode(mode: TFileMode);
     procedure SetSaveFileMode(mode: TFileMode);
+
+    function HandleSaveSchemePrompt: Boolean;
   public
     destructor Destroy;
   end;
@@ -251,8 +258,8 @@ implementation
 
   procedure TNassiShneiderman.FormCreate(Sender: TObject);
   const
-    MinFormWidth = 850;
-    MinFormHeight = 600;
+    MinFormWidth = 850 + 42;
+    MinFormHeight = 550 + 42;
   begin
     SaveDialog.Title := 'Save As';
     OpenDialog.Title := 'Open';
@@ -334,7 +341,7 @@ implementation
 
   procedure TNassiShneiderman.ScrollBoxMouseWheel(Sender: TObject;
   Shift: TShiftState; WheelDelta: Integer; MousePos: TPoint;
-    var Handled: Boolean);
+  var Handled: Boolean);
   const
     ScrotStep = 42 shl 1;
   begin
@@ -490,13 +497,28 @@ implementation
     UpdateForDedicatedStatement;
   end;
 
+  procedure TNassiShneiderman.actNewExecute(Sender: TObject);
+  begin
+    if FBlockManager.isSaved or FBlockManager.isDefaultMainBlock or
+                                HandleSaveSchemePrompt then
+    begin
+      FBlockManager.Destroy;
+      FBlockManager:= TBlockManager.Create(PaintBox);
+      FBlockManager.InitializeMainBlock;
+    end;
+  end;
+
   procedure TNassiShneiderman.actOpenExecute(Sender: TObject);
   begin
-    SetOpenFileMode(fmAll);
-    if OpenDialog.Execute then
+    if FBlockManager.isSaved or FBlockManager.isDefaultMainBlock or
+                                HandleSaveSchemePrompt then
     begin
-      FBlockManager.PathToFile := OpenDialog.FileName;
-      LoadSchema(FBlockManager);
+      SetOpenFileMode(fmJSON);
+      if OpenDialog.Execute then
+      begin
+        FBlockManager.PathToFile := OpenDialog.FileName;
+        LoadSchema(FBlockManager);
+      end;
     end;
   end;
 
@@ -508,14 +530,18 @@ implementation
       FBlockManager.PathToFile := SaveDialog.FileName;
       SaveSchema(FBlockManager);
     end;
+    tbSaveAs.Enabled := not FBlockManager.isSaved;
   end;
 
   procedure TNassiShneiderman.actSaveExecute(Sender: TObject);
   begin
     if FBlockManager.PathToFile <> '' then
-      SaveSchema(FBlockManager)
+    begin
+      SaveSchema(FBlockManager);
+    end
     else
       actSaveAsExecute(Sender);
+    tbSaveAs.Enabled := not FBlockManager.isSaved;
   end;
 
   procedure TNassiShneiderman.actUndoExecute(Sender: TObject);
@@ -616,6 +642,32 @@ implementation
     inherited;
   end;
 
+  function TNassiShneiderman.HandleSaveSchemePrompt: Boolean;
+  var
+    Answer: Integer;
+  begin
+    Answer := MessageDlg(rsExitDlg, mtWarning, [mbYes,mbNo,mbCancel], 0);
+    case Answer of
+      mrYes:
+      begin
+        SetSaveFileMode(fmJSON);
+
+        if SaveDialog.Execute then
+        begin
+          FBlockManager.PathToFile := SaveDialog.FileName;
+          SaveSchema(FBlockManager);
+          Result:= True;
+        end
+        else
+          Result:= False;
+      end;
+      mrNo:
+        Result:= True;
+      mrCancel:
+        Result:= False;
+    end;
+  end;
+
   procedure TNassiShneiderman.UpdateForStack;
   begin
     tbUndo.Enabled:= FBlockManager.UndoStack.Count <> 0;
@@ -685,6 +737,8 @@ implementation
     tbCut.Enabled := bool;
     tbCopy.Enabled := bool;
     tbDelete.Enabled := bool;
+
+    tbSaveAs.Enabled := not FBlockManager.isSaved;
   end;
 
   function TNassiShneiderman.isDragging: Boolean;

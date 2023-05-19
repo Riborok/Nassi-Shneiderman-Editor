@@ -32,7 +32,8 @@ implementation
 
   destructor TArrayList<T>.Destroy;
   begin
-    SetLength(FArray, 0);
+    Clear;
+
     inherited;
   end;
 

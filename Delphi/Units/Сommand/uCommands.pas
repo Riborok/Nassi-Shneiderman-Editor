@@ -45,13 +45,14 @@ type
     constructor Create(const AStatement: TStatement);
     procedure Execute;
     procedure Undo;
+    destructor Destroy; override;
   End;
 
   { TCommandAddBlock }
   TCommandAddBlock = class(TInterfacedObject, ICommand)
   private
     FInsertedBlock, FBaseBlock: TBlock;
-    FIndex: Integer;
+    FIndex, FHigh: Integer;
   public
     constructor Create(const ABaseBlock: TBlock; const AIndex : Integer;
                        const AInsertedBlock: TBlock);
@@ -134,7 +135,8 @@ implementation
   { TCommandAdd }
   destructor TCommandAddStatement.Destroy;
   begin
-    FNewStatement.Destroy;
+    if FNewStatement.BaseBlock = nil then
+      FNewStatement.Destroy;
     inherited;
   end;
 
@@ -163,6 +165,13 @@ implementation
   end;
 
   { TCommandDel }
+  destructor TCommandDelStatement.Destroy;
+  begin
+    if FStatement.BaseBlock = nil then
+      FStatement.Destroy;
+    inherited;
+  end;
+
   constructor TCommandDelStatement.Create(const AStatement: TStatement);
   begin
     FStatement:= AStatement;
@@ -192,11 +201,13 @@ implementation
     FBaseBlock:= ABaseBlock;
     FIndex:= AIndex;
     FInsertedBlock:= AInsertedBlock;
+    FHigh:= FInsertedBlock.Statements.Count - 1;
   end;
 
   procedure TCommandAddBlock.Execute;
   begin
     FBaseBlock.InsertBlock(FIndex, FInsertedBlock);
+    FInsertedBlock.Statements.Clear;
   end;
 
   procedure TCommandAddBlock.Undo;
@@ -206,8 +217,8 @@ implementation
   begin
     WasDefaultStatementRemoved:= FIndex >= FBaseBlock.Statements.Count;
     Dec(FIndex, Ord(WasDefaultStatementRemoved));
-    for I := 0 to FInsertedBlock.Statements.Count - 1 do
-      FBaseBlock.ExtractStatementAt(FIndex + I);
+    for I := 0 to FHigh do
+      FInsertedBlock.Statements.Add(FBaseBlock.ExtractStatementAt(FIndex + I));
     FBaseBlock.Install(FIndex - Ord(FIndex = FBaseBlock.Statements.Count));
     Inc(FIndex, Ord(WasDefaultStatementRemoved));
   end;

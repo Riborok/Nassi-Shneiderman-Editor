@@ -4,7 +4,8 @@ interface
 uses
   uBase, uCommands, uAutoClearStack, Vcl.ExtCtrls, uSwitchStatements,
   Winapi.Windows, uAdditionalTypes, uDrawShapes, Vcl.Graphics, frmGetAction,
-  frmGet—ase—onditions, uCaseBranching, uMinMaxInt, uStatementSearch, Types;
+  frmGet—ase—onditions, uCaseBranching, uMinMaxInt, uStatementSearch, Types,
+  uIfBranching;
 type
 
   TBlockManager = class
@@ -84,14 +85,12 @@ type
     procedure RedefineMainBlock;
     procedure ChangeGlobalSettings(const AOldDefaultAction: string);
     procedure InitializeMainBlock;
-    procedure SetInitialIndent;
     function isDefaultMainBlock: Boolean;
 
     { BufferBlock }
     procedure TryCutDedicated;
     procedure TryCopyDedicated;
     procedure TryDeleteDedicated;
-
     procedure TryInsertBufferBlock;
 
     { DedicatedStatement }
@@ -203,7 +202,7 @@ implementation
         FDedicatedStatement := nil;
       MainBlock.SetNewActionForDefaultStatements(AOldDefaultAction);
     end;
-    MainBlock.RedefineSizes;
+    TIfBranching.RedefineSizesForIfBranching(MainBlock);
     FPaintBox.Invalidate;
   end;
 
@@ -220,11 +219,6 @@ implementation
     FMainBlock:= TBlock.Create(SchemeInitialIndent, FPaintBox.Canvas);
     FMainBlock.AddUnknownStatement(uBase.DefaultStatement.Create(DefaultAction, FMainBlock),
                                                             SchemeInitialIndent);
-  end;
-
-  procedure TBlockManager.SetInitialIndent;
-  begin
-    //
   end;
 
   function TBlockManager.isDefaultMainBlock: Boolean;

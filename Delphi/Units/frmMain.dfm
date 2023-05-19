@@ -2155,8 +2155,40 @@ object NassiShneiderman: TNassiShneiderman
     ParentDoubleBuffered = False
     TabOrder = 0
     Transparent = False
-    object tbUndo: TToolButton
+    object tbNew: TToolButton
       Left = 0
+      Top = 0
+      Hint = 'Create a new blank diagram'
+      Action = actNew
+      ParentShowHint = False
+      ShowHint = True
+    end
+    object tbOpen: TToolButton
+      Left = 37
+      Top = 0
+      Hint = 'Open diagram'
+      Action = actOpen
+      ParentShowHint = False
+      ShowHint = True
+    end
+    object tbSaveAs: TToolButton
+      Left = 74
+      Top = 0
+      Hint = 'Save current diagram'
+      Action = actSave
+      ParentShowHint = False
+      ShowHint = True
+    end
+    object sep7: TToolButton
+      Left = 111
+      Top = 0
+      Width = 8
+      Caption = 'sep7'
+      ImageIndex = 19
+      Style = tbsSeparator
+    end
+    object tbUndo: TToolButton
+      Left = 119
       Top = 0
       Hint = 'Undo the last action'
       Action = actUndo
@@ -2165,7 +2197,7 @@ object NassiShneiderman: TNassiShneiderman
       ShowHint = True
     end
     object tbRedo: TToolButton
-      Left = 37
+      Left = 156
       Top = 0
       Hint = 'Redo the last action'
       Action = actRedo
@@ -2174,7 +2206,7 @@ object NassiShneiderman: TNassiShneiderman
       ShowHint = True
     end
     object sep4: TToolButton
-      Left = 74
+      Left = 193
       Top = 0
       Width = 8
       Caption = 'sep4'
@@ -2182,7 +2214,7 @@ object NassiShneiderman: TNassiShneiderman
       Style = tbsSeparator
     end
     object tbCut: TToolButton
-      Left = 82
+      Left = 201
       Top = 0
       Hint = 'Cut the seletced element'
       Action = actCut
@@ -2191,7 +2223,7 @@ object NassiShneiderman: TNassiShneiderman
       ShowHint = True
     end
     object tbCopy: TToolButton
-      Left = 119
+      Left = 238
       Top = 0
       Hint = 'Copy the seletced element'
       Action = actCopy
@@ -2200,7 +2232,7 @@ object NassiShneiderman: TNassiShneiderman
       ShowHint = True
     end
     object tbInsert: TToolButton
-      Left = 156
+      Left = 275
       Top = 0
       Hint = 'Paste the copied or cut element after the selected element'
       Action = actInsert
@@ -2209,7 +2241,7 @@ object NassiShneiderman: TNassiShneiderman
       ShowHint = True
     end
     object sep3: TToolButton
-      Left = 193
+      Left = 312
       Top = 0
       Width = 8
       Caption = 'sep3'
@@ -2217,7 +2249,7 @@ object NassiShneiderman: TNassiShneiderman
       Style = tbsSeparator
     end
     object tbAction: TToolButton
-      Left = 201
+      Left = 320
       Top = 0
       Hint = 'Edit the selected element'
       Action = actChangeAction
@@ -2226,7 +2258,7 @@ object NassiShneiderman: TNassiShneiderman
       ShowHint = True
     end
     object tbDelete: TToolButton
-      Left = 238
+      Left = 357
       Top = 0
       Hint = 'Delete the selected element'
       Action = actDelete
@@ -2235,7 +2267,7 @@ object NassiShneiderman: TNassiShneiderman
       ShowHint = True
     end
     object sep2: TToolButton
-      Left = 275
+      Left = 394
       Top = 0
       Width = 8
       Caption = 'sep2'
@@ -2243,7 +2275,7 @@ object NassiShneiderman: TNassiShneiderman
       Style = tbsSeparator
     end
     object tbProcess: TToolButton
-      Left = 283
+      Left = 402
       Top = 0
       Hint = 'Insert a new process after the selected element'
       Action = actAfterProcess
@@ -2252,7 +2284,7 @@ object NassiShneiderman: TNassiShneiderman
       ShowHint = True
     end
     object tbIfBranch: TToolButton
-      Left = 320
+      Left = 439
       Top = 0
       Hint = 'Insert a new branching block after the selected element'
       Action = actAfterIfBranch
@@ -2261,7 +2293,7 @@ object NassiShneiderman: TNassiShneiderman
       ShowHint = True
     end
     object tbMultBranch: TToolButton
-      Left = 357
+      Left = 476
       Top = 0
       Hint = 'Insert a new multiple branching block after the selected element'
       Action = actAfterMultBranch
@@ -2270,7 +2302,7 @@ object NassiShneiderman: TNassiShneiderman
       ShowHint = True
     end
     object tbLoop: TToolButton
-      Left = 394
+      Left = 513
       Top = 0
       Hint = 'Insert a new testing loop after the selected element'
       Action = actAfterLoop
@@ -2279,7 +2311,7 @@ object NassiShneiderman: TNassiShneiderman
       ShowHint = True
     end
     object tbRevLoop: TToolButton
-      Left = 431
+      Left = 550
       Top = 0
       Hint = 'Insert a new reversed testing loop after the selected element'
       Action = actAfterRevLoop
@@ -2288,7 +2320,7 @@ object NassiShneiderman: TNassiShneiderman
       ShowHint = True
     end
     object sep1: TToolButton
-      Left = 468
+      Left = 587
       Top = 0
       Width = 8
       Caption = 'sep1'
@@ -2296,7 +2328,7 @@ object NassiShneiderman: TNassiShneiderman
       Style = tbsSeparator
     end
     object tbSortAsc: TToolButton
-      Left = 476
+      Left = 595
       Top = 0
       Hint = 'Sort case blocks in ascending order'
       Action = actSortAsc
@@ -2305,7 +2337,7 @@ object NassiShneiderman: TNassiShneiderman
       ShowHint = True
     end
     object tbSortDesc: TToolButton
-      Left = 513
+      Left = 632
       Top = 0
       Hint = 'Sort case blocks in descending order'
       Action = actSortDesc
@@ -2314,7 +2346,7 @@ object NassiShneiderman: TNassiShneiderman
       ShowHint = True
     end
     object sep5: TToolButton
-      Left = 550
+      Left = 669
       Top = 0
       Width = 8
       Caption = 'sep5'
@@ -2322,7 +2354,7 @@ object NassiShneiderman: TNassiShneiderman
       Style = tbsSeparator
     end
     object tbFont: TToolButton
-      Left = 558
+      Left = 677
       Top = 0
       Hint = 'Edit font'
       Action = actChngFont
@@ -2330,15 +2362,15 @@ object NassiShneiderman: TNassiShneiderman
       ShowHint = True
     end
     object tbPen: TToolButton
-      Left = 595
+      Left = 714
       Top = 0
       Hint = 'Edit pen'
       Action = actChngPen
       ParentShowHint = False
       ShowHint = True
     end
-    object ToolButton1: TToolButton
-      Left = 632
+    object tbGlSettings: TToolButton
+      Left = 751
       Top = 0
       Hint = 'Global settings'
       Action = actChngGlSettings
@@ -2346,22 +2378,28 @@ object NassiShneiderman: TNassiShneiderman
       ShowHint = True
     end
     object sep6: TToolButton
-      Left = 669
+      Left = 788
       Top = 0
       Width = 8
       Caption = 'sep6'
       ImageIndex = 17
       Style = tbsSeparator
     end
-    object ToolButton2: TToolButton
-      Left = 677
+    object tbUserGuide: TToolButton
+      Left = 796
       Top = 0
+      Hint = 'Information and details about the program'#39's functionality'
       Action = actUserGuide
+      ParentShowHint = False
+      ShowHint = True
     end
-    object ToolButton3: TToolButton
-      Left = 714
+    object tbAbout: TToolButton
+      Left = 833
       Top = 0
+      Hint = 'Information about the author of the program'
       Action = actAbout
+      ParentShowHint = False
+      ShowHint = True
     end
   end
   object ScrollBox: TScrollBox
@@ -3470,6 +3508,7 @@ object NassiShneiderman: TNassiShneiderman
       Caption = 'New'
       ImageIndex = 22
       ShortCut = 16462
+      OnExecute = actNewExecute
     end
   end
   object MainMenu: TMainMenu

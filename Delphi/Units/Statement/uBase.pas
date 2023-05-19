@@ -116,6 +116,8 @@ type
     procedure InitializeBlocks(StartIndex: Integer = 0);
     procedure InstallCanvas(const ACanvas: TCanvas);
     procedure SetBlockTextSize;
+
+    procedure AlignBlocksToXStart;
   public
     constructor Create(const AAction : String); override;
     destructor Destroy; override;
@@ -164,8 +166,6 @@ type
     procedure FixYInBlock(const Index: Integer);
     procedure PromptFixYInBaseBlocks;
 
-    procedure FixYStatement(AIndex: Integer = 0);
-
     procedure RedefineBlock(const AIndex: Integer = 0);
   public
     constructor Create(const ABaseOperator: TOperator); overload;
@@ -194,6 +194,8 @@ type
     procedure MoveRight(const AOffset: Integer);
     procedure MoveDown(const AOffset: Integer);
     procedure ChangeXLastBlock(const ANewXLast: Integer);
+
+    procedure FixYStatement(AIndex: Integer = 0);
 
     procedure SetOptimalXLastBlock;
 
@@ -515,13 +517,14 @@ implementation
   function TBlock.ExtractStatementAt(const AIndex: Integer) : TStatement;
   begin
     Result:= FStatements[AIndex];
+    Result.FBaseBlock := nil;
     FStatements.Delete(AIndex);
     if FStatements.Count = 0 then
     begin
       AddStatement(DefaultStatement.Create(DefaultAction, Self));
       FStatements[0].FYStart:= Result.FYStart;
     end
-    else if (Result.BaseBlock.BaseOperator = nil) and (AIndex = 0) then
+    else if (BaseOperator = nil) and (AIndex = 0) then
       FStatements[0].FYStart:= Result.FYStart;
   end;
 
@@ -1089,8 +1092,25 @@ implementation
     BaseBlock.SetOptimalXLastBlock;
   end;
 
+  procedure TOperator.AlignBlocksToXStart;
+  var
+    I, CurrXStart: Integer;
+  begin
+    CurrXStart:= BaseBlock.FXStart + GetOffsetFromXStart;
+    if CurrXStart <> FBlocks[0].FXStart then
+      if Length(FBlocks) = 1 then
+        FBlocks[0].ChangeXStartBlock(CurrXStart)
+      else
+      begin
+        CurrXStart := CurrXStart - FBlocks[0].FXStart;
+        for I := 0 to High(FBlocks) - 1 do
+          FBlocks[I].MoveRight(CurrXStart);
+        FBlocks[High(FBlocks)].ChangeXStartBlock(FBlocks[High(FBlocks) - 1].XLast);
+      end;
+  end;
+
   procedure TOperator.RedefineStatement;
-    procedure GlueBlock(const ABlock: TBlock); forward;
+    procedure GlueBlock(const ABlock: TBlock); inline; forward;
     procedure GlueBlocks(const ABlocks: TBlockArr); inline;
     var
       I: Integer;
@@ -1117,13 +1137,12 @@ implementation
         end;
       end;
     end;
-    procedure RedefineYBlocks;
+    procedure RedefineBlocks;
     var
-      I, CurrXStart: Integer;
+      I: Integer;
     begin
-      CurrXStart:= BaseBlock.FXStart + GetOffsetFromXStart;
-      if CurrXStart <> FBlocks[0].FXStart then
-        FBlocks[0].ChangeXStartBlock(CurrXStart);
+      AlignBlocksToXStart;
+
       for I := 0 to High(FBlocks) do
       begin
         FBlocks[I].RedefineBlock;
@@ -1137,11 +1156,11 @@ implementation
       True:
       begin
         SetOptimalYLast;
-        RedefineYBlocks;
+        RedefineBlocks;
       end;
       False:
       begin
-        RedefineYBlocks;
+        RedefineBlocks;
         SetOptimalYLast;
       end;
     end;

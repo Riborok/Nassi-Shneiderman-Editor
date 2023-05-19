@@ -246,7 +246,7 @@ implementation
             JSONToPen(TJSONObject(GetValue('Pen')), Pen);
             JSONToFont(TJSONObject(GetValue('Font')), Font);
             MainBlock := JSONToBlock(TJSONObject(GetValue('MainBlock')), nil, PaintBox.Canvas);
-            TIfBranching.RedefineSizesForIfBranching(MainBlock);
+            RedefineMainBlock;
           end;
         end;
       finally

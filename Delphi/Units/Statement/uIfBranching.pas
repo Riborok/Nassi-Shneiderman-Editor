@@ -11,8 +11,10 @@ type
     FTrueCond, FFalseCond: string;
   private
     FTrueSize, FFalseSize: TSize;
+    procedure SetCondsSize;
     function GetAvailablePartWidth(const APartWidth, ATextHeight: Integer): Integer;
     function GetMinValidPartWidth(const ATextHeight, ATextWidth: Integer): Integer;
+    class procedure RedefineConds(const ABlock: TBlock); static;
   protected
     procedure SetTextSize; override;
     function GetOptimaWidth: Integer; override;
@@ -26,16 +28,59 @@ type
 
     class property TrueCond: string read FTrueCond write FTrueCond;
     class property FalseCond: string read FFalseCond write FFalseCond;
+    class procedure RedefineSizesForIfBranching(const ABlock: TBlock); static;
   end;
 
 implementation
 
+  class procedure TIfBranching.RedefineSizesForIfBranching(const ABlock: TBlock);
+  begin
+    RedefineConds(ABlock);
+    ABlock.FixYStatement;
+  end;
+
+  class procedure TIfBranching.RedefineConds(const ABlock: TBlock);
+  var
+    I, J: Integer;
+    CurrOperator: TOperator;
+    Statement: TStatement;
+  begin
+    for I := 0 to ABlock.Statements.Count - 1 do
+    begin
+      Statement := ABlock.Statements[I];
+      if Statement is TOperator then
+      begin
+        CurrOperator:= TOperator(Statement);
+
+        if Statement is TIfBranching then
+        begin
+          TIfBranching(Statement).SetCondsSize;
+          Statement.SetOptimalYLast;
+          for J := 0 to High(CurrOperator.Blocks) do
+          begin
+            RedefineConds(CurrOperator.Blocks[J]);
+            CurrOperator.Blocks[J].SetOptimalXLastBlock;
+          end;
+        end
+        else
+        for J := 0 to High(CurrOperator.Blocks) do
+          RedefineConds(CurrOperator.Blocks[J]);
+
+        CurrOperator.AlignBlocks;
+      end;
+    end;
+  end;
+
+  procedure TIfBranching.SetCondsSize;
+  begin
+    FTrueSize := GetTextSize(BaseBlock.Canvas, FTrueCond);
+    FFalseSize := GetTextSize(BaseBlock.Canvas, FFalseCond);
+  end;
+
   procedure TIfBranching.SetTextSize;
   begin
     inherited;
-    FTrueSize := GetTextSize(BaseBlock.Canvas, FTrueCond);
-
-    FFalseSize := GetTextSize(BaseBlock.Canvas, FFalseCond);
+    SetCondsSize;
   end;
 
   function TIfBranching.Clone: TStatement;
