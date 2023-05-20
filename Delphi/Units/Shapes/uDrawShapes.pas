@@ -1,7 +1,9 @@
 unit uDrawShapes;
 
 interface
-uses Vcl.graphics, System.Types, System.SysUtils, uConstants, uAdditionalTypes, uBase, System.UITypes;
+uses
+  Vcl.graphics, System.Types, System.SysUtils, uConstants, uAdditionalTypes,
+  uBase, System.UITypes;
 
 procedure DrawRect(const AXStart, AXLast, AYStart, AYLast : Integer;
                    const ACanvas: TCanvas);

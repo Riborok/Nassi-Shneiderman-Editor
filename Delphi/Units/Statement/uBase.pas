@@ -1,8 +1,9 @@
 ﻿unit uBase;
 
 interface
-uses Vcl.graphics, uArrayList, uMinMaxInt, uDetermineDimensions, System.Types,
-     uAdditionalTypes;
+uses
+  Vcl.graphics, uArrayList, uMinMaxInt, uDetermineDimensions, System.Types,
+  uAdditionalTypes;
 type
   TBlock = class;
 
@@ -214,6 +215,8 @@ type
     procedure Install(const Index: Integer);
 
     function GetMask(const AVisibleImageRect: TVisibleImageRect): Integer; inline;
+
+    procedure InstallCanvas(const ACanvas: TCanvas);
   end;
 
   var
@@ -905,6 +908,16 @@ implementation
       Ord(FXLast >= AVisibleImageRect.FTopLeft.X);
   end;
 
+  procedure TBlock.InstallCanvas(const ACanvas: TCanvas);
+  var
+    I: Integer;
+  begin
+    FCanvas := ACanvas;
+    for I := 0 to FStatements.Count - 1 do
+      if FStatements[I] is TOperator then
+        TOperator(FStatements[I]).InstallCanvas(ACanvas);
+  end;
+
   { TOperator }
   constructor TOperator.Create(const AAction : String);
   begin
@@ -1186,15 +1199,10 @@ implementation
 
   procedure TOperator.InstallCanvas(const ACanvas: TCanvas);
   var
-    I, J: Integer;
+    I: Integer;
   begin
     for I := 0 to High(Blocks) do
-    begin
-      Blocks[I].FCanvas:= ACanvas;
-      for J := 0 to Blocks[I].FStatements.Count - 1 do
-        if Blocks[I].FStatements[J] is TOperator then
-          TOperator(Blocks[I].FStatements[J]).InstallCanvas(ACanvas);
-    end;
+      Blocks[I].InstallCanvas(ACanvas);
   end;
 
   procedure TOperator.SetBlockTextSize;

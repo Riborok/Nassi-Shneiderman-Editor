@@ -5,7 +5,7 @@ uses
   uBase, uCommands, uAutoClearStack, Vcl.ExtCtrls, uSwitchStatements,
   Winapi.Windows, uAdditionalTypes, uDrawShapes, Vcl.Graphics, frmGetAction,
   frmGet—ase—onditions, uCaseBranching, uMinMaxInt, uStatementSearch, Types,
-  uIfBranching;
+  uIfBranching, uConstants;
 type
 
   TBlockManager = class
@@ -21,8 +21,6 @@ type
       State: TState;
     end;
   private const
-    SchemeInitialIndent = 10;
-
     SchemeInitialFontSize = 13;
     SchemeInitialFont = 'Courier new';
     SchemeInitialFontColor: TColor = clBlack;
@@ -216,9 +214,9 @@ implementation
 
   procedure TBlockManager.InitializeMainBlock;
   begin
-    FMainBlock:= TBlock.Create(SchemeInitialIndent, FPaintBox.Canvas);
+    FMainBlock:= TBlock.Create(SchemeIndent, FPaintBox.Canvas);
     FMainBlock.AddUnknownStatement(uBase.DefaultStatement.Create(DefaultAction, FMainBlock),
-                                                            SchemeInitialIndent);
+                                                            SchemeIndent);
   end;
 
   function TBlockManager.isDefaultMainBlock: Boolean;

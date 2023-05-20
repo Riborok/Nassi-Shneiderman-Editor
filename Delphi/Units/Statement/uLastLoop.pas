@@ -1,7 +1,8 @@
 ﻿unit uLastLoop;
 
 interface
-uses uDrawShapes, uLoop;
+uses
+  uDrawShapes, uLoop;
 type
 
   TLastLoop = class(TLoop)

@@ -1,7 +1,8 @@
 unit uStatementSearch;
 
 interface
-uses uBase;
+uses
+  uBase;
 
   function BinarySearchStatement(const AX, AY: Integer; const ABlock: TBlock): TStatement;
   function BinarySearchBlock(const Blocks: TBlockArr; const AX: Integer): TBlock;

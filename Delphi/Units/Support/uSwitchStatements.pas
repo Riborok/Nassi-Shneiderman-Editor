@@ -1,7 +1,8 @@
 unit uSwitchStatements;
 
 interface
-uses uBase, uAdditionalTypes;
+uses
+  uBase, uAdditionalTypes;
 type
   TDirection = (ForwardDir = 1, BackwardDir = -1);
 

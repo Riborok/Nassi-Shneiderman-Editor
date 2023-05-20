@@ -1,11 +1,12 @@
 unit uAutoClearStack;
 
 interface
-uses uStack;
+uses
+  uStack;
 type
   TAutoClearStack<T> = class(TStack<T>)
   private const
-    MaxAmount = 342;
+    MaxAmount = 142;
   public
     procedure Push(const AItem: T);
   end;

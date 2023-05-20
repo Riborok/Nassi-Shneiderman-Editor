@@ -1,8 +1,8 @@
 unit uLoop;
 
 interface
-uses uBase;
-
+uses
+  uBase;
 type
   TLoop = class abstract(TOperator)
   private const

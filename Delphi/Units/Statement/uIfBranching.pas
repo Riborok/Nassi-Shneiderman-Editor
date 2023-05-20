@@ -1,7 +1,9 @@
 ﻿unit uIfBranching;
 
 interface
-uses uBase, uDrawShapes, uMinMaxInt, uDetermineDimensions, uAdditionalTypes, uConstants;
+uses
+  uBase, uDrawShapes, uMinMaxInt, uDetermineDimensions, uAdditionalTypes,
+  uConstants;
 type
 
   TIfBranching = class(TOperator)

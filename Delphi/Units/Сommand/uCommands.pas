@@ -1,7 +1,8 @@
 unit uCommands;
 
 interface
-uses uAdditionalTypes, uBase, uStack, uCaseBranching, uMinMaxInt;
+uses
+  uAdditionalTypes, uBase, uStack, uCaseBranching, uMinMaxInt;
 type
 
   ICommand = interface
@@ -39,6 +40,7 @@ type
   { TCommandDel }
   TCommandDelStatement = class(TInterfacedObject, ICommand)
   private
+    FBaseBlock: TBlock;
     FStatement: TStatement;
     FIndex : Integer;
   public
@@ -175,17 +177,18 @@ implementation
   constructor TCommandDelStatement.Create(const AStatement: TStatement);
   begin
     FStatement:= AStatement;
+    FBaseBlock:= AStatement.BaseBlock;
   end;
 
   procedure TCommandDelStatement.Execute;
   begin
     FIndex:= FStatement.BaseBlock.Extract(FStatement);
-    FStatement.BaseBlock.Install(FIndex - Ord(FIndex = FStatement.BaseBlock.Statements.Count));
+    FBaseBlock.Install(FIndex - Ord(FIndex = FBaseBlock.Statements.Count));
   end;
 
   procedure TCommandDelStatement.Undo;
   begin
-    FStatement.BaseBlock.InsertWithResizing(FIndex, FStatement);
+    FBaseBlock.InsertWithResizing(FIndex, FStatement);
   end;
 
   { TCommandAddBlock }

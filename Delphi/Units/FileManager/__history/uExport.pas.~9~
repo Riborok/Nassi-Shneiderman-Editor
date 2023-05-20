@@ -1,0 +1,37 @@
+unit uExport;
+
+interface
+uses
+  uBase, Vcl.Graphics, Vcl.ExtCtrls, uAdditionalTypes, uConstants;
+
+procedure SaveBMPFile(const ABlock: TBlock; const AFileName: string);
+implementation
+
+  procedure SaveBMPFile(const ABlock: TBlock; const AFileName: string);
+  var
+    VisibleImageRect: TVisibleImageRect;
+    Bitmap: TBitmap;
+    PrevCanvas: TCanvas;
+  begin
+    PrevCanvas:= ABlock.Canvas;
+    Bitmap := TBitmap.Create;
+    try
+      Bitmap.Width := ABlock.XLast + SchemeIndent;
+      Bitmap.Height := ABlock.Statements[ABlock.Statements.Count - 1].GetYBottom + SchemeIndent;
+
+      VisibleImageRect.FTopLeft.X := 0;
+      VisibleImageRect.FTopLeft.Y := 0;
+      VisibleImageRect.FBottomRight.X := Bitmap.Width;
+      VisibleImageRect.FBottomRight.Y := Bitmap.Height;
+
+      ABlock.InstallCanvas(Bitmap.Canvas);
+      ABlock.DrawBlock(VisibleImageRect);
+
+      Bitmap.SaveToFile(AFileName);
+    finally
+      Bitmap.Destroy;
+    end;
+    ABlock.InstallCanvas(PrevCanvas);
+  end;
+
+end.

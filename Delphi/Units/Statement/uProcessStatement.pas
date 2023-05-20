@@ -1,7 +1,8 @@
 ﻿unit uProcessStatement;
 
 interface
-uses uBase, uDrawShapes;
+uses
+  uBase, uDrawShapes;
 type
 
   TProcessStatement = class(TStatement)

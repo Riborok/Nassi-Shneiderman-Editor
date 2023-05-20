@@ -1,7 +1,8 @@
 unit uStatementConverter;
 
 interface
-uses uBase, uCaseBranching, uFirstLoop, uIfBranching, uLastLoop, uProcessStatement;
+uses
+  uBase, uCaseBranching, uFirstLoop, uIfBranching, uLastLoop, uProcessStatement;
 
 function ConvertToStatementType(const AIndex: Integer): TStatementClass;
 function ConvertToStatementIndex(const ABlockType: TStatementClass): Integer;

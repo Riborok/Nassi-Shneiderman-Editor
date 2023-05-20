@@ -1,7 +1,8 @@
 ﻿unit uFirstLoop;
 
 interface
-uses uDrawShapes, uLoop;
+uses
+  uDrawShapes, uLoop;
 type
 
   TFirstLoop = class(TLoop)

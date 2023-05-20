@@ -1,7 +1,8 @@
 unit uAdditionalTypes;
 
 interface
-uses Types;
+uses
+  Types;
 type
   TStringArr = array of String;
 

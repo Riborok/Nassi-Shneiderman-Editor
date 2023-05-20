@@ -1,7 +1,9 @@
 ﻿unit uCaseBranching;
 
 interface
-uses uBase, uAdditionalTypes, uDrawShapes, uDetermineDimensions, uMinMaxInt, uCaseBlockSorting;
+uses
+  uBase, uAdditionalTypes, uDrawShapes, uDetermineDimensions, uMinMaxInt,
+  uCaseBlockSorting;
 type
 
   TCaseBranching = class(TOperator)

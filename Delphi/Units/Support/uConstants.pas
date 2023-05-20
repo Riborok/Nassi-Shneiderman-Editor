@@ -2,6 +2,7 @@ unit uConstants;
 
 interface
 const
+  SchemeIndent = 10;
   Space = ' ';
   mmFontSize = 14;
   mmFontName = 'Times New Roman';
@@ -14,10 +15,9 @@ const
   VK_P = $50;
   VK_G = $47;
 
-  PathToGitHubLicense = 'https://github.com/Riborok/Nassi-Shneiderman-Editor/blob/main/LICENSE';
-  PathToMITLicense = 'Help\MITLicense.txt';
-
   dirAppData = 'AppData';
+  PathToMITLicense = 'Help\MITLicense.txt';
+  PathToGitHubLicense = 'https://github.com/Riborok/Nassi-Shneiderman-Editor/blob/main/LICENSE';
 
 resourcestring
   rsUseGuide = 'UserGuide';

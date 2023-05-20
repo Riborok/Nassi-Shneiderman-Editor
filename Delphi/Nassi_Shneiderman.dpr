@@ -53,7 +53,8 @@ uses
   uLocalSave in 'Units\FileManager\uLocalSave.pas',
   frmHelp in 'Units\Forms\frmHelp.pas' {Help},
   uStatementConverter in 'Units\Support\uStatementConverter.pas',
-  uDialogMessages in 'Units\Support\uDialogMessages.pas';
+  uDialogMessages in 'Units\Support\uDialogMessages.pas',
+  uExport in 'Units\FileManager\uExport.pas';
 
 {$R *.res}
 

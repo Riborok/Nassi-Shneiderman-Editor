@@ -1,7 +1,9 @@
 unit uDetermineDimensions;
 
 interface
-uses Vcl.graphics, System.Types, System.SysUtils, uMinMaxInt, uConstants, uAdditionalTypes;
+uses
+  Vcl.graphics, System.Types, System.SysUtils, uMinMaxInt, uConstants,
+  uAdditionalTypes;
 
 function GetTextSize(const ACanvas: TCanvas; const AText: string): TSize;
 implementation

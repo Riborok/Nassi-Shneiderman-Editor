@@ -1,8 +1,8 @@
 ﻿unit uCaseBlockSorting;
 
 interface
-uses uAdditionalTypes, uStack, uBase;
-
+uses
+  uAdditionalTypes, uStack, uBase;
 type
   TCompareFunction = function(const AFirstStr, ASecondStr: String): Boolean;
 

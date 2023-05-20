@@ -1,0 +1,375 @@
+unit uCommands;
+
+interface
+uses
+  uAdditionalTypes, uBase, uStack, uCaseBranching, uMinMaxInt;
+type
+
+  ICommand = interface
+    procedure Execute;
+    procedure Undo;
+  end;
+
+  { TCommnadChangeContent }
+  TCommnadChangeContent = class(TInterfacedObject, ICommand)
+  private
+    FAction: string;
+    FConds: TStringArr;
+    FStatement: TStatement;
+  public
+    constructor Create(const AStatement: TStatement; const AAct: String;
+                       const AConds: TStringArr);
+    procedure Execute;
+    procedure Undo;
+  End;
+
+  { TCommandAddStatement }
+  TCommandAddStatement = class(TInterfacedObject, ICommand)
+  private
+    FNewStatement: TStatement;
+    FBaseBlock: TBlock;
+    FIndex : Integer;
+  public
+    constructor Create(const ABaseBlock: TBlock; const AIndex : Integer;
+                       const ANewStatement: TStatement);
+    procedure Execute;
+    procedure Undo;
+    destructor Destroy; override;
+  End;
+
+  { TCommandDel }
+  TCommandDelStatement = class(TInterfacedObject, ICommand)
+  private
+    FBaseBlock: TBlock;
+    FStatement: TStatement;
+    FIndex : Integer;
+  public
+    constructor Create(const AStatement: TStatement);
+    procedure Execute;
+    procedure Undo;
+    destructor Destroy; override;
+  End;
+
+  { TCommandAddBlock }
+  TCommandAddBlock = class(TInterfacedObject, ICommand)
+  private
+    FInsertedBlock, FBaseBlock: TBlock;
+    FIndex, FHigh: Integer;
+  public
+    constructor Create(const ABaseBlock: TBlock; const AIndex : Integer;
+                       const AInsertedBlock: TBlock);
+    procedure Execute;
+    procedure Undo;
+    destructor Destroy; override;
+  End;
+
+  { TCommandCaseSort }
+  TCommandCaseSort = class(TInterfacedObject, ICommand)
+  private
+    FCaseBranching : TCaseBranching;
+    FSortNumber: Integer;
+    FPrevConds: TStringArr;
+    FPrevBlocks: TBlockArr;
+  public
+    constructor Create(const ACaseBranching: TCaseBranching; const ASortNumber : Integer);
+    procedure Execute;
+    procedure Undo;
+  End;
+
+  { TCommandTransferAnotherBlock }
+  TCommandTransferAnotherBlock = class(TInterfacedObject, ICommand)
+  private
+    FCommandAddStatement : TCommandAddStatement;
+    FCommandDelStatement : TCommandDelStatement;
+    FOldBaseBlock : TBlock;
+  public
+    constructor Create(const AHoveredStatement : TStatement; const isAfter: Boolean;
+                       const AStatement: TStatement);
+    procedure Execute;
+    procedure Undo;
+  end;
+
+  { TCommandSwapStatements }
+  TCommandSwapStatements = class(TInterfacedObject, ICommand)
+  private
+    FFirstStatement, FSecondStatement : TStatement;
+    FFirstIndex, FSecondIndex: Integer;
+    procedure SortStatements;
+  public
+    constructor Create(const AFirstStatement, ASecondStatement: TStatement);
+    procedure Execute;
+    procedure Undo;
+  end;
+
+implementation
+
+  { TChangeContent }
+  constructor TCommnadChangeContent.Create(const AStatement: TStatement; const AAct: String;
+                       const AConds: TStringArr);
+  begin
+    FAction:= AAct;
+    FConds:= AConds;
+    FStatement:= AStatement;
+  end;
+
+  procedure TCommnadChangeContent.Execute;
+  var
+    PrevAction: string;
+  begin
+    PrevAction:= FStatement.Action;
+    if FConds = nil then
+      FStatement.ChangeAction(FAction)
+    else
+    begin
+      var CaseBranching: TCaseBranching:= TCaseBranching(FStatement);
+      var FPrevConds: TStringArr := CaseBranching.Conds;
+      CaseBranching.ChangeActionWithConds(FAction, FConds);
+      FConds:= FPrevConds;
+    end;
+    FAction:= PrevAction;
+  end;
+
+  procedure TCommnadChangeContent.Undo;
+  begin
+    Execute;
+  end;
+
+  { TCommandAdd }
+  destructor TCommandAddStatement.Destroy;
+  begin
+    if FNewStatement.BaseBlock = nil then
+      FNewStatement.Destroy;
+    inherited;
+  end;
+
+  constructor TCommandAddStatement.Create(const ABaseBlock: TBlock; const AIndex : Integer;
+                       const ANewStatement: TStatement);
+  begin
+    FNewStatement:= ANewStatement;
+    FIndex:= AIndex;
+    FBaseBlock:= ABaseBlock;
+  end;
+
+  procedure TCommandAddStatement.Execute;
+  begin
+    FBaseBlock.InsertWithResizing(FIndex, FNewStatement);
+  end;
+
+  procedure TCommandAddStatement.Undo;
+  var
+    WasDefaultStatementRemoved: Boolean;
+  begin
+    WasDefaultStatementRemoved:= FIndex >= FBaseBlock.Statements.Count;
+    Dec(FIndex, Ord(WasDefaultStatementRemoved));
+    FBaseBlock.ExtractStatementAt(FIndex);
+    FBaseBlock.Install(FIndex - Ord(FIndex = FBaseBlock.Statements.Count));
+    Inc(FIndex, Ord(WasDefaultStatementRemoved));
+  end;
+
+  { TCommandDel }
+  destructor TCommandDelStatement.Destroy;
+  begin
+    if FStatement.BaseBlock = nil then
+      FStatement.Destroy;
+    inherited;
+  end;
+
+  constructor TCommandDelStatement.Create(const AStatement: TStatement);
+  begin
+    FStatement:= AStatement;
+    FBaseBlock:= AStatement.BaseBlock;
+  end;
+
+  procedure TCommandDelStatement.Execute;
+  begin
+    FIndex:= FStatement.BaseBlock.Extract(FStatement);
+    FBaseBlock.Install(FIndex - Ord(FIndex = FStatement.BaseBlock.Statements.Count));
+  end;
+
+  procedure TCommandDelStatement.Undo;
+  begin
+    FBaseBlock.InsertWithResizing(FIndex, FStatement);
+  end;
+
+  { TCommandAddBlock }
+  destructor TCommandAddBlock.Destroy;
+  begin
+    FInsertedBlock.Destroy;
+    inherited;
+  end;
+
+  constructor TCommandAddBlock.Create(const ABaseBlock: TBlock; const AIndex : Integer;
+                     const AInsertedBlock: TBlock);
+  begin
+    FBaseBlock:= ABaseBlock;
+    FIndex:= AIndex;
+    FInsertedBlock:= AInsertedBlock;
+    FHigh:= FInsertedBlock.Statements.Count - 1;
+  end;
+
+  procedure TCommandAddBlock.Execute;
+  begin
+    FBaseBlock.InsertBlock(FIndex, FInsertedBlock);
+    FInsertedBlock.Statements.Clear;
+  end;
+
+  procedure TCommandAddBlock.Undo;
+  var
+    I: Integer;
+    WasDefaultStatementRemoved: Boolean;
+  begin
+    WasDefaultStatementRemoved:= FIndex >= FBaseBlock.Statements.Count;
+    Dec(FIndex, Ord(WasDefaultStatementRemoved));
+    for I := 0 to FHigh do
+      FInsertedBlock.Statements.Add(FBaseBlock.ExtractStatementAt(FIndex + I));
+    FBaseBlock.Install(FIndex - Ord(FIndex = FBaseBlock.Statements.Count));
+    Inc(FIndex, Ord(WasDefaultStatementRemoved));
+  end;
+
+  { TCommandCaseSort }
+
+  constructor TCommandCaseSort.Create(const ACaseBranching: TCaseBranching; const ASortNumber : Integer);
+  begin
+    FCaseBranching:= ACaseBranching;
+    FSortNumber:= ASortNumber;
+  end;
+
+  procedure TCommandCaseSort.Execute;
+  begin
+    FPrevConds:= Copy(FCaseBranching.Conds);
+    FPrevBlocks:= Copy(FCaseBranching.Blocks);
+
+    FCaseBranching.SortConditions(FSortNumber);
+  end;
+
+  procedure TCommandCaseSort.Undo;
+  begin
+    FCaseBranching.RestoreÑonditions(FPrevConds, FPrevBlocks);
+  end;
+
+  { TCommandTransferAnotherBlock }
+  constructor TCommandTransferAnotherBlock.Create(const AHoveredStatement : TStatement;
+                  const isAfter: Boolean; const AStatement: TStatement);
+  var
+    NewIndex, OldIndex: Integer;
+  begin
+    NewIndex:= AHoveredStatement.BaseBlock.
+                                   FindStatementIndex(AHoveredStatement.YStart);
+    FOldBaseBlock:= AStatement.BaseBlock;
+    OldIndex := FOldBaseBlock.FindStatementIndex(AStatement.YStart);
+
+    if AHoveredStatement.BaseBlock = FOldBaseBlock then
+      case isAfter of
+        True:
+          Inc(NewIndex, Ord(OldIndex - 1 >= NewIndex));
+        False:
+          Dec(NewIndex, Ord(OldIndex + 1 <= NewIndex));
+      end
+    else
+      Inc(NewIndex, Ord(isAfter));
+
+    FCommandAddStatement:= TCommandAddStatement.Create(AHoveredStatement.BaseBlock,
+                                                       NewIndex, AStatement);
+    FCommandDelStatement := TCommandDelStatement.Create(AStatement);
+  end;
+
+  procedure TCommandTransferAnotherBlock.Execute;
+  begin
+    FCommandDelStatement.Execute;
+    if FCommandAddStatement.FNewStatement is TOperator then
+    begin
+      var CurrOperator: TOperator := TOperator(FCommandAddStatement.FNewStatement);
+      CurrOperator.MoveRightChildrens(FCommandAddStatement.FBaseBlock.XStart -
+                                      FOldBaseBlock.XStart);
+      CurrOperator.SetXLastForChildrens(FCommandAddStatement.FBaseBlock.XLast);
+    end;
+    FCommandAddStatement.Execute;
+  end;
+
+  procedure TCommandTransferAnotherBlock.Undo;
+  begin
+    FCommandAddStatement.Undo;
+    if FCommandAddStatement.FNewStatement is TOperator then
+    begin
+      var CurrOperator: TOperator := TOperator(FCommandAddStatement.FNewStatement);
+      CurrOperator.MoveRightChildrens(FOldBaseBlock.XStart -
+                                      FCommandAddStatement.FBaseBlock.XStart);
+      CurrOperator.SetXLastForChildrens(FOldBaseBlock.XLast);
+    end;
+    FCommandDelStatement.FStatement.BaseBlock := FOldBaseBlock;
+    FCommandDelStatement.Undo;
+  end;
+
+  { TCommandSwapStatements }
+
+  constructor TCommandSwapStatements.Create(const AFirstStatement,
+                                            ASecondStatement: TStatement);
+  begin
+    FFirstStatement := AFirstStatement;
+    FFirstIndex := FFirstStatement.BaseBlock.FindStatementIndex(FFirstStatement.YStart);
+
+    FSecondStatement := ASecondStatement;
+    FSecondIndex := FSecondStatement.BaseBlock.FindStatementIndex(FSecondStatement.YStart);
+  end;
+
+  procedure TCommandSwapStatements.SortStatements;
+  var
+    TempStatement: TStatement;
+    TempIndex: Integer;
+  begin
+    if FFirstStatement.BaseBlock.XStart < FSecondStatement.BaseBlock.XStart then
+    begin
+      TempStatement := FFirstStatement;
+      FFirstStatement := FSecondStatement;
+      FSecondStatement:= TempStatement;
+
+      TempIndex := FFirstIndex;
+      FFirstIndex := FSecondIndex;
+      FSecondIndex := TempIndex;
+    end;
+  end;
+
+  procedure TCommandSwapStatements.Execute;
+  var
+    SecondBaseBlock: TBlock;
+    CurrOperator: TOperator;
+    Offset: Integer;
+    TempIndex: Integer;
+  begin
+    SortStatements;
+
+    SecondBaseBlock := FSecondStatement.BaseBlock;
+    Offset := FFirstStatement.BaseBlock.XStart - SecondBaseBlock.XStart;
+
+    FFirstStatement.BaseBlock.AssignStatement(FFirstIndex, FSecondStatement);
+    SecondBaseBlock.AssignStatement(FSecondIndex, FFirstStatement);
+
+    TempIndex := FFirstIndex;
+    FFirstIndex := FSecondIndex;
+    FSecondIndex := TempIndex;
+
+    if FFirstStatement is TOperator then
+    begin
+      CurrOperator := TOperator(FFirstStatement);
+      CurrOperator.MoveRightChildrens(-Offset);
+      CurrOperator.SetXLastForChildrens(CurrOperator.BaseBlock.XLast);
+    end;
+
+    if FSecondStatement is TOperator then
+    begin
+      CurrOperator := TOperator(FSecondStatement);
+      CurrOperator.MoveRightChildrens(Offset);
+      CurrOperator.SetXLastForChildrens(CurrOperator.BaseBlock.XLast);
+    end;
+
+    FFirstStatement.SwapYStart(FSecondStatement);
+    SecondBaseBlock.Install(FFirstIndex);
+    FSecondStatement.BaseBlock.Install(FSecondIndex);
+  end;
+
+  procedure TCommandSwapStatements.Undo;
+  begin
+    Execute;
+  end;
+
+end.

@@ -9,7 +9,7 @@ uses
   uStatementSearch, System.Actions, Vcl.ActnList, Vcl.ToolWin, Types, uBlockManager,
   Vcl.ComCtrls, uAdditionalTypes, frmPenSetting, System.ImageList, Vcl.ImgList,
   System.SysUtils, uGlobalSave, uLocalSave, frmHelp, uStatementConverter, uDialogMessages,
-  frmGlobalSettings, System.UITypes;
+  frmGlobalSettings, System.UITypes, uExport;
 
 type
   TNassiShneiderman = class(TForm)
@@ -523,12 +523,29 @@ implementation
   end;
 
   procedure TNassiShneiderman.actSaveAsExecute(Sender: TObject);
+  var
+    FileName: string;
+    FileExt: string;
   begin
     SetSaveFileMode(fmAll);
     if SaveDialog.Execute then
     begin
-      FBlockManager.PathToFile := SaveDialog.FileName;
-      SaveSchema(FBlockManager);
+      FileName := SaveDialog.FileName;
+      FileExt := LowerCase(ExtractFileExt(FileName));
+
+      if FileExt = '.json' then
+      begin
+        FBlockManager.PathToFile := FileName;
+        SaveSchema(FBlockManager);
+      end
+      else if FileExt = '.svg' then
+      begin
+        //
+      end
+      else if FileExt = '.bmp' then
+        SaveBMPFile(FBlockManager, FileName)
+      else if FileExt = '.png' then
+        SavePNGFile(FBlockManager, FileName)
     end;
     tbSaveAs.Enabled := not FBlockManager.isSaved;
   end;
@@ -676,17 +693,19 @@ implementation
 
   procedure TNassiShneiderman.SetOpenFileMode(mode: TFileMode);
   begin
+    OpenDialog.FileName := '';
     case mode of
-      fmAll:
+      fmJSON:
       begin
         OpenDialog.DefaultExt := '.json';
-        OpenDialog.Filter := rsFMJSON + '|' + rsFMSVG + '|' + rsFMBmp + '|' + rsFMPng + '|' + rsFMAll;
+        OpenDialog.Filter := rsFMJSON;
       end;
     end;
   end;
 
   procedure TNassiShneiderman.SetSaveFileMode(mode: TFileMode);
   begin
+    SaveDialog.FileName := '';
     case mode of
       fmJSON:
       begin
@@ -777,5 +796,4 @@ implementation
          ScrollBox.VertScrollBar.Position := AStatement.YStart - Stock;
     end;
   end;
-
 end.
