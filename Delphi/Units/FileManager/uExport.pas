@@ -4,7 +4,7 @@ interface
 uses
   uBlockManager, Vcl.Graphics, Vcl.ExtCtrls, uAdditionalTypes, uConstants, PNGImage,
   System.SysUtils, Classes, uBase, uCaseBranching, uFirstLoop, uIfBranching, uLastLoop,
-  uProcessStatement, System.UITypes, System.IOUtils;
+  uProcessStatement, System.UITypes, System.IOUtils, System.Types;
 
 procedure SaveBMPFile(const ABlockManager: TBlockManager; const AFileName: string);
 procedure SavePNGFile(const ABlockManager: TBlockManager; const AFileName: string);
@@ -120,9 +120,17 @@ implementation
     SVG.Add('<line x1="' + IntToStr(AXStart) + 'px" y1="' + IntToStr(AYStart) + 'px" x2="' + IntToStr(AXLast) + 'px" y2="' + IntToStr(AYLast) + 'px" stroke="' + ColorToRGBString(APen.Color) + '" stroke-width="' + IntToStr(APen.Width) + 'px" />');
   end;
 
-  procedure DrawText(const SVG: TStringList; AXStart, AYStart: Integer; const AFont: TFont; const Text: string);
+  procedure DrawText(const SVG: TStringList; AXStart, AYStart: Integer; const ACanvas: TCanvas; const AText: string);
+  var
+    Lines: TStringDynArray;
+    I, Indent: Integer;
   begin
-    SVG.Add('<text x="' + IntToStr(AXStart) + 'px" y="' + IntToStr(AYStart) + 'px" font-family="' + AFont.Name + '" font-size="' + IntToStr(AFont.Size) + 'px" fill="' + ColorToRGBString(AFont.Color) + '">' + Text + '</text>');
+    Lines := AText.Split([sLineBreak]);
+
+    Indent := Round(CorrectionToCanv * ACanvas.TextHeight(Space));
+
+    for I := 0 to High(Lines) do
+      SVG.Add('<text x="' + IntToStr(AXStart) + 'px" y="' + IntToStr(AYStart + Indent * I) + 'px" font-family="' + ACanvas.Font.Name + '" font-size="' + IntToStr(ACanvas.Font.Size) + 'px" fill="' + ColorToRGBString(ACanvas.Font.Color) + '">' + Lines[I] + '</text>');
   end;
 
   procedure DrawInvertedTriangle(const SVG: TStringList; const AXStart, AXMiddle, AXLast, AYStart, AYLast: Integer; const APen: TPen);
@@ -154,8 +162,8 @@ implementation
       DrawText(SVG,
                BaseBlock.XStart + ((BaseBlock.XLast - BaseBlock.XStart) shr 1)
                - (ActionSize.Width shr 1),
-               YStart + Round(ActionSize.Height * CorrectionToCanv) + YIndentText,
-               BaseBlock.Canvas.Font, Action);
+               YStart + Round(BaseBlock.Canvas.Font.Size * CorrectionToCanv) + YIndentText,
+               BaseBlock.Canvas, Action);
     end;
   end;
 
@@ -176,22 +184,22 @@ implementation
                GetAvailablePartWidth(Blocks[0].XLast - Blocks[0].XStart, TrueSize.Height + YIndentText) +
                GetAvailablePartWidth(BaseBlock.XLast - BaseBlock.XStart, ActionSize.Height) shr 1 -
                ActionSize.Width shr 1,
-               YStart + Round(ActionSize.Height * CorrectionToCanv) + YIndentText,
-               BaseBlock.Canvas.Font, Action);
+               YStart + Round(BaseBlock.Canvas.Font.Size * CorrectionToCanv) + YIndentText,
+               BaseBlock.Canvas, Action);
 
       DrawText(SVG,
                Blocks[0].XStart + GetAvailablePartWidth(
                Blocks[0].XLast - Blocks[0].XStart, TrueSize.Height) shr 1 -
                TrueSize.Width shr 1,
-               YStart + Round(ActionSize.Height * CorrectionToCanv) + YIndentText shl 1 + ActionSize.Height,
-               BaseBlock.Canvas.Font, TIfBranching.TrueCond);
+               YStart + Round(BaseBlock.Canvas.Font.Size * CorrectionToCanv) + YIndentText shl 1 + ActionSize.Height,
+               BaseBlock.Canvas, TIfBranching.TrueCond);
 
       DrawText(SVG,
                Blocks[1].XLast - GetAvailablePartWidth(
                Blocks[1].XLast - Blocks[1].XStart, FalseSize.Height) shr 1 -
                FalseSize.Width shr 1,
-               YStart + Round(ActionSize.Height * CorrectionToCanv) + YIndentText shl 1 + ActionSize.Height,
-               BaseBlock.Canvas.Font, TIfBranching.FalseCond);
+               YStart + Round(BaseBlock.Canvas.Font.Size * CorrectionToCanv) + YIndentText shl 1 + ActionSize.Height,
+               BaseBlock.Canvas, TIfBranching.FalseCond);
 
       DrawBlock(SVG, Blocks[0]);
       DrawBlock(SVG, Blocks[1]);
@@ -255,7 +263,7 @@ implementation
               -
               ActionSize.Width shr 1
               ,
-              YStart+ Round(ActionSize.Height * CorrectionToCanv) + YIndentText, BaseBlock.Canvas.Font, Action);
+              YStart + Round(BaseBlock.Canvas.Font.Size * CorrectionToCanv) + YIndentText, BaseBlock.Canvas, Action);
 
       // Drawing the conditions
       Inc(YTriangleHeight, YIndentText);
@@ -263,7 +271,7 @@ implementation
         DrawText(SVG,
                 Blocks[I].XStart + ((Blocks[I].XLast - Blocks[I].XStart) shr 1)
                 - (CondsSizes[I].Width shr 1),
-                YTriangleHeight, BaseBlock.Canvas.Font, Conds[I]);
+                YTriangleHeight, BaseBlock.Canvas, Conds[I]);
 
       for I := 0 to High(Blocks) do
         DrawBlock(SVG, Blocks[I]);
@@ -283,8 +291,8 @@ implementation
       DrawText(SVG,
                BaseBlock.XStart + ((BaseBlock.XLast - BaseBlock.XStart) shr 1)
                - (ActionSize.Width shr 1),
-               YStart + Round(ActionSize.Height * CorrectionToCanv) + YIndentText,
-               BaseBlock.Canvas.Font, Action);
+               YStart + Round(BaseBlock.Canvas.Font.Size * CorrectionToCanv) + YIndentText,
+               BaseBlock.Canvas, Action);
 
       DrawBlock(SVG, Blocks[0]);
     end;
@@ -303,8 +311,8 @@ implementation
       DrawText(SVG,
                BaseBlock.XStart + ((BaseBlock.XLast - BaseBlock.XStart) shr 1)
                - (ActionSize.Width shr 1),
-               GetBlockYBottom + Round(ActionSize.Height * CorrectionToCanv) + YIndentText,
-               BaseBlock.Canvas.Font, Action);
+               GetBlockYBottom + Round(BaseBlock.Canvas.Font.Size * CorrectionToCanv) + YIndentText,
+               BaseBlock.Canvas, Action);
 
       DrawBlock(SVG, Blocks[0]);
     end;
