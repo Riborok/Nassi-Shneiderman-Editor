@@ -209,6 +209,7 @@ implementation
     if FMainBlock <> nil then
       FMainBlock.Destroy;
     FMainBlock:= ANewBlock;
+    FDedicatedStatement := nil;
     PaintBox.Invalidate;
   end;
 
@@ -221,7 +222,7 @@ implementation
 
   function TBlockManager.isDefaultMainBlock: Boolean;
   begin
-    Result:= isDefaultStatement(FMainBlock.Statements[0]);
+    Result:= (FUndoStack.Count = 0) and (FRedoStack.Count = 0) and isDefaultStatement(FMainBlock.Statements[0]);
   end;
 
   { BufferBlock }

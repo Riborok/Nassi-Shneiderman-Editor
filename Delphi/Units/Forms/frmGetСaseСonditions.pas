@@ -1,4 +1,9 @@
 unit frmGet—ase—onditions;
+{
+ Many conditions can be created, resulting in numerous components. It is a
+ costly endeavor. A beautiful solution needs to be found, but currently,
+ there is a lack of time to accomplish it :(
+}
 
 interface
 

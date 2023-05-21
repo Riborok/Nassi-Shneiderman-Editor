@@ -20,7 +20,7 @@ implementation
     constOKColor = clGreen;
     constCancelColor = clRed;
 
-    constGlobalSettingsName = 'GlobalSettings.json';
+    constGbSettingsNameWithExt = 'GlobalSettings' + constExtJSON;
 
   procedure ResetGlobalSettings;
   begin
@@ -44,7 +44,7 @@ implementation
     AppDataPath: string;
   begin
     AppDataPath := IncludeTrailingPathDelimiter(ExtractFilePath(ParamStr(0))) + dirAppData;
-    AppDataPath := TPath.Combine(AppDataPath, constGlobalSettingsName);
+    AppDataPath := TPath.Combine(AppDataPath, constGbSettingsNameWithExt);
 
     if FileExists(AppDataPath) then
     begin
@@ -97,7 +97,7 @@ implementation
       if not TDirectory.Exists(AppDataPath) then
         TDirectory.CreateDirectory(AppDataPath);
 
-      AppDataPath := TPath.Combine(AppDataPath, constGlobalSettingsName);
+      AppDataPath := TPath.Combine(AppDataPath, constGbSettingsNameWithExt);
 
       TFile.WriteAllText(AppDataPath, Json.ToJSON, TEncoding.UTF8);
     finally

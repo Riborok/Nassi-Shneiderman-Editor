@@ -54,7 +54,8 @@ uses
   frmHelp in 'Units\Forms\frmHelp.pas' {Help},
   uStatementConverter in 'Units\Support\uStatementConverter.pas',
   uDialogMessages in 'Units\Support\uDialogMessages.pas',
-  uExport in 'Units\FileManager\uExport.pas';
+  uExport in 'Units\FileManager\uExport.pas',
+  uStatistics in 'Units\FileManager\uStatistics.pas';
 
 {$R *.res}
 

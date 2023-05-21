@@ -15,6 +15,13 @@ const
   VK_P = $50;
   VK_G = $47;
 
+  constExtStat = '.stat';
+  constExtJSON = '.json';
+  constExtSVG = '.svg';
+  constExtBmp = '.bmp';
+  constExtPng = '.png';
+  constExtAll = '.*';
+
   dirAppData = 'AppData';
   PathToMITLicense = 'Help\MITLicense.txt';
   PathToGitHubLicense = 'https://github.com/Riborok/Nassi-Shneiderman-Editor/blob/main/LICENSE';
@@ -23,11 +30,12 @@ resourcestring
   rsUseGuide = 'UserGuide';
   rsAbout = 'AboutProgram';
 
-  rsFMJSON = 'JSON Files (*.json)|*.json';
-  rsFMSVG = 'SVG Files (*.svg)|*.svg';
-  rsFMBmp = 'Bitmap Files (*.bmp)|*.bmp';
-  rsFMPng = 'PNG Files (*.png)|*.png';
-  rsFMAll = 'All Files (*.*)|*.*';
+  rsFMJSON = 'JSON Files (*' + constExtJSON + ')|*' + constExtJSON;
+  rsFMSVG = 'SVG Files (*' + constExtSVG + ')|*' + constExtSVG;
+  rsFMBmp = 'Bitmap Files (*' + constExtBmp + ')|*' + constExtBmp;
+  rsFMPng = 'PNG Files (*' + constExtPng + ')|*' + constExtPng;
+  rsFMStat = 'PNG Files (*' + constExtStat +')|*' + constExtStat;
+  rsFMAll = 'All Files (*' + constExtAll + ')|*' + constExtAll;
 
 implementation
 

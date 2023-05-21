@@ -154,6 +154,7 @@
         <DCCReference Include="Units\Support\uStatementConverter.pas"/>
         <DCCReference Include="Units\Support\uDialogMessages.pas"/>
         <DCCReference Include="Units\FileManager\uExport.pas"/>
+        <DCCReference Include="Units\FileManager\uStatistics.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>

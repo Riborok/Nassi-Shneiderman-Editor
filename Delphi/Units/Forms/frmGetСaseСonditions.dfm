@@ -2205,8 +2205,6 @@
       TabOrder = 0
       TabStop = False
       OnClick = btnAddClick
-      ExplicitTop = 2
-      ExplicitHeight = 29
     end
     object btnDelete: TButton
       AlignWithMargins = True
@@ -2227,9 +2225,6 @@
       TabOrder = 1
       TabStop = False
       OnClick = btnDeleteClick
-      ExplicitLeft = 447
-      ExplicitTop = 1
-      ExplicitHeight = 30
     end
     object ScrollBox: TScrollBox
       Left = 1
@@ -2246,7 +2241,6 @@
       ParentFont = False
       TabOrder = 2
       OnMouseWheel = ScrollBoxMouseWheel
-      ExplicitHeight = 592
     end
   end
   object btnOK: TButton
@@ -2264,8 +2258,6 @@
     Caption = 'OK'
     ModalResult = 1
     TabOrder = 1
-    ExplicitTop = 640
-    ExplicitHeight = 35
   end
   object btnCancel: TButton
     AlignWithMargins = True
@@ -2282,6 +2274,5 @@
     Caption = 'Cancel'
     ModalResult = 2
     TabOrder = 2
-    ExplicitTop = 638
   end
 end
