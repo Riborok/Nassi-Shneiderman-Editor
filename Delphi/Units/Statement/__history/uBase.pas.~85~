@@ -1,8 +1,9 @@
 ﻿unit uBase;
 
 interface
-uses Vcl.graphics, uArrayList, uMinMaxInt, uDetermineDimensions, System.Types,
-     uAdditionalTypes;
+uses
+  Vcl.graphics, uArrayList, uMinMaxInt, uDetermineDimensions, System.Types,
+  uAdditionalTypes;
 type
   TBlock = class;
 
@@ -60,6 +61,8 @@ type
 
     // These properties return the text of the statement and base block
     property Action: String read FAction;
+    property ActionSize: TSize read FActionSize;
+
     property BaseBlock: TBlock read FBaseBlock write FBaseBlock;
 
     // Returnts the Y statrt coordinate
@@ -78,6 +81,8 @@ type
 
     // Set the optimal Y last
     procedure SetOptimalYLast;
+
+    function GetSerialNumber: Integer; virtual; abstract;
 
     procedure SwapYStart(const AStatement: TStatement);
 
@@ -116,6 +121,8 @@ type
     procedure InitializeBlocks(StartIndex: Integer = 0);
     procedure InstallCanvas(const ACanvas: TCanvas);
     procedure SetBlockTextSize;
+
+    procedure AlignBlocksToXStart;
   public
     constructor Create(const AAction : String); override;
     destructor Destroy; override;
@@ -164,8 +171,6 @@ type
     procedure FixYInBlock(const Index: Integer);
     procedure PromptFixYInBaseBlocks;
 
-    procedure FixYStatement(AIndex: Integer = 0);
-
     procedure RedefineBlock(const AIndex: Integer = 0);
   public
     constructor Create(const ABaseOperator: TOperator); overload;
@@ -195,6 +200,8 @@ type
     procedure MoveDown(const AOffset: Integer);
     procedure ChangeXLastBlock(const ANewXLast: Integer);
 
+    procedure FixYStatement(AIndex: Integer = 0);
+
     procedure SetOptimalXLastBlock;
 
     procedure DrawBlock(const AVisibleImageRect: TVisibleImageRect);
@@ -212,6 +219,8 @@ type
     procedure Install(const Index: Integer);
 
     function GetMask(const AVisibleImageRect: TVisibleImageRect): Integer; inline;
+
+    procedure InstallCanvas(const ACanvas: TCanvas);
   end;
 
   var
@@ -515,13 +524,14 @@ implementation
   function TBlock.ExtractStatementAt(const AIndex: Integer) : TStatement;
   begin
     Result:= FStatements[AIndex];
+    Result.FBaseBlock := nil;
     FStatements.Delete(AIndex);
     if FStatements.Count = 0 then
     begin
       AddStatement(DefaultStatement.Create(DefaultAction, Self));
       FStatements[0].FYStart:= Result.FYStart;
     end
-    else if (Result.BaseBlock.BaseOperator = nil) and (AIndex = 0) then
+    else if (BaseOperator = nil) and (AIndex = 0) then
       FStatements[0].FYStart:= Result.FYStart;
   end;
 
@@ -902,6 +912,16 @@ implementation
       Ord(FXLast >= AVisibleImageRect.FTopLeft.X);
   end;
 
+  procedure TBlock.InstallCanvas(const ACanvas: TCanvas);
+  var
+    I: Integer;
+  begin
+    FCanvas := ACanvas;
+    for I := 0 to FStatements.Count - 1 do
+      if FStatements[I] is TOperator then
+        TOperator(FStatements[I]).InstallCanvas(ACanvas);
+  end;
+
   { TOperator }
   constructor TOperator.Create(const AAction : String);
   begin
@@ -1089,9 +1109,26 @@ implementation
     BaseBlock.SetOptimalXLastBlock;
   end;
 
+  procedure TOperator.AlignBlocksToXStart;
+  var
+    I, CurrXStart: Integer;
+  begin
+    CurrXStart:= BaseBlock.FXStart + GetOffsetFromXStart;
+    if CurrXStart <> FBlocks[0].FXStart then
+      if Length(FBlocks) = 1 then
+        FBlocks[0].ChangeXStartBlock(CurrXStart)
+      else
+      begin
+        CurrXStart := CurrXStart - FBlocks[0].FXStart;
+        for I := 0 to High(FBlocks) - 1 do
+          FBlocks[I].MoveRight(CurrXStart);
+        FBlocks[High(FBlocks)].ChangeXStartBlock(FBlocks[High(FBlocks) - 1].XLast);
+      end;
+  end;
+
   procedure TOperator.RedefineStatement;
-    procedure GlueBlock(const ABlock: TBlock); forward;
-    procedure GlueOperator(const ABlocks: TBlockArr); inline;
+    procedure GlueBlock(const ABlock: TBlock); inline; forward;
+    procedure GlueBlocks(const ABlocks: TBlockArr); inline;
     var
       I: Integer;
     begin
@@ -1107,23 +1144,22 @@ implementation
         FStatements[0].Lower(BaseOperator.GetBlockYStart - FStatements[0].FYStart);
 
         if FStatements[0] is TOperator then
-          GlueOperator(TOperator(FStatements[0]).Blocks);
+          GlueBlocks(TOperator(FStatements[0]).Blocks);
 
         for I := 1 to FStatements.Count - 1 do
         begin
           FStatements[I].Lower(FStatements[I - 1].GetYBottom - FStatements[I].FYStart);
           if FStatements[I] is TOperator then
-            GlueOperator(TOperator(FStatements[I]).Blocks);
+            GlueBlocks(TOperator(FStatements[I]).Blocks);
         end;
       end;
     end;
-    procedure RedefineYBlocks;
+    procedure RedefineBlocks;
     var
-      I, CurrXStart: Integer;
+      I: Integer;
     begin
-      CurrXStart:= BaseBlock.FXStart + GetOffsetFromXStart;
-      if CurrXStart <> FBlocks[0].FXStart then
-        FBlocks[0].ChangeXStartBlock(CurrXStart);
+      AlignBlocksToXStart;
+
       for I := 0 to High(FBlocks) do
       begin
         FBlocks[I].RedefineBlock;
@@ -1137,11 +1173,11 @@ implementation
       True:
       begin
         SetOptimalYLast;
-        RedefineYBlocks;
+        RedefineBlocks;
       end;
       False:
       begin
-        RedefineYBlocks;
+        RedefineBlocks;
         SetOptimalYLast;
       end;
     end;
@@ -1167,15 +1203,10 @@ implementation
 
   procedure TOperator.InstallCanvas(const ACanvas: TCanvas);
   var
-    I, J: Integer;
+    I: Integer;
   begin
     for I := 0 to High(Blocks) do
-    begin
-      Blocks[I].FCanvas:= ACanvas;
-      for J := 0 to Blocks[I].FStatements.Count - 1 do
-        if Blocks[I].FStatements[J] is TOperator then
-          TOperator(Blocks[I].FStatements[J]).InstallCanvas(ACanvas);
-    end;
+      Blocks[I].InstallCanvas(ACanvas);
   end;
 
   procedure TOperator.SetBlockTextSize;

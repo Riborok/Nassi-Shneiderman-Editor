@@ -1023,7 +1023,12 @@ implementation
       True:
         for I := 0 to High(FBlocks) do
           FBlocks[I].Statements.GetLast.SetYBottom(AYBottom);
-      False: FYLast := AYBottom;
+      False:
+      begin
+        FYLast := AYBottom;
+        for I := 0 to High(FBlocks) do
+          FBlocks[I].FStatements.GetLast.SetYBottom(YLast - GetOptimaWidth);
+      end;
     end;
   end;
 
