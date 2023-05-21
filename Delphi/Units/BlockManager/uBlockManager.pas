@@ -640,6 +640,6 @@ implementation
     TryDrawCarryBlock(AVisibleImageRect);
 
     FMainBlock.DrawBlock(AVisibleImageRect);
-    //DrawCoordinates(FPaintBox.Canvas, 50);
+    // DrawCoordinates(FPaintBox.Canvas, 50);
   end;
 end.

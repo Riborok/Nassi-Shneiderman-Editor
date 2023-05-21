@@ -13,6 +13,7 @@ type
     function GetMaxHeightOfConds: Integer;
     procedure SetCondSize(const AIndex: Integer);
     procedure RestoreBlocksAfterRearrangement;
+    procedure RepairChildBlocks(const AHigh: Integer);
   protected
     procedure SetTextSize; override;
     procedure CreateBlock; override;
@@ -130,25 +131,45 @@ implementation
       SetCondSize(I);
   end;
 
+  procedure TCaseBranching.RepairChildBlocks(const AHigh: Integer);
+  var
+    I, Offset: Integer;
+  begin
+    Offset := BaseBlock.XStart - FBlocks[0].XStart;
+    if Offset <> 0 then
+      FBlocks[0].MoveRight(Offset);
+
+    for I := 1 to AHigh do
+    begin
+      Offset := FBlocks[I - 1].XLast - FBlocks[I].XStart;
+      if Offset <> 0 then
+        FBlocks[I].MoveRight(Offset);
+    end;
+    FBlocks[AHigh].ChangeXLastBlock(BaseBlock.XLast);
+  end;
+
   procedure TCaseBranching.ChangeActionWithConds(const AAction: String;
                                                  const AConds: TStringArr);
   var
-    I: Integer;
-    PrevCond: TStringArr;
+    I, MinHigh: Integer;
+    PrevConds: TStringArr;
   begin
-
-    PrevCond:= FConds;
+    PrevConds:= FConds;
     FConds:= AConds;
 
     SetLength(FCondsSizes, Length(AConds));
 
     // Check what conditions have changed
-    for I := 0 to Min(High(PrevCond), High(FConds)) do
-      if FConds[I] <> PrevCond[I] then
+    MinHigh := Min(High(PrevConds), High(FConds));
+    for I := 0 to MinHigh do
+      if FConds[I] <> PrevConds[I] then
       begin
         SetCondSize(I);
-        FBlocks[I].SetOptimalXLastBlock;
+        FBlocks[I].ChangeXLastBlock(FBlocks[I].FindOptimalXLast);
       end;
+
+    // Repair of children after X change
+    RepairChildBlocks(MinHigh);
 
     // Remove blocks if the amount of conditions has decreased
     for I := Length(FConds) to High(FBlocks) do
@@ -158,22 +179,22 @@ implementation
     SetLength(FBlocks, Length(AConds));
 
     // Add new blocks if the amount of conditions has increased
-    if Length(PrevCond) <= High(FConds) then
+    if Length(PrevConds) < Length(FConds) then
     begin
       // Set the width to one, to untie the X of the last block. In the future
       // will set the optimal width
-      FBlocks[High(PrevCond)].ChangeXLastBlock(FBlocks[High(PrevCond)].XStart + 1);
+      FBlocks[High(PrevConds)].ChangeXLastBlock(FBlocks[High(PrevConds)].XStart + 1);
 
-      for I := Length(PrevCond) to High(FConds) do
+      for I := Length(PrevConds) to High(FConds) do
         SetCondSize(I);
 
       // Сreate and initialize new blocks. Set the width to one. In the future
       // will set the optimal width
-      CreateBlockStarting(Length(PrevCond));
-      InitializeBlocks(Length(PrevCond));
+      CreateBlockStarting(Length(PrevConds));
+      InitializeBlocks(Length(PrevConds));
 
       // Set the optimal width of the last block
-      FBlocks[High(PrevCond)].SetOptimalXLastBlock;
+      FBlocks[High(PrevConds)].SetOptimalXLastBlock;
     end;
 
     // Changing the action
@@ -227,11 +248,12 @@ implementation
 
   procedure TCaseBranching.CreateBlockStarting(AStartIndex: Integer);
   var
-    I: Integer;
+    I, HighIndex: Integer;
   begin
-    for I := High(FBlocks) downto AStartIndex do
+    HighIndex:= High(FBlocks);
+    for I := HighIndex downto AStartIndex do
     begin
-      FBlocks[I]:= TBlock.Create(MaxInt - (High(FBlocks) - I), Self);
+      FBlocks[I]:= TBlock.Create(MaxInt - (HighIndex - I), Self);
       FBlocks[I].Statements.Add(DefaultStatement.Create(DefaultAction, FBlocks[I]));
     end;
   end;

@@ -155,8 +155,6 @@ type
 
     procedure MoveRightExceptXLast(const AOffset: Integer);
 
-    function FindOptimalXLast: Integer;
-
     function GetLastStatement: TStatement;
 
     function Clone(const ABaseOperator: TOperator): TBlock;
@@ -199,6 +197,7 @@ type
     procedure MoveRight(const AOffset: Integer);
     procedure MoveDown(const AOffset: Integer);
     procedure ChangeXLastBlock(const ANewXLast: Integer);
+    function FindOptimalXLast: Integer;
 
     procedure FixYStatement(AIndex: Integer = 0);
 
