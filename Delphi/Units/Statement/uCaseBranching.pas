@@ -133,18 +133,20 @@ implementation
 
   procedure TCaseBranching.RepairChildBlocks(const AHigh: Integer);
   var
-    I, Offset: Integer;
+    I, StartIndex: Integer;
   begin
-    Offset := BaseBlock.XStart - FBlocks[0].XStart;
-    if Offset <> 0 then
-      FBlocks[0].MoveRight(Offset);
+    StartIndex := AHigh + 1;
 
     for I := 1 to AHigh do
-    begin
-      Offset := FBlocks[I - 1].XLast - FBlocks[I].XStart;
-      if Offset <> 0 then
-        FBlocks[I].MoveRight(Offset);
-    end;
+      if FBlocks[I - 1].XLast - FBlocks[I].XStart <> 0 then
+      begin
+        StartIndex:= I;
+        Break;
+      end;
+
+    for I := StartIndex to AHigh do
+      FBlocks[I].MoveRight(FBlocks[I - 1].XLast - FBlocks[I].XStart);
+
     FBlocks[AHigh].ChangeXLastBlock(BaseBlock.XLast);
   end;
 
