@@ -479,6 +479,8 @@ implementation
     FBlockManager.TryCutDedicated;
     UpdateForStack;
     UpdateForDedicatedStatement;
+
+    Inc(FUserInfo.DeleteStatementCount);
   end;
 
   procedure TNassiShneiderman.MIInsetClick(Sender: TObject);
@@ -486,6 +488,8 @@ implementation
     FBlockManager.TryInsertBufferBlock;
     UpdateForStack;
     UpdateForDedicatedStatement;
+
+    Inc(FUserInfo.AddStatementCount);
   end;
 
   procedure TNassiShneiderman.AddStatement(Sender: TObject);

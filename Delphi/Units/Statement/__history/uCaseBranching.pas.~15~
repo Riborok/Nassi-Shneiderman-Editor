@@ -1,7 +1,9 @@
 ﻿unit uCaseBranching;
 
 interface
-uses uBase, uAdditionalTypes, uDrawShapes, uDetermineDimensions, uMinMaxInt, uCaseBlockSorting;
+uses
+  uBase, uAdditionalTypes, uDrawShapes, uDetermineDimensions, uMinMaxInt,
+  uCaseBlockSorting;
 type
 
   TCaseBranching = class(TOperator)
@@ -32,7 +34,9 @@ type
     procedure SortConditions(const SortNumber: Integer);
     procedure RestoreСonditions(const AConds: TStringArr; const ABlocks: TBlockArr);
 
-    property Conds: TStringArr read FConds;
+    function GetSerialNumber: Integer; override;
+
+    property Conds: TStringArr read FConds write FConds;
     property CondsSizes: TSizeArr read FCondsSizes;
   end;
 
@@ -58,7 +62,7 @@ implementation
     LastBlock:= FBlocks[High(FBlocks)];
 
     // Decrease the last x by 1 to untie it from the base block
-    LastBlock.ChangeXLastBlock(LastBlock.XLast - 1);
+    SetXLastForChildrens(LastBlock.XLast - 1);
 
     // Set old values
     FConds:= AConds;
@@ -71,8 +75,7 @@ implementation
     LastBlock.SetOptimalXLastBlock;
 
     // Stretch the new last block to the base
-    LastBlock:= FBlocks[High(FBlocks)];
-    LastBlock.ChangeXLastBlock(FBaseBlock.XLast);
+    SetXLastForChildrens(FBaseBlock.XLast);
   end;
 
   procedure TCaseBranching.SortConditions(const SortNumber: Integer);
@@ -89,7 +92,7 @@ implementation
     LastBlock:= FBlocks[High(FBlocks)];
 
     // Decrease the last x by 1 to untie it from the base block
-    LastBlock.ChangeXLastBlock(LastBlock.XLast - 1);
+    SetXLastForChildrens(LastBlock.XLast - 1);
 
     // Sorting blocks
     QuickSort(FConds, FBlocks, Compare);
@@ -97,12 +100,11 @@ implementation
     // Move the blocks in a new order
     RestoreBlocksAfterRearrangement;
 
+    // Stretch the new last block to the base
+    SetXLastForChildrens(FBaseBlock.XLast);
+
     // Set the optimal length for the last block before sorting
     LastBlock.SetOptimalXLastBlock;
-
-    // Stretch the new last block to the base
-    LastBlock:= FBlocks[High(FBlocks)];
-    LastBlock.ChangeXLastBlock(FBaseBlock.XLast);
   end;
 
   procedure TCaseBranching.RestoreBlocksAfterRearrangement;
@@ -230,13 +232,18 @@ implementation
     for I := High(FBlocks) downto AStartIndex do
     begin
       FBlocks[I]:= TBlock.Create(MaxInt - (High(FBlocks) - I), Self);
-      FBlocks[I].Statements.Add(DefaultStatement.CreateDefault(FBlocks[I]));
+      FBlocks[I].Statements.Add(DefaultStatement.Create(DefaultAction, FBlocks[I]));
     end;
   end;
 
   function TCaseBranching.IsPreсOperator: Boolean;
   begin
     Result:= True;
+  end;
+
+  function TCaseBranching.GetSerialNumber: Integer;
+  begin
+    Result:= 2;
   end;
 
   procedure TCaseBranching.Draw;
