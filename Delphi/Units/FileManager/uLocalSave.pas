@@ -136,7 +136,7 @@ implementation
     I, StatementIndex: Integer;
   begin
     Result := TJSONObject.Create;
-    StatementIndex := ConvertToStatementIndex(TStatementClass(AStatement.ClassType));
+    StatementIndex := AStatement.GetSerialNumber;
     Result.AddPair('StatementIndex', TJSONNumber.Create(StatementIndex));
 
     if StatementIndex = 2 {2: TCaseBranching} then

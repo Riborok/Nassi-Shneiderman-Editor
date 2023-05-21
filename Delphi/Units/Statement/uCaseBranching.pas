@@ -34,6 +34,8 @@ type
     procedure SortConditions(const SortNumber: Integer);
     procedure RestoreСonditions(const AConds: TStringArr; const ABlocks: TBlockArr);
 
+    function GetSerialNumber: Integer; override;
+
     property Conds: TStringArr read FConds write FConds;
     property CondsSizes: TSizeArr read FCondsSizes;
   end;
@@ -237,6 +239,11 @@ implementation
   function TCaseBranching.IsPreсOperator: Boolean;
   begin
     Result:= True;
+  end;
+
+  function TCaseBranching.GetSerialNumber: Integer;
+  begin
+    Result:= 2;
   end;
 
   procedure TCaseBranching.Draw;

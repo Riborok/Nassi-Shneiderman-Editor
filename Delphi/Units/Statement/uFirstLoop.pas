@@ -11,6 +11,7 @@ type
     procedure Draw; override;
   public
     function IsPreсOperator: Boolean; override;
+    function GetSerialNumber: Integer; override;
   end;
 
 implementation
@@ -23,6 +24,11 @@ implementation
   function TFirstLoop.GetOptimalYLast: Integer;
   begin
     Result := FYStart + FActionSize.Height + FYIndentText shl 1;
+  end;
+
+  function TFirstLoop.GetSerialNumber: Integer;
+  begin
+    Result:= 3;
   end;
 
   procedure TFirstLoop.Draw;

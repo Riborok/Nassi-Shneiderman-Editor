@@ -10,6 +10,8 @@ type
     function GetOptimaWidth: Integer; override;
     function GetOptimalYLast: Integer; override;
     procedure Draw; override;
+  public
+    function GetSerialNumber: Integer; override;
   end;
 
 implementation
@@ -30,6 +32,11 @@ implementation
   function TProcessStatement.GetOptimalYLast: Integer;
   begin
     Result := FYStart + FActionSize.Height + FYIndentText shl 1;
+  end;
+
+  function TProcessStatement.GetSerialNumber: Integer;
+  begin
+    Result:= 0;
   end;
 
 end.

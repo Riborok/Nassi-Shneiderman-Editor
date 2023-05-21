@@ -539,9 +539,7 @@ implementation
         SaveSchema(FBlockManager);
       end
       else if FileExt = '.svg' then
-      begin
-        //
-      end
+        SaveSVGFile(FBlockManager, FileName)
       else if FileExt = '.bmp' then
         SaveBMPFile(FBlockManager, FileName)
       else if FileExt = '.png' then

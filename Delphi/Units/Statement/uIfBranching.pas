@@ -14,7 +14,6 @@ type
   private
     FTrueSize, FFalseSize: TSize;
     procedure SetCondsSize;
-    function GetAvailablePartWidth(const APartWidth, ATextHeight: Integer): Integer;
     function GetMinValidPartWidth(const ATextHeight, ATextWidth: Integer): Integer;
     class procedure RedefineConds(const ABlock: TBlock); static;
   protected
@@ -25,8 +24,15 @@ type
     function GetOptimalYLast: Integer; override;
     procedure Draw; override;
   public
+    property TrueSize: TSize read FTrueSize;
+    property FalseSize: TSize read FFalseSize;
+
     function IsPreсOperator: Boolean; override;
     function Clone: TStatement; override;
+
+    function GetAvailablePartWidth(const APartWidth, ATextHeight: Integer): Integer;
+
+    function GetSerialNumber: Integer; override;
 
     class property TrueCond: string read FTrueCond write FTrueCond;
     class property FalseCond: string read FFalseCond write FFalseCond;
@@ -141,6 +147,11 @@ implementation
       Result:= GetMinValidPartWidth(FTrueSize.Height, FTrueSize.Width)
     else
       Result:= GetMinValidPartWidth(FFalseSize.Height, FFalseSize.Width);
+  end;
+
+  function TIfBranching.GetSerialNumber: Integer;
+  begin
+    Result:= 1;
   end;
 
   procedure TIfBranching.Draw;

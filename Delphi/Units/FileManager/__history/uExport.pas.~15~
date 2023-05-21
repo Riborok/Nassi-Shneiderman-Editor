@@ -1,0 +1,167 @@
+unit uExport;
+
+interface
+uses
+  uBlockManager, Vcl.Graphics, Vcl.ExtCtrls, uAdditionalTypes, uConstants, PNGImage,
+  System.SysUtils, Classes, uBase, uCaseBranching, uFirstLoop, uIfBranching, uLastLoop,
+  uProcessStatement, uStatementConverter, System.UITypes, System.IOUtils;
+
+procedure SaveBMPFile(const ABlockManager: TBlockManager; const AFileName: string);
+procedure SavePNGFile(const ABlockManager: TBlockManager; const AFileName: string);
+procedure SaveSVGFile(const ABlockManager: TBlockManager; const AFileName: string);
+
+implementation
+
+  procedure InitializeVisibleImageRect(const ABitmap: TBitmap;
+                                       out AVisibleImageRect: TVisibleImageRect);
+  begin
+    AVisibleImageRect.FTopLeft.X := 0;
+    AVisibleImageRect.FTopLeft.Y := 0;
+    AVisibleImageRect.FBottomRight.X := ABitmap.Width;
+    AVisibleImageRect.FBottomRight.Y := ABitmap.Height;
+  end;
+
+  procedure InitializeBitmap(const ABitmap: TBitmap; const ABlockManager: TBlockManager);
+  begin
+    ABitmap.Width := ABlockManager.MainBlock.XLast + SchemeIndent;
+    ABitmap.Height := ABlockManager.MainBlock.Statements[ABlockManager.MainBlock.
+                      Statements.Count - 1].GetYBottom + SchemeIndent;
+    ABitmap.Canvas.Font := ABlockManager.Font;
+    ABitmap.Canvas.Pen := ABlockManager.Pen;
+  end;
+
+  procedure SaveBMPFile(const ABlockManager: TBlockManager; const AFileName: string);
+  var
+    VisibleImageRect: TVisibleImageRect;
+    Bitmap: TBitmap;
+  begin
+    Bitmap := TBitmap.Create;
+    try
+      InitializeBitmap(Bitmap, ABlockManager);
+
+      InitializeVisibleImageRect(Bitmap, VisibleImageRect);
+
+      ABlockManager.MainBlock.InstallCanvas(Bitmap.Canvas);
+      ABlockManager.MainBlock.DrawBlock(VisibleImageRect);
+
+      Bitmap.SaveToFile(AFileName);
+    finally
+      Bitmap.Destroy;
+    end;
+    ABlockManager.MainBlock.InstallCanvas(ABlockManager.PaintBox.Canvas);
+  end;
+
+  procedure SavePNGFile(const ABlockManager: TBlockManager; const AFileName: string);
+  var
+    Bitmap: TBitmap;
+    PNG: TPNGImage;
+    VisibleImageRect: TVisibleImageRect;
+  begin
+    Bitmap := TBitmap.Create;
+    try
+      InitializeBitmap(Bitmap, ABlockManager);
+
+      InitializeVisibleImageRect(Bitmap, VisibleImageRect);
+
+      ABlockManager.MainBlock.InstallCanvas(Bitmap.Canvas);
+      ABlockManager.MainBlock.DrawBlock(VisibleImageRect);
+
+      PNG := TPNGImage.Create;
+      try
+        PNG.Assign(Bitmap);
+        PNG.SaveToFile(AFileName);
+      finally
+        PNG.Destroy;
+      end;
+    finally
+      Bitmap.Destroy;
+    end;
+    ABlockManager.MainBlock.InstallCanvas(ABlockManager.PaintBox.Canvas);
+  end;
+
+  { SVG }
+
+  const
+    SVGHead = '<?xml version="1.0" encoding="UTF-8" standalone="no"?>' +
+              '<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" ' +
+              '"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">';
+    clrFill: TColor = clWhite;
+
+  function ColorToRGBString(const AColor: TColor): string;
+  var
+    RGB: Longint;
+  begin
+    RGB := ColorToRGB(AColor);
+    Result := '#' + IntToHex(RGB, 6);
+  end;
+
+  procedure SetSVGOpenTag(const SVG: TStringList; const AWidth, AHeight: Integer);
+  begin
+    SVG.Add('<svg xmlns="http://www.w3.org/2000/svg" ' +
+            'xmlns:xlink="http://www.w3.org/1999/xlink" ' +
+            'width="' + IntToStr(AWidth) + '" ' +
+            'height="' + IntToStr(AHeight) + '" ' +
+            'version="1.1">');
+  end;
+
+  procedure DrawRectangle(const SVG: TStringList; const AXStart, AXLast, AYStart, AYLast: Integer; const APen: TPen);
+  begin
+    SVG.Add('<rect x="' + IntToStr(AXStart) + '" y="' + IntToStr(AYStart) + '" width="' + IntToStr(AXLast - AXStart) + '" height="' + IntToStr(AYLast - AYStart) + '" stroke="' + ColorToRGBString(APen.Color) + '" stroke-width="' + IntToStr(APen.Width) + '" fill="' + ColorToRGBString(clrFill) + '" />');
+  end;
+
+  procedure DrawLine(const SVG: TStringList; const AXStart, AXLast, AYStart, AYLast: Integer; const APen: TPen);
+  begin
+    SVG.Add('<line x1="' + IntToStr(AXStart) + '" y1="' + IntToStr(AYStart) + '" x2="' + IntToStr(AXLast) + '" y2="' + IntToStr(AYLast) + '" stroke="' + ColorToRGBString(APen.Color) + '" stroke-width="' + IntToStr(APen.Width) + '" />');
+  end;
+
+  procedure DrawText(const SVG: TStringList; AXStart, AYStart: Integer; const AFont: TFont; const Text: string);
+  begin
+    SVG.Add('<text x="' + IntToStr(AXStart) + '" y="' + IntToStr(AYStart) + '" font-family="' + AFont.Name + '" font-size="' + IntToStr(AFont.Size) + '" fill="' + ColorToRGBString(AFont.Color) + '">' + Text + '</text>');
+  end;
+
+  procedure DrawProcess(const SVG: TStringList; const AStatement: TStatement);
+  begin
+    with AStatement do
+    begin
+      DrawRectangle(SVG, BaseBlock.XStart, BaseBlock.XLast,
+                    YStart, YLast, BaseBlock.Canvas.Pen);
+      DrawText(SVG, BaseBlock.XStart + ((BaseBlock.XLast - BaseBlock.XStart) shr 1)
+               - (ActionSize.Width shr 1), YStart + YIndentText,
+               BaseBlock.Canvas.Font, Action);
+    end;
+  end;
+
+  procedure DrawBlock(const SVG: TStringList; const ABlock: TBlock);
+  var
+    I: Integer;
+  begin
+    for I := 0 to ABlock.Statements.Count - 1 do
+      case ConvertToStatementIndex(TStatementClass(ABlock.Statements[I].ClassType)) of
+        0: DrawProcess(SVG, ABlock.Statements[I]);
+      end;
+  end;
+
+  procedure SaveSVGFile(const ABlockManager: TBlockManager; const AFileName: string);
+  var
+    SVG: TStringList;
+  begin
+    SVG := TStringList.Create;
+    try
+      SetSVGOpenTag(SVG, ABlockManager.MainBlock.XLast + SchemeIndent,
+                    ABlockManager.MainBlock.Statements[ABlockManager.MainBlock.
+                    Statements.Count - 1].GetYBottom + SchemeIndent);
+
+      ABlockManager.PaintBox.Canvas.Pen := ABlockManager.Pen;
+      ABlockManager.PaintBox.Canvas.Font := ABlockManager.Font;
+
+      DrawBlock(SVG, ABlockManager.MainBlock);
+
+      SVG.Add('</svg>');
+
+      TFile.WriteAllText(AFileName, SVG.Text, TEncoding.UTF8);
+    finally
+      SVG.Destroy;
+    end;
+  end;
+
+end.

@@ -61,6 +61,8 @@ type
 
     // These properties return the text of the statement and base block
     property Action: String read FAction;
+    property ActionSize: TSize read FActionSize;
+
     property BaseBlock: TBlock read FBaseBlock write FBaseBlock;
 
     // Returnts the Y statrt coordinate
@@ -79,6 +81,8 @@ type
 
     // Set the optimal Y last
     procedure SetOptimalYLast;
+
+    function GetSerialNumber: Integer; virtual; abstract;
 
     procedure SwapYStart(const AStatement: TStatement);
 
