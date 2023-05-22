@@ -334,6 +334,9 @@ implementation
 
   procedure TNassiShneiderman.FormShortCut(var Msg: TWMKey; var Handled: Boolean);
   begin
+    if isDragging then
+      FBlockManager.DestroyCarryBlock;
+
     if FisPressed then
       Handled:= True
     else if GetKeyState(VK_RETURN) < 0 then
@@ -348,8 +351,6 @@ implementation
           FormKeyDown(nil, Msg.CharCode, []);
       end;
     end;
-    if isDragging then
-      FBlockManager.DestroyCarryBlock;
   end;
 
   procedure TNassiShneiderman.PaintBoxPaint(Sender: TObject);
