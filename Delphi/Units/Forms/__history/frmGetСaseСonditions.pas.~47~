@@ -339,7 +339,6 @@ procedure TWriteCaseConditions.btnAddClick(Sender: TObject);
         Height := MemoHeight;
         Font.Size := mmFontSize;
         Font.Name := mmFontName;
-        MaxLength := MaxTextLength;
       end;
 
       Inc(CurrPosY, MemoHeight + Indent);

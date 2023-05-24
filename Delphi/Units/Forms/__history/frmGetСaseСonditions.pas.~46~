@@ -132,10 +132,8 @@ implementation
   begin
     case ScrollCode of
       scLineUp, scPageUp:
-      if FPointer <> Low(FCondsSet) then
         ScrollUp;
       scLineDown, scPageDown:
-      if FPointer <> FHigh - constMemoHigh then
         ScrollDown;
       scPosition, scTrack:
         SetScrollPos(ScrollPos);
@@ -339,7 +337,6 @@ procedure TWriteCaseConditions.btnAddClick(Sender: TObject);
         Height := MemoHeight;
         Font.Size := mmFontSize;
         Font.Name := mmFontName;
-        MaxLength := MaxTextLength;
       end;
 
       Inc(CurrPosY, MemoHeight + Indent);
