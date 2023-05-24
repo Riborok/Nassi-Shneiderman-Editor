@@ -2130,6 +2130,7 @@ object WriteCaseConditions: TWriteCaseConditions
   OldCreateOrder = False
   OnCreate = FormCreate
   OnKeyDown = FormKeyDown
+  OnMouseWheel = FormMouseWheel
   OnShow = FormShow
   PixelsPerInch = 96
   TextHeight = 13

@@ -1,9 +1,4 @@
 unit frmGetÑaseÑonditions;
-{
- Many conditions can be created, resulting in numerous components. It is a
- costly endeavor. A beautiful solution needs to be found, but currently,
- there is a lack of time to accomplish it :(
-}
 
 interface
 
@@ -29,6 +24,8 @@ type
     procedure FormShow(Sender: TObject);
     procedure ScrollBarScroll(Sender: TObject; ScrollCode: TScrollCode;
       var ScrollPos: Integer);
+    procedure FormMouseWheel(Sender: TObject; Shift: TShiftState;
+      WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
   private const
     constMinAmount = 2;
     constMaxAmount = 442;
@@ -231,7 +228,25 @@ implementation
       ModalResult := mrOk;
   end;
 
-  procedure TWriteCaseConditions.btnAddClick(Sender: TObject);
+  procedure TWriteCaseConditions.FormMouseWheel(Sender: TObject;
+    Shift: TShiftState; WheelDelta: Integer; MousePos: TPoint;
+    var Handled: Boolean);
+  begin
+    if ScrollBar.Enabled then
+      if (WheelDelta > 0) and (FPointer <> Low(FCondsSet)) then
+      begin
+        ScrollUp;
+        ScrollBar.Position := FPointer;
+      end
+      else if (WheelDelta < 0) and (FPointer <> FHigh - constMemoHigh) then
+      begin
+        ScrollDown;
+        ScrollBar.Position := FPointer;
+      end;
+    Handled:= True;
+  end;
+
+procedure TWriteCaseConditions.btnAddClick(Sender: TObject);
   begin
     if FHigh < constMaxAmount then
     begin

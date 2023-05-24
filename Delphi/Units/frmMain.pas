@@ -381,6 +381,7 @@ implementation
 
     MousePos:= PaintBox.ScreenToClient(Mouse.CursorPos);
     MouseMove(Sender, Shift, MousePos.X, MousePos.Y);
+    Handled:= True;
   end;
 
   procedure TNassiShneiderman.PopupMenuPopup(Sender: TObject);
