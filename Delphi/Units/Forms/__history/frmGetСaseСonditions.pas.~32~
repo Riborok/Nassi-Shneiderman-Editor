@@ -1,0 +1,186 @@
+unit frmGet—ase—onditions;
+{
+ Many conditions can be created, resulting in numerous components. It is a
+ costly endeavor. A beautiful solution needs to be found, but currently,
+ there is a lack of time to accomplish it :(
+}
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, uAdditionalTypes, uStack, uConstants,
+  Vcl.ExtCtrls, uMinMaxInt, Vcl.DBCtrls;
+
+type
+  TWrite—ase—onditions = class(TForm)
+    btnOK: TButton;
+    lbAdd: TLabel;
+    btnAdd: TButton;
+    lbDel: TLabel;
+    btnDelete: TButton;
+    btnCancel: TButton;
+    MainPanel: TPanel;
+    ScrollBar: TScrollBar;
+    procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+    procedure FormCreate(Sender: TObject);
+    procedure btnAddClick(Sender: TObject);
+    procedure btnDeleteClick(Sender: TObject);
+    procedure FormShow(Sender: TObject);
+  private const
+    MinAmount = 2;
+    MaxAmount = 442;
+    MemoAmount = 4;
+    LabelCaption = 'Condition ';
+  private type
+    TCondSet = record
+      LabelCaption : TLabel;
+      Memo : TMemo;
+    end;
+  private
+    { Private declarations }
+    FMemoCount: Integer;
+    FConds : TStringArr;
+    FCondsSet : array[1..MemoAmount] of TCondSet;
+
+
+    procedure CreateMemo(const AText: string = '');
+  public
+    { Public declarations }
+    function TryGetCond(var AConds: TStringArr): Boolean;
+    destructor Destroy; override;
+  end;
+
+var
+  Write—ase—onditions: TWrite—ase—onditions;
+
+implementation
+
+{$R *.dfm}
+  function TWrite—ase—onditions.TryGetCond(var AConds: TStringArr): Boolean;
+  begin
+    FMemoCount := Length(AConds);
+
+    SetLength(FConds, FMemoCount shl 1);
+
+    Move(AConds[0], FConds[0], Length(AConds) * SizeOf(string));
+
+    ShowModal;
+
+    if Self.ModalResult = MrOk then
+    begin
+      Result:= True;
+      Move(FConds[0], AConds[0], FMemoCount * SizeOf(string));
+    end
+    else
+      Result:= False;
+  end;
+
+  procedure TWrite—ase—onditions.FormKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+  begin
+    if Key = VK_ESCAPE then
+      ModalResult := mrCancel
+    else if (Key = VK_RETURN) and not (ssShift in Shift) then
+      ModalResult := mrOk;
+  end;
+
+  procedure TWrite—ase—onditions.btnAddClick(Sender: TObject);
+  begin
+    if FMemoCount <= MaxAmount then
+    begin
+      Inc(FMemoCount);
+
+      if FMemoCount < Length(FConds) then
+        SetLength(FConds, FMemoCount shl 1);
+
+      // Õ‡ÒÚÓËÚ¸ Visible
+      // —‰ÂÎ‡Ú¸ ÔÓÍÛÚÍÛ
+    end;
+  end;
+
+  procedure TWrite—ase—onditions.btnDeleteClick(Sender: TObject);
+  begin
+    if FMemoCount > MinAmount then
+    begin
+      Dec(FMemoCount);
+
+      // Õ‡ÒÚÓËÚ¸ Visible
+      // ÕÛÊÌÓ ÎË ‰ÂÎ‡Ú¸ œÓÍÛÚÍÛ?
+
+    end;
+  end;
+
+  procedure TWrite—ase—onditions.CreateMemo(const AText: string = '');
+
+  begin
+
+  end;
+
+  procedure TWrite—ase—onditions.FormCreate(Sender: TObject);
+  const
+    Indent = 5;
+  var
+    MemoHeight, FCondsSetWidth: Integer;
+    I, CurrPosY: Integer;
+  begin
+    MemoHeight := (MainPanel.Height - mmFontSize * MemoAmount -
+              MemoAmount * Indent - Indent shl 1) div MemoAmount - Indent shl 1;
+    FCondsSetWidth:= ScrollBar.Left - Indent shl 1;
+
+    CurrPosY:= Indent;
+    for I := Low(FCondsSet) to High(FCondsSet) do
+    begin
+      FCondsSet[I].LabelCaption := TLabel.Create(Self);
+      FCondsSet[I].Memo := TMemo.Create(Self);
+
+      with FCondsSet[I].LabelCaption do
+      begin
+        Parent := MainPanel;
+        Left := Indent;
+        Width := FCondsSetWidth;
+        Top := CurrPosY;
+        Font.Size := mmFontSize;
+        Font.Name := mmFontName;
+
+        Caption := 'Label ' + IntToStr(I);
+      end;
+
+      Inc(CurrPosY, FCondsSet[I].LabelCaption.Height + Indent);
+
+      with FCondsSet[I].Memo do
+      begin
+        Parent := MainPanel;
+        Left := Indent;
+        Width := FCondsSetWidth;
+        Top := CurrPosY;
+        Height := MemoHeight;
+        Font.Size := mmFontSize;
+        Font.Name := mmFontName;
+
+        Lines.Add('Memo ' + IntToStr(I));
+      end;
+
+      Inc(CurrPosY, MemoHeight + Indent);
+    end;
+  end;
+
+  destructor TWrite—ase—onditions.Destroy;
+  var
+    I: Integer;
+  begin
+    for I := Low(FCondsSet) to High(FCondsSet) do
+    begin
+      FCondsSet[I].LabelCaption.Destroy;
+      FCondsSet[I].Memo.Destroy;
+    end;
+    inherited;
+  end;
+
+  procedure TWrite—ase—onditions.FormShow(Sender: TObject);
+  begin
+    Left := (Screen.Width - Width) shr 1;
+    Top := (Screen.Height - Height) shr 1;
+  end;
+
+end.

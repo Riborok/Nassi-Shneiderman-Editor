@@ -226,7 +226,7 @@ type
 
     function HandleSaveSchemePrompt: Boolean;
   public
-    destructor Destroy;
+    destructor Destroy; override;
   end;
 
 var

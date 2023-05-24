@@ -2147,9 +2147,6 @@ object WriteAction: TWriteAction
     Caption = 'OK'
     ModalResult = 1
     TabOrder = 0
-    ExplicitLeft = 197
-    ExplicitTop = 227
-    ExplicitHeight = 30
   end
   object MemoAction: TMemo
     Left = 0
@@ -2184,7 +2181,5 @@ object WriteAction: TWriteAction
     Caption = 'Cancel'
     ModalResult = 2
     TabOrder = 2
-    ExplicitLeft = 8
-    ExplicitTop = 230
   end
 end

@@ -356,7 +356,7 @@ implementation
       begin
         var CaseBranching: TCaseBranching:= TCaseBranching(FDedicatedStatement);
         var Cond: TStringArr:= CaseBranching.Conds;
-        if (WriteAction.TryGetAction(Action)) and (Write—ase—onditions.TryGetCond(Cond)) then
+        if (WriteAction.TryGetAction(Action)) and (WriteCaseConditions.TryGetCond(Cond)) then
         begin
           AddToUndoStack(TCommnadChangeContent.Create(FDedicatedStatement, Action, Cond));
           FPaintBox.Invalidate;
@@ -571,7 +571,7 @@ implementation
       if AStatementClass = TCaseBranching then
       begin
         var Cond: TStringArr:= nil;
-        if Write—ase—onditions.TryGetCond(Cond) then
+        if WriteCaseConditions.TryGetCond(Cond) then
           Result:= TCaseBranching.Create(Action, Cond);
       end
       else

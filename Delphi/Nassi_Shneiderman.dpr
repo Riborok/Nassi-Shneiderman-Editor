@@ -37,7 +37,7 @@ uses
   uMinMaxInt in 'Units\Support\uMinMaxInt.pas',
   frmGetAction in 'Units\Forms\frmGetAction.pas' {WriteAction},
   uLoop in 'Units\Statement\uLoop.pas',
-  frmGetÑaseÑonditions in 'Units\Forms\frmGetÑaseÑonditions.pas' {WriteÑaseÑonditions},
+  frmGetÑaseÑonditions in 'Units\Forms\frmGetÑaseÑonditions.pas' {WriteCaseConditions},
   uAdditionalTypes in 'Units\Support\uAdditionalTypes.pas',
   uConstants in 'Units\Support\uConstants.pas',
   uCaseBlockSorting in 'Units\Support\uCaseBlockSorting.pas',
@@ -64,7 +64,7 @@ begin
   Application.MainFormOnTaskbar := True;
   Application.CreateForm(TNassiShneiderman, NassiShneiderman);
   Application.CreateForm(TWriteAction, WriteAction);
-  Application.CreateForm(TWriteÑaseÑonditions, WriteÑaseÑonditions);
+  Application.CreateForm(TWriteCaseConditions, WriteCaseConditions);
   Application.CreateForm(THelp, Help);
   Application.Run;
 end.

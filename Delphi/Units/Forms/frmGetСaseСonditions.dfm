@@ -1,10 +1,10 @@
-﻿object WriteСaseСonditions: TWriteСaseСonditions
+object WriteCaseConditions: TWriteCaseConditions
   Left = 0
   Top = 0
   BorderStyle = bsDialog
-  Caption = 'Write '#1057'ase '#1057'onditions'
-  ClientHeight = 680
-  ClientWidth = 546
+  Caption = 'Write Case Conditions'
+  ClientHeight = 584
+  ClientWidth = 550
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -2133,146 +2133,127 @@
   OnShow = FormShow
   PixelsPerInch = 96
   TextHeight = 13
-  object Panel: TPanel
-    Left = 0
-    Top = 0
-    Width = 546
-    Height = 632
-    Margins.Left = 0
-    Margins.Top = 0
-    Margins.Right = 0
-    Margins.Bottom = 0
-    Align = alTop
-    Anchors = [akLeft, akTop, akRight, akBottom]
-    Caption = 'Panel'
-    TabOrder = 0
-    object lbAdd: TLabel
-      AlignWithMargins = True
-      Left = 16
-      Top = 11
-      Width = 108
-      Height = 26
-      Margins.Left = 15
-      Margins.Top = 10
-      Align = alLeft
-      Anchors = [akTop, akBottom]
-      AutoSize = False
-      Caption = 'Add condition'
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -19
-      Font.Name = 'Times New Roman'
-      Font.Style = []
-      ParentFont = False
-      ExplicitHeight = 23
-    end
-    object lbDel: TLabel
-      AlignWithMargins = True
-      Left = 306
-      Top = 11
-      Width = 137
-      Height = 26
-      Margins.Top = 10
-      Align = alRight
-      Anchors = [akTop, akBottom]
-      AutoSize = False
-      Caption = 'Remove condition'
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -19
-      Font.Name = 'Times New Roman'
-      Font.Style = []
-      ParentFont = False
-      ExplicitLeft = 304
-      ExplicitTop = 10
-      ExplicitHeight = 20
-    end
-    object btnAdd: TButton
-      AlignWithMargins = True
-      Left = 130
-      Top = 4
-      Width = 81
-      Height = 33
-      Align = alLeft
-      Anchors = [akTop, akBottom]
-      Caption = '+'
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -27
-      Font.Name = 'Times New Roman'
-      Font.Style = []
-      ParentFont = False
-      TabOrder = 0
-      TabStop = False
-      OnClick = btnAddClick
-    end
-    object btnDelete: TButton
-      AlignWithMargins = True
-      Left = 449
-      Top = 4
-      Width = 81
-      Height = 33
-      Margins.Right = 15
-      Align = alRight
-      Anchors = [akTop, akBottom]
-      Caption = '-'
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -27
-      Font.Name = 'Times New Roman'
-      Font.Style = []
-      ParentFont = False
-      TabOrder = 1
-      TabStop = False
-      OnClick = btnDeleteClick
-    end
-    object ScrollBox: TScrollBox
-      Left = 1
-      Top = 40
-      Width = 544
-      Height = 591
-      Align = alBottom
-      Anchors = [akLeft, akTop, akRight, akBottom]
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -19
-      Font.Name = 'Times New Roman'
-      Font.Style = []
-      ParentFont = False
-      TabOrder = 2
-      OnMouseWheel = ScrollBoxMouseWheel
-    end
+  object lbAdd: TLabel
+    AlignWithMargins = True
+    Left = 104
+    Top = 10
+    Width = 108
+    Height = 23
+    Margins.Left = 15
+    Margins.Top = 10
+    AutoSize = False
+    Caption = 'Add condition'
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -19
+    Font.Name = 'Times New Roman'
+    Font.Style = []
+    ParentFont = False
+  end
+  object lbDel: TLabel
+    AlignWithMargins = True
+    Left = 392
+    Top = 10
+    Width = 137
+    Height = 20
+    Margins.Top = 10
+    AutoSize = False
+    Caption = 'Remove condition'
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -19
+    Font.Name = 'Times New Roman'
+    Font.Style = []
+    ParentFont = False
   end
   object btnOK: TButton
     AlignWithMargins = True
     Left = 303
-    Top = 637
+    Top = 541
     Width = 238
     Height = 38
     Margins.Left = 5
     Margins.Top = 5
     Margins.Right = 5
     Margins.Bottom = 5
-    Align = alRight
-    Anchors = [akLeft, akTop, akRight, akBottom]
     Caption = 'OK'
     ModalResult = 1
-    TabOrder = 1
+    TabOrder = 0
   end
   object btnCancel: TButton
     AlignWithMargins = True
     Left = 5
-    Top = 637
+    Top = 541
     Width = 238
     Height = 38
     Margins.Left = 5
     Margins.Top = 5
     Margins.Right = 5
     Margins.Bottom = 5
-    Align = alLeft
-    Anchors = [akLeft, akTop, akRight, akBottom]
     Caption = 'Cancel'
     ModalResult = 2
+    TabOrder = 1
+  end
+  object btnDelete: TButton
+    AlignWithMargins = True
+    Left = 303
+    Top = 5
+    Width = 81
+    Height = 38
+    Margins.Right = 15
+    Margins.Bottom = 6
+    Caption = '-'
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -27
+    Font.Name = 'Times New Roman'
+    Font.Style = []
+    ParentFont = False
     TabOrder = 2
+    TabStop = False
+    OnClick = btnDeleteClick
+  end
+  object btnAdd: TButton
+    AlignWithMargins = True
+    Left = 13
+    Top = 5
+    Width = 81
+    Height = 38
+    Margins.Bottom = 6
+    Caption = '+'
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -27
+    Font.Name = 'Times New Roman'
+    Font.Style = []
+    ParentFont = False
+    TabOrder = 3
+    TabStop = False
+    OnClick = btnAddClick
+  end
+  object MainPanel: TPanel
+    Left = -3
+    Top = 52
+    Width = 554
+    Height = 481
+    TabOrder = 4
+    object ScrollBar: TScrollBar
+      AlignWithMargins = True
+      Left = 528
+      Top = 2
+      Width = 25
+      Height = 477
+      Margins.Left = 0
+      Margins.Top = 1
+      Margins.Right = 0
+      Margins.Bottom = 1
+      Align = alRight
+      Kind = sbVertical
+      Max = 2
+      PageSize = 1
+      TabOrder = 0
+      TabStop = False
+      OnScroll = ScrollBarScroll
+    end
   end
 end

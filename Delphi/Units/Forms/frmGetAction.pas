@@ -51,15 +51,6 @@ implementation
     MemoAction.MaxLength := MaxTextLength;
     MemoAction.Font.Size := mmFontSize;
     MemoAction.Font.Name := mmFontName;
-
-    Self.Width := Round(Screen.Width / 5);
-    Self.Height := Round(Screen.Height / 3.6);
-
-    btnOK.Width := Round((Self.Width - btnCancel.Margins.Left - btnOK.Margins.Right) / 2.1);
-    btnCancel.Width := btnOK.Width;
-
-    btnOK.Height := Round(Self.Height / 7.9);
-    btnCancel.Height := btnOK.Height;
   end;
 
   procedure TWriteAction.FormShow(Sender: TObject);

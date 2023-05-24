@@ -19,8 +19,10 @@ type
       const pDisp: IDispatch; const URL, Flags, TargetFrameName, PostData,
       Headers: OleVariant; var Cancel: WordBool);
     procedure pmLicenseClick(Sender: TObject);
+  private const
+    MinFormWidth = 750;
+    MinFormHeight = 400;
   private
-    MinFormWidth, MinFormHeight : Integer;
     procedure WMMouseActivate(var Msg: TMessage); message WM_MOUSEACTIVATE;
   public
     procedure Execute(AName: WideString);
@@ -44,12 +46,12 @@ implementation
     end;
   end;
 
-procedure THelp.WMMouseActivate(var Msg: TMessage);
+  procedure THelp.WMMouseActivate(var Msg: TMessage);
   begin
     try
       inherited;
       if Msg.LParamHi = 516 then
-      pmHtmlMenu.Popup(Mouse.CursorPos.x, Mouse.CursorPos.y);
+        pmHtmlMenu.Popup(Mouse.CursorPos.x, Mouse.CursorPos.y);
       Msg.Result := 0;
     except
     end;
@@ -57,9 +59,6 @@ procedure THelp.WMMouseActivate(var Msg: TMessage);
 
   procedure THelp.FormCreate(Sender: TObject);
   begin
-    MinFormWidth := Round(Screen.Width / 2.7);
-    MinFormHeight := Round(Screen.Height / 2.7);
-
     Constraints.MinWidth := MinFormWidth;
     Constraints.MinHeight := MinFormHeight;
   end;

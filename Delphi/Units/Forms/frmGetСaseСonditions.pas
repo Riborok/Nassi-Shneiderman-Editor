@@ -10,102 +10,219 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, uAdditionalTypes, uStack, uConstants,
-  Vcl.ExtCtrls;
+  Vcl.ExtCtrls, uMinMaxInt, Vcl.DBCtrls;
 
 type
-  TWriteÑaseÑonditions = class(TForm)
-    ScrollBox: TScrollBox;
+  TWriteCaseConditions = class(TForm)
     btnOK: TButton;
     lbAdd: TLabel;
     btnAdd: TButton;
     lbDel: TLabel;
     btnDelete: TButton;
     btnCancel: TButton;
-    Panel: TPanel;
+    MainPanel: TPanel;
+    ScrollBar: TScrollBar;
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure FormCreate(Sender: TObject);
     procedure btnAddClick(Sender: TObject);
-    procedure ScrollBoxMouseWheel(Sender: TObject; Shift: TShiftState;
-      WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
     procedure btnDeleteClick(Sender: TObject);
-    destructor Destroy;
     procedure FormShow(Sender: TObject);
+    procedure ScrollBarScroll(Sender: TObject; ScrollCode: TScrollCode;
+      var ScrollPos: Integer);
+  private const
+    constMinAmount = 2;
+    constMaxAmount = 442;
+
+    constMemoAmount = 4;
+    constMemoHigh = constMemoAmount - 1;
+
+    constLabelCaption = 'Condition ';
   private type
+
     TCondSet = record
       LabelCaption : TLabel;
       Memo : TMemo;
     end;
   private
     { Private declarations }
-    FCondSetStack: TStack<TCondSet>;
-    FIndent: Integer;
-    procedure CreateMemo(const AText: string = '');
+    FPointer, FHigh: Integer;
+    FConds : TStringArr;
+    FCondsSet : array[0..constMemoHigh] of TCondSet;
+
+    procedure SetCondSetVisible(const ACondSetIndex: Integer; const AVisible: Boolean);
+    procedure RefreshCondSet(const AIndex: Integer);
+    procedure ScrollUp;
+    procedure ScrollDown;
+    procedure SetScrollPos(const ANewPointer: Integer);
+    procedure SaveCurrentCombination;
   public
     { Public declarations }
-    function TryGetCond(var ACond: TStringArr): Boolean;
-  private const
-    MinAmount = 2;
-    MaxAmount = 142;
+    function TryGetCond(var AConds: TStringArr): Boolean;
+    destructor Destroy; override;
   end;
 
 var
-  WriteÑaseÑonditions: TWriteÑaseÑonditions;
+  WriteCaseConditions: TWriteCaseConditions;
 
 implementation
 
 {$R *.dfm}
-  function TWriteÑaseÑonditions.TryGetCond(var ACond: TStringArr): Boolean;
-  var
-    I: Integer;
-    CondSet: TCondSet;
+
+  procedure TWriteCaseConditions.SetCondSetVisible(const ACondSetIndex: Integer; const AVisible: Boolean);
   begin
-    FIndent:= 0;
-    for I := 0 to High(ACond) do
-      CreateMemo(ACond[i]);
+    FCondsSet[ACondSetIndex].LabelCaption.Visible := AVisible;
+    FCondsSet[ACondSetIndex].Memo.Visible := AVisible;
+  end;
 
-    for I := Length(ACond) + 1 to MinAmount do
-      CreateMemo;
+  procedure TWriteCaseConditions.RefreshCondSet(const AIndex: Integer);
+  begin
+    FCondsSet[AIndex].Memo.Lines.Text := FConds[AIndex];
+    FCondsSet[AIndex].LabelCaption.Caption := constLabelCaption + IntToStr(AIndex);
+  end;
 
-    FCondSetStack.Peek.Memo.SelStart := 0;
-    FCondSetStack.Peek.Memo.SelLength := Length(FCondSetStack.Peek.Memo.Text);
+  procedure TWriteCaseConditions.SetScrollPos(const ANewPointer: Integer);
+  var
+    I, J: Integer;
+  begin
+    SaveCurrentCombination;
+    FPointer := ANewPointer;
 
-    ShowModal;
-
-    if ModalResult = MrOk then
+    J := Low(FCondsSet);
+    for I := FPointer to FPointer + constMemoHigh do
     begin
-      Result:= True;
-
-      SetLength(ACond, FCondSetStack.Count);
-
-      for I := FCondSetStack.Count - 1 downto 0 do
-      begin
-        CondSet:= FCondSetStack.Pop;
-        ACond[I]:= CondSet.Memo.Lines.Text;
-        CondSet.Memo.Destroy;
-        CondSet.LabelCaption.Destroy;
-      end;
-    end
-    else
-    begin
-      Result:= False;
-
-      for I:= FCondSetStack.Count - 1 downto 0 do
-      begin
-        CondSet:= FCondSetStack.Pop;
-        CondSet.Memo.Destroy;
-        CondSet.LabelCaption.Destroy;
-      end;
+      FCondsSet[J].Memo.Lines.Text := FConds[I];
+      FCondsSet[J].LabelCaption.Caption := constLabelCaption + IntToStr(I);
+      Inc(J);
     end;
   end;
 
-  destructor TWriteÑaseÑonditions.Destroy;
+  procedure TWriteCaseConditions.ScrollDown;
+  var
+    I: Integer;
   begin
-    FCondSetStack.Destroy;
+    FConds[FPointer] := FCondsSet[Low(FCondsSet)].Memo.Lines.Text;
 
-    inherited;
+    Inc(FPointer);
+    for I := Low(FCondsSet) to constMemoHigh - 1 do
+    begin
+      FCondsSet[I].Memo.Lines.Text := FCondsSet[I + 1].Memo.Lines.Text;
+      FCondsSet[I].LabelCaption.Caption := constLabelCaption + IntToStr(FPointer + I);
+    end;
+
+    FCondsSet[constMemoHigh].Memo.Lines.Text := FConds[FPointer + constMemoHigh];
+    FCondsSet[constMemoHigh].LabelCaption.Caption := constLabelCaption + IntToStr(FPointer + constMemoHigh);
   end;
 
-  procedure TWriteÑaseÑonditions.FormKeyDown(Sender: TObject; var Key: Word;
+  procedure TWriteCaseConditions.ScrollUp;
+  var
+    I: Integer;
+  begin
+    FConds[FPointer + constMemoHigh] := FCondsSet[constMemoHigh].Memo.Lines.Text;
+
+    Dec(FPointer);
+    for I := constMemoHigh downto Low(FCondsSet) + 1 do
+    begin
+      FCondsSet[I].Memo.Lines.Text := FCondsSet[I - 1].Memo.Lines.Text;
+      FCondsSet[I].LabelCaption.Caption := constLabelCaption + IntToStr(FPointer + I);
+    end;
+
+    FCondsSet[Low(FCondsSet)].Memo.Lines.Text := FConds[FPointer];
+    FCondsSet[Low(FCondsSet)].LabelCaption.Caption := constLabelCaption + IntToStr(FPointer);
+  end;
+
+  procedure TWriteCaseConditions.ScrollBarScroll(Sender: TObject;
+    ScrollCode: TScrollCode; var ScrollPos: Integer);
+  begin
+    case ScrollCode of
+      scLineUp, scPageUp:
+        ScrollUp;
+      scLineDown, scPageDown:
+        ScrollDown;
+      scPosition, scTrack:
+        SetScrollPos(ScrollPos);
+      scTop:
+        SetScrollPos(Low(FCondsSet));
+      scBottom:
+        SetScrollPos(FHigh - constMemoHigh);
+    end;
+  end;
+
+  function TWriteCaseConditions.TryGetCond(var AConds: TStringArr): Boolean;
+  var
+    I, MinHigh: Integer;
+  begin
+    FPointer:= Low(FCondsSet);
+
+    if AConds = nil then
+    begin
+      ScrollBar.Enabled := False;
+      FHigh := constMinAmount - 1;
+
+      SetLength(FConds, FHigh shl 2);
+
+      for I := Low(FCondsSet) to FHigh do
+      begin
+        SetCondSetVisible(I, True);
+
+        FCondsSet[I].Memo.Lines.Text := '';
+        FCondsSet[I].LabelCaption.Caption := constLabelCaption + IntToStr(I);
+      end;
+
+      for I := FHigh + 1 to constMemoHigh do
+        SetCondSetVisible(I, False);
+    end
+    else
+    begin
+      FHigh := High(AConds);
+
+      if High(AConds) > constMemoHigh then
+        ScrollBar.Enabled := True
+      else
+        ScrollBar.Enabled := False;
+
+      SetLength(FConds, Length(AConds) shl 1);
+
+      for I := 0 to High(AConds) do
+        FConds[I] := AConds[I];
+
+      MinHigh := Min(FHigh, constMemoHigh);
+      for I := Low(FCondsSet) to MinHigh do
+      begin
+        SetCondSetVisible(I, True);
+        RefreshCondSet(I);
+      end;
+
+      for I := MinHigh + 1 to constMemoHigh do
+        SetCondSetVisible(I, False);
+    end;
+
+    ShowModal;
+
+    if Self.ModalResult = MrOk then
+    begin
+      Result:= True;
+      SetLength(AConds, FHigh + 1);
+
+      SaveCurrentCombination;
+
+      for I := 0 to FHigh do
+        AConds[I] := FConds[I];
+    end
+    else
+      Result:= False;
+
+    SetLength(FConds, 0);
+  end;
+
+  procedure TWriteCaseConditions.SaveCurrentCombination;
+  var
+    I: Integer;
+  begin
+    for I := Low(FCondsSet) to constMemoHigh do
+      FConds[FPointer + I] := FCondsSet[I].Memo.Lines.Text;
+  end;
+
+  procedure TWriteCaseConditions.FormKeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
   begin
     if Key = VK_ESCAPE then
@@ -114,89 +231,118 @@ implementation
       ModalResult := mrOk;
   end;
 
-  procedure TWriteÑaseÑonditions.btnAddClick(Sender: TObject);
+  procedure TWriteCaseConditions.btnAddClick(Sender: TObject);
   begin
-    if FCondSetStack.Count <= MaxAmount then
-      CreateMemo;
-  end;
-
-  procedure TWriteÑaseÑonditions.btnDeleteClick(Sender: TObject);
-  var
-    CondSet: TCondSet;
-  begin
-    if FCondSetStack.Count > MinAmount then
+    if FHigh < constMaxAmount then
     begin
-      CondSet:= FCondSetStack.Pop;
-      CondSet.LabelCaption.Destroy;
-      CondSet.Memo.Destroy;
+      Inc(FHigh);
+
+      if FHigh > High(FConds) then
+        SetLength(FConds, (FHigh + 1) shl 1);
+
+      if FHigh <= constMemoHigh then
+      begin
+        ScrollBar.Position := 0;
+        SetCondSetVisible(FHigh, True);
+        RefreshCondSet(FHigh);
+      end
+      else
+      begin
+        ScrollBar.Enabled := True;
+        ScrollBar.Max := FHigh - constMemoHigh;
+      end;
     end;
   end;
 
-  procedure TWriteÑaseÑonditions.CreateMemo(const AText: string = '');
-  var
-    CondSet: TCondSet;
+  procedure TWriteCaseConditions.btnDeleteClick(Sender: TObject);
   begin
-    with CondSet do
+    if FHigh >= constMinAmount then
     begin
-      LabelCaption := TLabel.Create(ScrollBox);
-      LabelCaption.Parent := ScrollBox;
-      LabelCaption.Font.Size := mmFontSize;
-      LabelCaption.Font.Name := mmFontName;
-      LabelCaption.Caption := 'Condition ' + IntToStr(FCondSetStack.Count);
-      LabelCaption.AlignWithMargins := True;
-      LabelCaption.Margins.Top := 20;
-      LabelCaption.Align := alTop;
-      LabelCaption.Top := FIndent;
-      Inc(FIndent, LabelCaption.Width);
+      if FHigh <= constMemoAmount then
+      begin
+        ScrollBar.Position := 0;
+        ScrollBar.Enabled := False;
 
-      Memo := TMemo.Create(ScrollBox);
-      Memo.Parent := ScrollBox;
-      Memo.ScrollBars := ssBoth;
-      Memo.Text := AText;
-      Memo.Align := alTop;
-      Memo.Font.Size := mmFontSize;
-      Memo.Font.Name := mmFontName;
-      Memo.MaxLength := MaxTextLength;
-      Memo.Top:= FIndent;
-      Inc(FIndent, Memo.Width);
+        var I: Integer;
+        for I := Low(FCondsSet) to FHigh - 1 do
+          RefreshCondSet(I);
+        for I := FHigh to constMemoHigh do
+          SetCondSetVisible(I, False);
+      end
+      else if FPointer + constMemoHigh = FHigh then
+      begin
+        ScrollUp;
+        ScrollBar.Max := FHigh - constMemoAmount;
+      end
+      else
+        ScrollBar.Max := FHigh - constMemoAmount;
+
+      FConds[FHigh] := '';
+
+      Dec(FHigh);
     end;
-
-    FCondSetStack.Push(CondSet);
-
-    ScrollBox.VertScrollBar.Position := ScrollBox.VertScrollBar.Range;
   end;
 
-  procedure TWriteÑaseÑonditions.FormCreate(Sender: TObject);
+  procedure TWriteCaseConditions.FormCreate(Sender: TObject);
+  const
+    Indent = 5;
+  var
+    MemoHeight, FCondsSetWidth: Integer;
+    I, CurrPosY: Integer;
   begin
-    FCondSetStack:= TStack<TCondSet>.Create;
+    MemoHeight := (MainPanel.Height - mmFontSize * constMemoAmount -
+              constMemoAmount * Indent - Indent shl 1) div constMemoAmount - Indent shl 1;
+    FCondsSetWidth:= ScrollBar.Left - Indent shl 1;
 
-    Self.Width := (lbAdd.Width + lbDel.Width) shl 1;
-    Self.Height := Round(Screen.Height / 1.55);
+    CurrPosY:= Indent;
+    for I := Low(FCondsSet) to constMemoHigh do
+    begin
+      FCondsSet[I].LabelCaption := TLabel.Create(Self);
+      FCondsSet[I].Memo := TMemo.Create(Self);
 
-    btnOK.Width := Round(Self.Width / 2.1);
-    btnCancel.Width := btnOK.Width;
+      with FCondsSet[I].LabelCaption do
+      begin
+        Parent := MainPanel;
+        Left := Indent;
+        Width := FCondsSetWidth;
+        Top := CurrPosY;
+        Font.Size := mmFontSize;
+        Font.Name := mmFontName;
+      end;
 
-    btnOK.Height := Round(Self.Height / 18.34);
-    btnCancel.Height := btnOK.Height;
+      Inc(CurrPosY, FCondsSet[I].LabelCaption.Height + Indent);
+
+      with FCondsSet[I].Memo do
+      begin
+        Parent := MainPanel;
+        Left := Indent;
+        Width := FCondsSetWidth;
+        Top := CurrPosY;
+        Height := MemoHeight;
+        Font.Size := mmFontSize;
+        Font.Name := mmFontName;
+      end;
+
+      Inc(CurrPosY, MemoHeight + Indent);
+    end;
   end;
 
-  procedure TWriteÑaseÑonditions.FormShow(Sender: TObject);
+  destructor TWriteCaseConditions.Destroy;
+  var
+    I: Integer;
+  begin
+    for I := Low(FCondsSet) to constMemoHigh do
+    begin
+      FCondsSet[I].LabelCaption.Destroy;
+      FCondsSet[I].Memo.Destroy;
+    end;
+    inherited;
+  end;
+
+  procedure TWriteCaseConditions.FormShow(Sender: TObject);
   begin
     Left := (Screen.Width - Width) shr 1;
     Top := (Screen.Height - Height) shr 1;
-    FCondSetStack.Peek.Memo.SetFocus;
   end;
 
-  procedure TWriteÑaseÑonditions.ScrollBoxMouseWheel(Sender: TObject;
-  Shift: TShiftState; WheelDelta: Integer; MousePos: TPoint;
-  var Handled: Boolean);
-  const
-    ScrotStep = 42 shl 1;
-  begin
-    if WheelDelta > 0 then
-      ScrollBox.VertScrollBar.Position := ScrollBox.VertScrollBar.Position - ScrotStep
-    else
-      ScrollBox.VertScrollBar.Position := ScrollBox.VertScrollBar.Position + ScrotStep;
-  end;
-
-end.
+  end.
