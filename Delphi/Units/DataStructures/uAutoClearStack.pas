@@ -6,7 +6,7 @@ uses
 type
   TAutoClearStack<T> = class(TStack<T>)
   private const
-    MaxAmount = 142;
+    MaxAmount = 42 shl 1;
   public
     procedure Push(const AItem: T);
   end;

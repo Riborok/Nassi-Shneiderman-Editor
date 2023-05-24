@@ -2169,9 +2169,9 @@ object WriteCaseConditions: TWriteCaseConditions
   end
   object btnOK: TButton
     AlignWithMargins = True
-    Left = 303
+    Left = 280
     Top = 541
-    Width = 238
+    Width = 265
     Height = 38
     Margins.Left = 5
     Margins.Top = 5
@@ -2185,7 +2185,7 @@ object WriteCaseConditions: TWriteCaseConditions
     AlignWithMargins = True
     Left = 5
     Top = 541
-    Width = 238
+    Width = 265
     Height = 38
     Margins.Left = 5
     Margins.Top = 5
