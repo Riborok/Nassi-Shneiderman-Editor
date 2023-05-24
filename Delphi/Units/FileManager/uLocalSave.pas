@@ -4,7 +4,7 @@ interface
 uses
   UBlockManager, uBase, System.JSON, System.Classes, uIfBranching, Vcl.Graphics,
   System.SysUtils, System.IOUtils, System.UITypes, uCaseBranching, uAdditionalTypes,
-  uStatementConverter, System.Generics.Collections;
+  uStatementConverter, System.Generics.Collections, Vcl.Dialogs, uDialogMessages;
 
   procedure SaveSchema(const ABlockManager: TBlockManager);
   procedure LoadSchema(const ABlockManager: TBlockManager);
@@ -249,9 +249,10 @@ implementation
             TIfBranching.RedefineSizesForIfBranching(MainBlock);
           end;
         end;
-      finally
-        Json.Destroy;
+      except
+        ShowMessage(rsErrorFile);
       end;
+      Json.Destroy;
     end;
   end;
 end.

@@ -2,7 +2,7 @@ unit uStatistics;
 
 interface
 uses
-  System.SysUtils, Windows, uConstants, System.IOUtils;
+  System.SysUtils, Windows, uConstants, System.IOUtils, Vcl.Dialogs, uDialogMessages;
 
 type
   TUserInfo = record
@@ -113,9 +113,10 @@ implementation
     Reset(UserInfoFile);
     try
       Read(UserInfoFile, Result);
-    finally
-      CloseFile(UserInfoFile);
+    except
+      ShowMessage(rsErrorFile);
     end;
+    CloseFile(UserInfoFile);
   end;
 
   function FormatStatistics(const AUserInfo: TUserInfo): string;

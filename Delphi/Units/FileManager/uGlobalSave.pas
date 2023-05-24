@@ -63,9 +63,10 @@ implementation
             CancelColor := StringToColor(GetValue('CancelColor').Value);
           end;
         end;
-      finally
-        Json.Destroy;
+      except
+        ResetGlobalSettings;
       end;
+      Json.Destroy;
     end
     else
       ResetGlobalSettings;
