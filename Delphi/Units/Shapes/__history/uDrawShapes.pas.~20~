@@ -1,7 +1,9 @@
-ï»¿unit uDrawShapes;
+unit uDrawShapes;
 
 interface
-uses Vcl.graphics, System.Types, System.SysUtils, uConstants, uAdditionalTypes, uBase, System.UITypes;
+uses
+  Vcl.graphics, System.Types, System.SysUtils, uConstants, uAdditionalTypes,
+  uBase, System.UITypes;
 
 procedure DrawRect(const AXStart, AXLast, AYStart, AYLast : Integer;
                    const ACanvas: TCanvas);
@@ -23,9 +25,10 @@ procedure DrawText(const ACanvas: TCanvas; const AX, AY: Integer; const AText: s
 
 function CreateRect(const AStatement: TStatement): TRect; inline;
 
-procedure DrawArrow(Canvas: TCanvas; const X, StartY, EndY: Integer; const IsUpArrow: Boolean);
+procedure DrawArrow(const ACanvas: TCanvas; const AX, AStartY, AEndY: Integer;
+                    const AColor: TColor);
 
-// ÐŸÐ¾Ñ‚Ð¾Ð¼ ÑƒÐ±Ñ€Ð°Ñ‚ÑŒ Ð½Ð°Ð´Ð°
+// Ïîòîì óáðàòü íàäà
 procedure DrawCoordinates(Canvas: TCanvas; Step: Integer);
 implementation
 
@@ -79,15 +82,9 @@ implementation
   end;
 
   procedure ColorizeRect(const ACanvas: TCanvas; const ARect: TRect; const AColor: TColor);
-  var
-    SavedColor: TColor;
   begin
-    SavedColor := ACanvas.Brush.Color;
-
     ACanvas.Brush.Color := AColor;
     ACanvas.FillRect(ARect);
-
-    ACanvas.Brush.Color := SavedColor;
   end;
 
   procedure DrawText(const ACanvas: TCanvas; const AX, AY: Integer; const AText: string);
@@ -95,9 +92,7 @@ implementation
     Lines: TStringDynArray;
     Indent: Integer;
     I: Integer;
-    SavedColor: TColor;
   begin
-    SavedColor := ACanvas.Brush.Color;
     ACanvas.Brush.Style := bsClear;
 
     Lines := AText.Split([sLineBreak]);
@@ -106,8 +101,6 @@ implementation
 
     for I := 0 to High(Lines) do
       ACanvas.TextOut(AX, AY + I * Indent, Lines[I]);
-
-    ACanvas.Brush.Color := SavedColor;
   end;
 
   procedure DrawCoordinates(Canvas: TCanvas; Step: Integer);
@@ -132,21 +125,24 @@ implementation
     Canvas.Font.Size:= PrevFontSize;
   end;
 
-  procedure DrawArrow(Canvas: TCanvas; const X, StartY, EndY: Integer; const IsUpArrow: Boolean);
+  procedure DrawArrow(const ACanvas: TCanvas; const AX, AStartY, AEndY: Integer;
+                      const AColor: TColor);
   var
     Points: array [0..2] of TPoint;
     Offset, ArrowHeight, ArrowWidth: Integer;
   begin
-    ArrowHeight := Abs(EndY - StartY);
+    ACanvas.Brush.Color:= AColor;
+
+    ArrowHeight := Abs(AEndY - AStartY);
     ArrowWidth := ArrowHeight div 2;
-    if IsUpArrow  then
-      Offset:= -ArrowHeight
+    if AStartY > AEndY then
+      Offset := -ArrowHeight
     else
-      Offset:= ArrowHeight;
-    Points[0] := Point(X, EndY + Offset);
-    Points[1] := Point(X - ArrowWidth, EndY - Offset);
-    Points[2] := Point(X + ArrowWidth, EndY - Offset);
-    Canvas.Polygon(Points);
+      Offset := ArrowHeight;
+    Points[0] := Point(AX, AStartY);
+    Points[1] := Point(AX - ArrowWidth, AStartY + Offset);
+    Points[2] := Point(AX + ArrowWidth, AStartY + Offset);
+    ACanvas.Polygon(Points);
   end;
 
 end.
