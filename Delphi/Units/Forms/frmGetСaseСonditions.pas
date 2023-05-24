@@ -149,6 +149,7 @@ implementation
     I, MinHigh: Integer;
   begin
     FPointer:= Low(FCondsSet);
+    ScrollBar.Position := 0;
 
     if AConds = nil then
     begin
