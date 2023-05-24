@@ -140,13 +140,13 @@ implementation
 
   destructor TBlockManager.Destroy;
   begin
-    FMainBlock.Destroy;
+    FPen.Destroy;
+    FFont.Destroy;
 
     FUndoStack.Destroy;
     FRedoStack.Destroy;
 
-    FPen.Destroy;
-    FFont.Destroy;
+    FMainBlock.Destroy;
 
     inherited;
   end;

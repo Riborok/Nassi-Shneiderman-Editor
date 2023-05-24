@@ -13,6 +13,8 @@ type
   // DefaultSymbol is a constant field used to represent an unknown value
   // in the statement
   TStatement = class abstract
+  private
+    FRefCount : Integer;
   protected
 
     // FYStart and FYLast are used to store the Y position of the statement
@@ -55,6 +57,8 @@ type
 
     procedure Initialize; virtual;
   public
+    property RefCount: Integer read FRefCount;
+
     // Create
     constructor Create(const AAction : String; const ABaseBlock: TBlock); overload;
     constructor Create(const AAction : String); overload; virtual;
@@ -90,6 +94,9 @@ type
 
     function GetMask(const AVisibleImageRect: TVisibleImageRect;
                    const isTOperator: Boolean): Integer; inline;
+
+    procedure IncRefCount; inline;
+    procedure DecRefCount; inline;
   end;
 
   { TStatementClass }
@@ -176,7 +183,7 @@ type
     constructor Create(const AXStart: Integer; const ABaseOperator: TOperator); overload;
     constructor Create(const AXStart, AXLast: Integer; const ABaseOperator: TOperator;
                        const ACanvas: TCanvas); overload;
-    destructor Destroy; override;
+    destructor Destroy;
 
     property XStart: Integer read FXStart;
     property XLast: Integer read FXLast;
@@ -237,14 +244,26 @@ implementation
 
   { TStatement }
 
+  procedure TStatement.IncRefCount;
+  begin
+    Inc(FRefCount);
+  end;
+
+  procedure TStatement.DecRefCount;
+  begin
+    Dec(FRefCount);
+  end;
+
   constructor TStatement.Create(const AAction : String; const ABaseBlock: TBlock);
   begin
+    FRefCount := 0;
     FBaseBlock:= ABaseBlock;
     Create(AAction);
   end;
 
   constructor TStatement.Create(const AAction : String);
   begin
+    FRefCount := 0;
     FAction := AAction;
   end;
 
@@ -375,7 +394,8 @@ implementation
     I: Integer;
   begin
     for I := 0 to FStatements.Count - 1 do
-      FStatements[I].Destroy;
+      if FStatements[I].FRefCount = 0 then
+        FStatements[I].Destroy;
 
     FStatements.Destroy;
     inherited;

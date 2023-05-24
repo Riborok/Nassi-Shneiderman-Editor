@@ -137,7 +137,9 @@ implementation
   { TCommandAdd }
   destructor TCommandAddStatement.Destroy;
   begin
-    if FNewStatement.BaseBlock = nil then
+    FNewStatement.DecRefCount;
+
+    if (FNewStatement.BaseBlock = nil) and (FNewStatement.RefCount = 0) then
       FNewStatement.Destroy;
     inherited;
   end;
@@ -145,6 +147,8 @@ implementation
   constructor TCommandAddStatement.Create(const ABaseBlock: TBlock; const AIndex : Integer;
                        const ANewStatement: TStatement);
   begin
+    ANewStatement.IncRefCount;
+
     FNewStatement:= ANewStatement;
     FIndex:= AIndex;
     FBaseBlock:= ABaseBlock;
@@ -169,13 +173,17 @@ implementation
   { TCommandDel }
   destructor TCommandDelStatement.Destroy;
   begin
-    if FStatement.BaseBlock = nil then
+    FStatement.DecRefCount;
+
+    if (FStatement.BaseBlock = nil) and (FStatement.RefCount = 0) then
       FStatement.Destroy;
     inherited;
   end;
 
   constructor TCommandDelStatement.Create(const AStatement: TStatement);
   begin
+    AStatement.IncRefCount;
+
     FStatement:= AStatement;
     FBaseBlock:= AStatement.BaseBlock;
   end;
@@ -193,14 +201,34 @@ implementation
 
   { TCommandAddBlock }
   destructor TCommandAddBlock.Destroy;
+  var
+    I: Integer;
+    WasDefaultStatementRemoved: Boolean;
   begin
+    if FInsertedBlock.Statements.Count = 0 then
+    begin
+      WasDefaultStatementRemoved:= FIndex >= FBaseBlock.Statements.Count;
+      Dec(FIndex, Ord(WasDefaultStatementRemoved));
+      Dec(FHigh, Ord(WasDefaultStatementRemoved));
+      for I := FIndex to FIndex + FHigh do
+        FBaseBlock.Statements[I].DecRefCount;
+    end
+    else
+      for I := 0 to FHigh do
+        FInsertedBlock.Statements[I].DecRefCount;
+
     FInsertedBlock.Destroy;
     inherited;
   end;
 
   constructor TCommandAddBlock.Create(const ABaseBlock: TBlock; const AIndex : Integer;
                      const AInsertedBlock: TBlock);
+  var
+    I: Integer;
   begin
+    for I := 0 to AInsertedBlock.Statements.Count - 1 do
+      AInsertedBlock.Statements[I].IncRefCount;
+
     FBaseBlock:= ABaseBlock;
     FIndex:= AIndex;
     FInsertedBlock:= AInsertedBlock;
