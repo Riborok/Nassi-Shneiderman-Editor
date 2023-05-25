@@ -309,7 +309,7 @@ procedure TWriteCaseConditions.btnAddClick(Sender: TObject);
     I, CurrPosY: Integer;
   begin
     MemoHeight := (MainPanel.Height - mmFontSize * constMemoAmount -
-              constMemoAmount * Indent - Indent shl 1) div constMemoAmount - Indent shl 1;
+              constMemoAmount * Indent shl 1 - Indent shl 1) div constMemoAmount - Indent shl 1;
     FCondsSetWidth:= ScrollBar.Left - Indent shl 1;
 
     CurrPosY:= Indent;
