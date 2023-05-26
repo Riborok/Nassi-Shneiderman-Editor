@@ -1,0 +1,10 @@
+unit DialogMessages;
+
+interface
+
+resourcestring
+  rsExitDlg = 'Are you sure you want to close without saving?';
+
+implementation
+
+end.

@@ -1,0 +1,72 @@
+unit BlockController;
+
+interface
+uses Base, GetAction, Get—ase—onditions, AdditionalTypes, System.Classes, CaseBranching,
+     FirstLoop, IfBranching, LastLoop, ProcessStatement, Vcl.Controls, VCL.Forms;
+
+function ConvertToBlockType(const AIndex: Integer): TStatementClass;
+
+function CreateStatement(const AStatementClass: TStatementClass;
+         const ABaseBlock: TBlock): TStatement;
+
+procedure TryChangeContent(const AStatement: TStatement);
+
+implementation
+
+  function ConvertToBlockType(const AIndex: Integer): TStatementClass;
+  begin
+    case AIndex of
+      0 : Result:= TProcessStatement;
+      1 : Result:= TIfBranching;
+      2 : Result:= TCaseBranching;
+      3 : Result:= TFirstLoop;
+      4 : Result:= TLastLoop;
+    end;
+  end;
+
+  function CreateStatement(const AStatementClass: TStatementClass;
+                          const ABaseBlock: TBlock): TStatement;
+  var
+    Action: String;
+    Cond: TStringArr;
+  begin
+    Result:= nil;
+    Action := '';
+
+    if WriteAction.TryGetAction(Action) then
+    begin
+
+      if AStatementClass = TCaseBranching then
+      begin
+        Cond:= nil;
+        if Write—ase—onditions.TryGetCond(Cond) then
+          Result:= TCaseBranching.Create(Action, Cond, ABaseBlock);
+      end
+      else
+        Result:= AStatementClass.Create(Action, ABaseBlock);
+    end;
+  end;
+
+  procedure TryChangeContent(const AStatement: TStatement);
+  var
+    Action: String;
+    Cond: TStringArr;
+    CaseBranching: TCaseBranching;
+  begin
+    Action := AStatement.Action;
+
+    if WriteAction.TryGetAction(Action) then
+    begin
+      if AStatement is TCaseBranching then
+      begin
+        CaseBranching:= TCaseBranching(AStatement);
+        Cond:= CaseBranching.Conds;
+        if Write—ase—onditions.TryGetCond(Cond) then
+          CaseBranching.ChangeActionWithConds(Action, Cond);
+      end
+      else
+        AStatement.ChangeAction(Action);
+    end;
+  end;
+
+end.

@@ -1,0 +1,26 @@
+unit BaseStatement;
+
+interface
+type
+
+  TBaseStatement = class abstract
+  private
+    FYStart, FYLast: Integer;
+    FAction: String;
+  protected
+    constructor Create(const AYStart: Integer; const AAction : String);
+  public
+    property YStart: Integer read FYStart write FYStart;
+    property YLast: Integer read FYLast write FYLast;
+    property Action: String read FAction write FAction;
+  end;
+
+implementation
+
+  constructor TBaseStatement.Create(const AYStart: Integer; const AAction : String);
+  begin
+    FAction := AAction;
+    FYStart := AYStart;
+  end;
+
+end.

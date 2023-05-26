@@ -1,0 +1,28 @@
+unit ConditionalOperator;
+
+interface
+uses Base, Vcl.ExtCtrls, DetermineDimensions;
+type
+  TConditionalOperator = class(TOperator)
+  protected
+    function GetAvailablePartWidth(const APartWidth, ATextHeight: Integer): Integer;
+    function GetMinValidPartWidth(const ATextHeight, ATextWidth: Integer): Integer;
+
+  end;
+
+implementation
+
+  function TIfBranching.GetAvailablePartWidth(const APartWidth, ATextHeight: Integer): Integer;
+  begin
+    Result:= Round(APartWidth *
+             (FYLast - FYStart - ATextHeight - YIndentText) / (FYLast - FYStart));
+  end;
+
+  function TIfBranching.GetMinValidPartWidth(const ATextHeight,
+                                             ATextWidth: Integer): Integer;
+  begin
+    Result:= Round((ATextWidth + 2 * XMinIndentText) *
+             (FYLast - FYStart) / (FYLast - FYStart - ATextHeight - YIndentText));
+  end;
+
+end.

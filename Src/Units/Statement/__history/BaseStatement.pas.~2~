@@ -1,0 +1,62 @@
+unit BaseStatement;
+
+interface
+type
+
+  TBaseStatement = class abstract
+  private
+    FYStart, FYLast: Integer;
+    FAction: String;
+    function GetYStart: Integer;
+    procedure SetYStart(const AValue: Integer);
+    function GetYLast: Integer;
+    procedure SetYLast(const AValue: Integer);
+    function GetAction: String;
+    procedure SetAction(const AValue: String);
+  protected
+    constructor Create(AYStart: Integer; const AAction : String);
+  public
+    property YStart: Integer read GetYStart write SetYStart;
+    property YLast: Integer read GetYLast write SetYLast;
+    property Action: String read GetAction write SetAction;
+  end;
+
+implementation
+
+  constructor TBaseStatement.Create(AYStart: Integer; const AAction : String);
+  begin
+    FAction := AAction;
+    FYStart := AYStart;
+  end;
+
+  function TBaseStatement.GetYStart: Integer;
+  begin
+    Result := FYStart;
+  end;
+
+  procedure TBaseStatement.SetYStart(const AValue: Integer);
+  begin
+    FYStart := AValue;
+  end;
+
+  function TBaseStatement.GetYLast: Integer;
+  begin
+    Result := FYLast;
+  end;
+
+  procedure TBaseStatement.SetYLast(const AValue: Integer);
+  begin
+    FYLast := AValue;
+  end;
+
+  function TBaseStatement.GetAction: String;
+  begin
+    Result := FAction;
+  end;
+
+  procedure TBaseStatement.SetAction(const AValue: String);
+  begin
+    FAction := AValue;
+  end;
+
+end.

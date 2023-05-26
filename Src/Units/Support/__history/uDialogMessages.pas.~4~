@@ -1,0 +1,11 @@
+unit uDialogMessages;
+
+interface
+
+resourcestring
+  rsExitDlg = 'You have made changes. Would you like to save before exiting?';
+  rsNewDlg = '"Creating a new sheet will discard your current changes. Are you sure you want to proceed?';
+
+implementation
+
+end.

@@ -1,0 +1,108 @@
+unit SwitchStatements;
+
+interface
+uses Base;
+type
+  TDirection = (ForwardDir = 1, BackwardDir = -1);
+
+procedure SetHorizontalMovement(out AStatement: TStatement; const AMainBlock: TBlock;
+                                const ADirection: TDirection);
+
+procedure SetVerticalMovement(out AStatement: TStatement; const AMainBlock: TBlock;
+                                const ADirection: TDirection);
+
+implementation
+
+  procedure SetHorizontalMovement(out AStatement: TStatement; const AMainBlock: TBlock;
+                                  const ADirection: TDirection);
+  var
+    LastBlock: Integer;
+    BlockIndex, StatementIndex : Integer;
+  begin
+    if (AStatement = nil) or (AStatement.BaseBlock.BaseOperator = nil) then
+      AStatement:= AMainBlock.Statements[0]
+    else
+    begin
+      case ADirection of
+        BackwardDir: LastBlock:= 0;
+        ForwardDir:  LastBlock:= High(AStatement.BaseBlock.BaseOperator.Blocks);
+      end;
+
+      BlockIndex:= AStatement.BaseBlock.BaseOperator.
+                        FindBlockIndex(AStatement.BaseBlock.XStart);
+      if BlockIndex = LastBlock then
+        AStatement:= AStatement.BaseBlock.BaseOperator
+      else
+      begin
+        StatementIndex:= AStatement.BaseBlock.FindStatementIndex(
+                                                  AStatement.YStart);
+
+        if AStatement.BaseBlock.BaseOperator.Blocks[BlockIndex +
+                      Ord(ADirection)].Statements.Count < StatementIndex  then
+          StatementIndex:= AStatement.BaseBlock.BaseOperator.
+                Blocks[BlockIndex + Ord(ADirection)].Statements.Count - 1;
+
+        AStatement:= AStatement.BaseBlock.
+          BaseOperator.Blocks[BlockIndex + Ord(ADirection)].Statements[StatementIndex];
+      end;
+    end;
+  end;
+
+  procedure SetVerticalMovement(out AStatement: TStatement; const AMainBlock: TBlock;
+                                  const ADirection: TDirection);
+  var
+    StatementIndex: Integer;
+    CurrStatement: TStatement;
+    Blocks: TBlockArr;
+  begin
+    if AStatement = nil then
+      AStatement:= AMainBlock.Statements[0]
+    else
+    begin
+      StatementIndex:= AStatement.BaseBlock.FindStatementIndex(
+                                                AStatement.YStart);
+
+      case ADirection of
+        BackwardDir:
+        begin
+          if StatementIndex > 0 then
+          begin
+            AStatement:= AStatement.BaseBlock.Statements[StatementIndex + Ord(ADirection)];
+            if AStatement is TOperator then
+            begin
+              Blocks:= TOperator(AStatement).Blocks;
+              AStatement:= Blocks[High(Blocks)].Statements.GetLast;
+            end;
+          end
+          else if AStatement.BaseBlock.BaseOperator = nil then
+            AStatement:= AStatement.BaseBlock.Statements[0]
+          else
+            AStatement:= AStatement.BaseBlock.BaseOperator;
+        end;
+        ForwardDir:
+        begin
+          if AStatement is TOperator then
+            AStatement:= TOperator(AStatement).Blocks[0].Statements[0]
+          else if StatementIndex < AStatement.BaseBlock.Statements.Count - 1 then
+            AStatement:= AStatement.BaseBlock.Statements[StatementIndex + Ord(ADirection)]
+          else
+          begin
+            CurrStatement := AStatement;
+            while CurrStatement.BaseBlock.BaseOperator <> nil do
+            begin
+              CurrStatement := CurrStatement.BaseBlock.BaseOperator;
+              StatementIndex := CurrStatement.BaseBlock.FindStatementIndex(
+                                CurrStatement.YStart);
+              if StatementIndex < CurrStatement.BaseBlock.Statements.Count - 1 then
+              begin
+                AStatement := CurrStatement.BaseBlock.Statements[StatementIndex + Ord(ADirection)];
+                Exit;
+              end;
+            end;
+            AStatement := AStatement.BaseBlock.Statements[0];
+          end;
+        end;
+      end;
+    end;
+  end;
+end.

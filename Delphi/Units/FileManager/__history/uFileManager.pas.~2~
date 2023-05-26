@@ -1,9 +1,0 @@
-unit uFileManager;
-
-interface
-
-uses UBlockManager, uBase;
-
-implementation
-
-end.

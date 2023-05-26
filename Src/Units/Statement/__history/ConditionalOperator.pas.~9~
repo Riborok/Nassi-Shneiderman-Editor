@@ -1,0 +1,36 @@
+﻿unit ConditionalOperator;
+
+interface
+uses Base, Vcl.ExtCtrls, DetermineDimensions;
+type
+  TConditionalOperator = class abstract(TOperator)
+  protected
+    function GetOptimalYLast: Integer; override;
+    function GetCondition(const Index: Integer): String; virtual; abstract;
+    function GetMaxHeightOfCond: Integer;
+  end;
+
+implementation
+
+  function TConditionalOperator.GetOptimalYLast: Integer;
+  begin
+    Result := FYStart + GetMaxHeightOfCond + GetTextHeight(FImage.Canvas,
+                                              FAction) + 3 * YIndentText;
+  end;
+
+  function TConditionalOperator.GetMaxHeightOfCond: Integer;
+  var
+    I: Integer;
+    CurrConditionHeight: Integer;
+  begin
+    Result:= GetTextHeight(FImage.Canvas, GetCondition(0));
+    for I := 1 to High(FBlocks) do
+    begin
+      CurrConditionHeight:= GetTextHeight(FImage.Canvas, GetCondition(I));
+      if CurrConditionHeight > Result then
+        Result:= CurrConditionHeight;
+    end;
+  end;
+
+
+end.

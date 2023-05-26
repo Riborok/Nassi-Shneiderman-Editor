@@ -1,0 +1,35 @@
+unit BaseStatement;
+
+interface
+uses vcl.graphics;
+type
+
+  TBaseStatement = class abstract
+  private
+    FYStart, FYLast: Integer;
+    FXStart, FXLast: Integer;
+    FAction: String;
+  protected
+    constructor Create(const AYStart, AXStart, AXLast: Integer; const AAction : String);
+  public
+    property YStart: Integer read FYStart write FYStart;
+    property YLast: Integer read FYLast write FYLast;
+    property XStart: Integer read FXStart write FXStart;
+    property XLast: Integer read FXLast write FXLast;
+    property Action: String read FAction write FAction;
+    procedure Draw(ACanvas: TCanvas); virtual; abstract;
+  end;
+
+implementation
+
+  constructor TBaseStatement.Create(const AYStart, AXStart, AXLast: Integer; const AAction : String);
+  begin
+    FAction := AAction;
+
+    FYStart := AYStart;
+
+    FXStart := AXStart;
+    FXLast := AXLast;
+  end;
+
+end.

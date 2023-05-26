@@ -1,0 +1,136 @@
+unit DoublyLinkedList;
+
+interface
+
+type
+
+  // Node in a doubly linked list
+  TNode<T> = class
+  private
+    FPrev, FNext: TNode<T>;
+    FData: T;
+  public
+    constructor Create(AData: T);
+    property Prev: TNode<T> read FPrev;
+    property Next: TNode<T> read FNext;
+    property Data: T read FData;
+  end;
+
+  IAddRemoveNode<T> = interface
+    procedure AddBefore(Node: TNode<T>; AData: T);
+    procedure AddAfter(Node: TNode<T>; AData: T);
+    procedure Remove(Node: TNode<T>);
+  end;
+
+  // Implements a doubly linked list
+  TDoublyLinkedList<T> = class(TInterfacedObject, IAddRemoveNode<T>)
+  private
+    FHead: TNode<T>;
+    FTail: TNode<T>;
+
+    FCurrent: TNode<T>;
+  public
+    constructor Create(AData: T);
+    destructor Destroy(); override;
+    procedure AddBefore(Node: TNode<T>; AData: T);
+    procedure AddAfter(Node: TNode<T>; AData: T);
+    procedure Remove(Node: TNode<T>);
+
+  end;
+
+implementation
+
+  // Creating a new node with data AData
+  constructor TNode<T>.Create(AData: T);
+  begin
+    FData := AData;
+    FPrev:= nil;
+    FNext:= nil;
+  end;
+
+  // Initializes the doubly linked list with a head node.
+  // The tail of the list is also set to the head node
+  constructor TDoublyLinkedList<T>.Create(AData: T);
+  begin
+    FHead := TNode<T>.Create(AData);
+    FTail := FHead;
+  end;
+
+  // Frees all the nodes in the list starting from the head node.
+  // The inherited destructor is also called to free any other resources.
+  destructor TDoublyLinkedList<T>.Destroy();
+  var
+    Temp: TNode<T>;
+  begin
+
+    Temp := FHead;
+
+    while Temp <> nil do
+    begin
+      FHead := Temp.Next;
+      Temp.Free;
+      Temp := FHead;
+    end;
+
+    inherited;
+  end;
+
+  // Adds a new node with data AData before the given Node in the list
+  procedure TDoublyLinkedList<T>.AddBefore(Node: TNode<T>; AData: T);
+  var
+    NewNode: TNode<T>;
+  begin
+
+    NewNode := TNode<T>.Create(AData);
+
+    NewNode.FPrev := Node.Prev;
+    NewNode.FNext := Node;
+
+    Node.FPrev := NewNode;
+
+    if NewNode.Prev = nil then
+      FHead := NewNode
+    else
+      NewNode.FPrev.FNext := NewNode;
+
+  end;
+
+  // Adds a new node with data AData after the given Node in the list
+  procedure TDoublyLinkedList<T>.AddAfter(Node: TNode<T>; AData: T);
+  var
+    NewNode: TNode<T>;
+  begin
+
+    NewNode := TNode<T>.Create(AData);
+    NewNode.FNext := Node.Next;
+    NewNode.FPrev := Node;
+
+    Node.FNext := NewNode;
+
+    if NewNode.Next = nil then
+      FTail := NewNode
+    else
+      NewNode.FNext.FPrev := NewNode;
+
+  end;
+
+  // Removes the given Node from the list.
+  // If the removed node is the head or tail of the list, updates accordingly.
+  // Frees the memory used by the removed node.
+  procedure TDoublyLinkedList<T>.Remove(Node: TNode<T>);
+  begin
+
+    if Node.Prev <> nil then
+      Node.FPrev.FNext := Node.Next
+    else
+      FHead := Node.Next;
+
+    if Node.Next <> nil then
+      Node.FNext.FPrev := Node.FPrev
+    else
+      FTail := Node.Prev;
+
+    Node.Free;
+  end;
+
+end.

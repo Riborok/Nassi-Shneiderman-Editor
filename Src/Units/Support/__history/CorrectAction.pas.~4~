@@ -1,0 +1,24 @@
+﻿unit CorrectAction;
+
+interface
+
+  function GetActionForStatements(const Astring: String): String;
+implementation
+
+  function GetActionForStatements(const Astring: String): String;
+  begin
+    if Astring <> '' then
+      Result := Astring
+    else
+      Result := ' ';
+  end;
+
+  function GetActionForStatements(const Astring: String): String;
+  begin
+    if Astring <> '' then
+      Result := Astring
+    else
+      Result := ' ';
+  end;
+
+end.
