@@ -54,3 +54,7 @@ To edit a specific block, you can double-click the block with the left mouse but
 If the operator is a case statement, you need to provide conditions for it. You can use the "+" and "-" buttons to add or remove input fields. Please note that you cannot remove a field if there are only two fields remaining.
 
 ![](Images/Write%20Conditions.png)
+
+Export options available in: PNG, BMP, SVG.
+
+![](Images/Import.png)

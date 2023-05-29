@@ -376,7 +376,7 @@ implementation
   procedure TNassiShneiderman.FormShortCut(var Msg: TWMKey; var Handled: Boolean);
   begin
     // If dragging is in progress, destroy the carry block
-    if isDragging then
+    if isDragging and (GetKeyState(VK_SHIFT) >= 0) then
       FBlockManager.DestroyCarryBlock;
 
     // Check if a key is already pressed
