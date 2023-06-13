@@ -4,7 +4,7 @@ interface
 uses
   uBase, uCommands, uAutoClearStack, Vcl.ExtCtrls, uSwitchStatements,
   Winapi.Windows, uAdditionalTypes, uDrawShapes, Vcl.Graphics, frmGetAction,
-  frmGet—ase—onditions, uCaseBranching, uMinMaxInt, uStatementSearch, Types,
+  frmGetCaseConditions, uCaseBranching, uMinMaxInt, uStatementSearch, Types,
   uIfBranching, uConstants;
 type
 

@@ -37,7 +37,7 @@ uses
   uMinMaxInt in 'Units\Support\uMinMaxInt.pas',
   frmGetAction in 'Units\Forms\frmGetAction.pas' {WriteAction},
   uLoop in 'Units\Statement\uLoop.pas',
-  frmGet—ase—onditions in 'Units\Forms\frmGet—ase—onditions.pas' {WriteCaseConditions},
+  frmGetCaseConditions in 'Units\Forms\frmGetCaseConditions.pas' {WriteCaseConditions},
   uAdditionalTypes in 'Units\Support\uAdditionalTypes.pas',
   uConstants in 'Units\Support\uConstants.pas',
   uCaseBlockSorting in 'Units\Support\uCaseBlockSorting.pas',

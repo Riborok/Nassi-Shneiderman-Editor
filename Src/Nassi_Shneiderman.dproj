@@ -124,7 +124,7 @@
             <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="Units\Statement\uLoop.pas"/>
-        <DCCReference Include="Units\Forms\frmGetСaseСonditions.pas">
+        <DCCReference Include="Units\Forms\frmGetCaseConditions.pas">
             <Form>WriteCaseConditions</Form>
             <FormType>dfm</FormType>
         </DCCReference>
