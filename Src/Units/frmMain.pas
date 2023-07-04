@@ -157,6 +157,10 @@ type
     mnExpSVG: TMenuItem;
     mnExpBMP: TMenuItem;
     mnExpPNG: TMenuItem;
+    tbarMenu: TToolBar;
+    lblScale: TLabel;
+    tbSelectScale: TTrackBar;
+    lblScaleView: TLabel;
 
     procedure FormCreate(Sender: TObject);
 
@@ -197,6 +201,7 @@ type
     procedure actOpenExecute(Sender: TObject);
     procedure actNewExecute(Sender: TObject);
     procedure actExportExecute(Sender: TObject);
+    procedure tbSelectScaleChange(Sender: TObject);
   private type
     TFileMode = (fmJSON = 0, fmSvg, fmBmp, fmPng, fmStat, fmAll);
   private
@@ -413,8 +418,14 @@ implementation
   const
     ScrollStep = 42 shl 1;
   begin
-    // Check if Shift key is pressed
-    if ssShift in Shift then
+    if ssCtrl in Shift then
+    begin
+      if WheelDelta > 0 then
+        tbSelectScale.Position:= tbSelectScale.Position + 1
+      else
+        tbSelectScale.Position:= tbSelectScale.Position - 1;
+    end
+    else if ssShift in Shift then
     begin
       // Scroll horizontally based on the WheelDelta value
       if WheelDelta > 0 then
@@ -597,7 +608,27 @@ implementation
     UpdateForStack;
   end;
 
-  procedure TNassiShneiderman.actRedoExecute(Sender: TObject);
+  procedure TNassiShneiderman.tbSelectScaleChange(Sender: TObject);
+  var
+    Scale: Single;
+  begin
+    case tbSelectScale.Position of
+      1: Scale := 0.1;
+      2: Scale := 0.3;
+      3: Scale := 0.5;
+      4: Scale := 0.8;
+      5: Scale := 1;
+      6: Scale := 1.2;
+      7: Scale := 1.5;
+      8: Scale := 1.7;
+      9: Scale := 2;
+      10: Scale := 4;
+    end;
+    lblScaleView.Caption := ' ' + IntToStr(Round(Scale * 100)) + '%';
+
+  end;
+
+procedure TNassiShneiderman.actRedoExecute(Sender: TObject);
   begin
     // Try to redo the previous action in the block manager
     FBlockManager.TryRedo;

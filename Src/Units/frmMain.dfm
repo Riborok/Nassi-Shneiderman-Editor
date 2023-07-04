@@ -2127,14 +2127,12 @@ object NassiShneiderman: TNassiShneiderman
     FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
     FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF}
   Menu = MainMenu
-  OldCreateOrder = False
   WindowState = wsMaximized
   OnClose = FormClose
   OnCreate = FormCreate
   OnKeyDown = FormKeyDown
   OnKeyUp = FormKeyUp
   OnShortCut = FormShortCut
-  PixelsPerInch = 96
   TextHeight = 13
   object tbMain: TToolBar
     Left = 0
@@ -2154,6 +2152,7 @@ object NassiShneiderman: TNassiShneiderman
     ParentDoubleBuffered = False
     TabOrder = 0
     Transparent = False
+    ExplicitWidth = 973
     object tbNew: TToolButton
       Left = 0
       Top = 0
@@ -2404,9 +2403,9 @@ object NassiShneiderman: TNassiShneiderman
   object ScrollBox: TScrollBox
     AlignWithMargins = True
     Left = 3
-    Top = 38
+    Top = 60
     Width = 971
-    Height = 596
+    Height = 574
     HorzScrollBar.Tracking = True
     VertScrollBar.Tracking = True
     Align = alClient
@@ -2414,6 +2413,10 @@ object NassiShneiderman: TNassiShneiderman
     ParentColor = False
     TabOrder = 1
     OnMouseWheel = ScrollBoxMouseWheel
+    ExplicitLeft = 2
+    ExplicitTop = 78
+    ExplicitWidth = 967
+    ExplicitHeight = 595
     object PaintBox: TPaintBox
       Left = 0
       Top = 0
@@ -2430,6 +2433,65 @@ object NassiShneiderman: TNassiShneiderman
       OnMouseMove = MouseMove
       OnMouseUp = MouseUp
       OnPaint = PaintBoxPaint
+    end
+  end
+  object tbarMenu: TToolBar
+    Left = 0
+    Top = 35
+    Width = 977
+    Height = 22
+    ButtonHeight = 21
+    Caption = 'tbarMenu'
+    Color = clBlack
+    DoubleBuffered = True
+    GradientStartColor = clMenuHighlight
+    HotTrackColor = clBlack
+    ParentColor = False
+    ParentDoubleBuffered = False
+    ParentShowHint = False
+    ShowHint = True
+    TabOrder = 2
+    Transparent = False
+    object lblScale: TLabel
+      Left = 0
+      Top = 0
+      Width = 59
+      Height = 21
+      Alignment = taRightJustify
+      Caption = '  Scale: '
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -19
+      Font.Name = 'Times New Roman'
+      Font.Style = []
+      ParentFont = False
+      Layout = tlCenter
+    end
+    object tbSelectScale: TTrackBar
+      Left = 59
+      Top = 0
+      Width = 150
+      Height = 21
+      LineSize = 0
+      Min = 1
+      Position = 5
+      TabOrder = 0
+      OnChange = tbSelectScaleChange
+    end
+    object lblScaleView: TLabel
+      Left = 209
+      Top = 0
+      Width = 48
+      Height = 21
+      Alignment = taRightJustify
+      Caption = ' 100%'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -19
+      Font.Name = 'Times New Roman'
+      Font.Style = []
+      ParentFont = False
+      Layout = tlCenter
     end
   end
   object ilIcons: TImageList
