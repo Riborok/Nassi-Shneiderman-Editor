@@ -3,8 +3,8 @@ object NassiShneiderman: TNassiShneiderman
   Top = 0
   BorderIcons = [biSystemMenu, biMinimize, biMaximize, biHelp]
   Caption = 'Nassi Shneiderman'
-  ClientHeight = 636
-  ClientWidth = 973
+  ClientHeight = 635
+  ClientWidth = 969
   Color = clCream
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -2137,7 +2137,7 @@ object NassiShneiderman: TNassiShneiderman
   object tbMain: TToolBar
     Left = 0
     Top = 0
-    Width = 973
+    Width = 969
     Height = 35
     BorderWidth = 1
     ButtonHeight = 27
@@ -2403,8 +2403,8 @@ object NassiShneiderman: TNassiShneiderman
     AlignWithMargins = True
     Left = 3
     Top = 60
-    Width = 967
-    Height = 573
+    Width = 963
+    Height = 572
     HorzScrollBar.Tracking = True
     VertScrollBar.Tracking = True
     Align = alClient
@@ -2433,7 +2433,7 @@ object NassiShneiderman: TNassiShneiderman
   object tbarMenu: TToolBar
     Left = 0
     Top = 35
-    Width = 973
+    Width = 969
     Height = 22
     ButtonHeight = 21
     Caption = 'tbarMenu'

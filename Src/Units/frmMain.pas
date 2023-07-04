@@ -612,6 +612,9 @@ implementation
   var
     PrevZoomFactor: Single;
   begin
+    // Reset focus
+    ActiveControl := nil;
+
     // Store the previous zoom factor
     PrevZoomFactor := FBlockManager.ZoomFactor;
 
