@@ -43,6 +43,7 @@ type
 
     FUndoStack, FRedoStack: TAutoClearStack<ICommand>;
 
+    FZoomFactor : Single;
     FPen: TPen;
     FFont: TFont;
 
@@ -64,6 +65,7 @@ type
     property UndoStack: TAutoClearStack<ICommand> read FUndoStack;
     property RedoStack: TAutoClearStack<ICommand> read FRedoStack;
 
+    property ZoomFactor: Single read FZoomFactor write FZoomFactor;
     property Font: TFont read FFont;
     property Pen: TPen read FPen;
     property PaintBox: TPaintBox read FPaintBox;
@@ -153,6 +155,8 @@ implementation
 
   constructor TBlockManager.Create(const APaintBox: TPaintBox);
   begin
+    FZoomFactor := 1;
+
     FPaintBox:= APaintBox;
     FPen := TPen.Create;
     FFont := TFont.Create;

@@ -610,25 +610,36 @@ implementation
 
   procedure TNassiShneiderman.tbSelectScaleChange(Sender: TObject);
   var
-    Scale: Single;
+    PrevZoomFactor: Single;
   begin
-    case tbSelectScale.Position of
-      1: Scale := 0.1;
-      2: Scale := 0.3;
-      3: Scale := 0.5;
-      4: Scale := 0.8;
-      5: Scale := 1;
-      6: Scale := 1.2;
-      7: Scale := 1.5;
-      8: Scale := 1.7;
-      9: Scale := 2;
-      10: Scale := 4;
-    end;
-    lblScaleView.Caption := ' ' + IntToStr(Round(Scale * 100)) + '%';
+    // Store the previous zoom factor
+    PrevZoomFactor := FBlockManager.ZoomFactor;
 
+    // Set the zoom factor based on the selected position of tbSelectScale track bar
+    case tbSelectScale.Position of
+      1: FBlockManager.ZoomFactor := 0.1;
+      2: FBlockManager.ZoomFactor := 0.3;
+      3: FBlockManager.ZoomFactor := 0.5;
+      4: FBlockManager.ZoomFactor := 0.8;
+      5: FBlockManager.ZoomFactor := 1;
+      6: FBlockManager.ZoomFactor := 1.2;
+      7: FBlockManager.ZoomFactor := 1.5;
+      8: FBlockManager.ZoomFactor := 1.7;
+      9: FBlockManager.ZoomFactor := 2;
+      10: FBlockManager.ZoomFactor := 4;
+    end;
+
+    lblScaleView.Caption := ' ' + IntToStr(Round(FBlockManager.ZoomFactor * 100)) + '%';
+
+    // Adjust the font height based on the new zoom factor
+    FBlockManager.Font.Height := Round(
+         FBlockManager.Font.Height * FBlockManager.ZoomFactor / PrevZoomFactor);
+
+    // Redefine the main block to apply the new font settings
+    FBlockManager.RedefineMainBlock;
   end;
 
-procedure TNassiShneiderman.actRedoExecute(Sender: TObject);
+  procedure TNassiShneiderman.actRedoExecute(Sender: TObject);
   begin
     // Try to redo the previous action in the block manager
     FBlockManager.TryRedo;

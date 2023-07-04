@@ -3,8 +3,8 @@ object NassiShneiderman: TNassiShneiderman
   Top = 0
   BorderIcons = [biSystemMenu, biMinimize, biMaximize, biHelp]
   Caption = 'Nassi Shneiderman'
-  ClientHeight = 637
-  ClientWidth = 977
+  ClientHeight = 636
+  ClientWidth = 973
   Color = clCream
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -2137,7 +2137,7 @@ object NassiShneiderman: TNassiShneiderman
   object tbMain: TToolBar
     Left = 0
     Top = 0
-    Width = 977
+    Width = 973
     Height = 35
     BorderWidth = 1
     ButtonHeight = 27
@@ -2152,7 +2152,6 @@ object NassiShneiderman: TNassiShneiderman
     ParentDoubleBuffered = False
     TabOrder = 0
     Transparent = False
-    ExplicitWidth = 973
     object tbNew: TToolButton
       Left = 0
       Top = 0
@@ -2404,8 +2403,8 @@ object NassiShneiderman: TNassiShneiderman
     AlignWithMargins = True
     Left = 3
     Top = 60
-    Width = 971
-    Height = 574
+    Width = 967
+    Height = 573
     HorzScrollBar.Tracking = True
     VertScrollBar.Tracking = True
     Align = alClient
@@ -2413,10 +2412,6 @@ object NassiShneiderman: TNassiShneiderman
     ParentColor = False
     TabOrder = 1
     OnMouseWheel = ScrollBoxMouseWheel
-    ExplicitLeft = 2
-    ExplicitTop = 78
-    ExplicitWidth = 967
-    ExplicitHeight = 595
     object PaintBox: TPaintBox
       Left = 0
       Top = 0
@@ -2438,7 +2433,7 @@ object NassiShneiderman: TNassiShneiderman
   object tbarMenu: TToolBar
     Left = 0
     Top = 35
-    Width = 977
+    Width = 973
     Height = 22
     ButtonHeight = 21
     Caption = 'tbarMenu'
@@ -2476,6 +2471,7 @@ object NassiShneiderman: TNassiShneiderman
       Min = 1
       Position = 5
       TabOrder = 0
+      TabStop = False
       OnChange = tbSelectScaleChange
     end
     object lblScaleView: TLabel

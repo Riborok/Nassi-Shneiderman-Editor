@@ -4,7 +4,7 @@ interface
 uses
   uBase, uCommands, uAutoClearStack, Vcl.ExtCtrls, uSwitchStatements,
   Winapi.Windows, uAdditionalTypes, uDrawShapes, Vcl.Graphics, frmGetAction,
-  frmGet—ase—onditions, uCaseBranching, uMinMaxInt, uStatementSearch, Types,
+  frmGetCaseConditions, uCaseBranching, uMinMaxInt, uStatementSearch, Types,
   uIfBranching, uConstants;
 type
 
@@ -140,13 +140,13 @@ implementation
 
   destructor TBlockManager.Destroy;
   begin
-    FMainBlock.Destroy;
+    FPen.Destroy;
+    FFont.Destroy;
 
     FUndoStack.Destroy;
     FRedoStack.Destroy;
 
-    FPen.Destroy;
-    FFont.Destroy;
+    FMainBlock.Destroy;
 
     inherited;
   end;
@@ -209,6 +209,7 @@ implementation
     if FMainBlock <> nil then
       FMainBlock.Destroy;
     FMainBlock:= ANewBlock;
+    FDedicatedStatement := nil;
     PaintBox.Invalidate;
   end;
 
@@ -221,7 +222,7 @@ implementation
 
   function TBlockManager.isDefaultMainBlock: Boolean;
   begin
-    Result:= isDefaultStatement(FMainBlock.Statements[0]);
+    Result:= (FUndoStack.Count = 0) and (FRedoStack.Count = 0) and isDefaultStatement(FMainBlock.Statements[0]);
   end;
 
   { BufferBlock }
@@ -355,7 +356,7 @@ implementation
       begin
         var CaseBranching: TCaseBranching:= TCaseBranching(FDedicatedStatement);
         var Cond: TStringArr:= CaseBranching.Conds;
-        if (WriteAction.TryGetAction(Action)) and (Write—ase—onditions.TryGetCond(Cond)) then
+        if (WriteAction.TryGetAction(Action)) and (WriteCaseConditions.TryGetCond(Cond)) then
         begin
           AddToUndoStack(TCommnadChangeContent.Create(FDedicatedStatement, Action, Cond));
           FPaintBox.Invalidate;
@@ -570,7 +571,7 @@ implementation
       if AStatementClass = TCaseBranching then
       begin
         var Cond: TStringArr:= nil;
-        if Write—ase—onditions.TryGetCond(Cond) then
+        if WriteCaseConditions.TryGetCond(Cond) then
           Result:= TCaseBranching.Create(Action, Cond);
       end
       else
@@ -639,6 +640,5 @@ implementation
     TryDrawCarryBlock(AVisibleImageRect);
 
     FMainBlock.DrawBlock(AVisibleImageRect);
-    //DrawCoordinates(FPaintBox.Canvas, 50);
   end;
 end.
