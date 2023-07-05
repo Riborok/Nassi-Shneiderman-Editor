@@ -9,7 +9,7 @@ uses
   uStatementSearch, System.Actions, Vcl.ActnList, Vcl.ToolWin, Types, uBlockManager,
   Vcl.ComCtrls, uAdditionalTypes, frmPenSetting, System.ImageList, Vcl.ImgList,
   System.SysUtils, uGlobalSave, uLocalSave, frmHelp, uStatementConverter, uDialogMessages,
-  frmGlobalSettings, System.UITypes, uExport, uStatistics;
+  frmGlobalSettings, System.UITypes, uExport, uStatistics, uArrayList;
 
 type
   TNassiShneiderman = class(TForm)
@@ -161,6 +161,12 @@ type
     lblScale: TLabel;
     tbSelectScale: TTrackBar;
     lblScaleView: TLabel;
+    sep8: TToolButton;
+    cbMain: TComboBox;
+    actClose: TAction;
+    tbClose: TToolButton;
+    actRename: TAction;
+    tbRename: TToolButton;
 
     procedure FormCreate(Sender: TObject);
 
@@ -199,9 +205,15 @@ type
     procedure actSaveAsExecute(Sender: TObject);
     procedure actSaveExecute(Sender: TObject);
     procedure actOpenExecute(Sender: TObject);
-    procedure actNewExecute(Sender: TObject);
     procedure actExportExecute(Sender: TObject);
     procedure tbSelectScaleChange(Sender: TObject);
+    procedure actNewExecute(Sender: TObject);
+    procedure cbMainChange(Sender: TObject);
+    procedure cbMainCloseUp(Sender: TObject);
+    procedure actCloseExecute(Sender: TObject);
+    procedure actRenameExecute(Sender: TObject);
+  private const
+    OriginalName = 'Main';
   private type
     TFileMode = (fmJSON = 0, fmSvg, fmBmp, fmPng, fmStat, fmAll);
   private
@@ -214,7 +226,8 @@ type
 
     FMayDrag, FWasDbClick: Boolean;
 
-    FBlockManager: TBlockManager;
+    FCurrPos: Integer;
+    FBlockManagers: TArrayList<TBlockManager>;
 
     FUserInfo: TUserInfo;
 
@@ -229,6 +242,7 @@ type
     procedure SetOpenFileMode(const AMode: TFileMode);
     procedure SetSaveFileMode(const AMode: TFileMode);
 
+    procedure AddNewSchema(const AName: string);
     function HandleSaveSchemePrompt: Boolean;
   public
     destructor Destroy; override;
@@ -245,7 +259,7 @@ implementation
 
   procedure TNassiShneiderman.FormClose(Sender: TObject; var Action: TCloseAction);
   var
-    Answer: integer;
+    Answer, I: Integer;
   begin
     // Set the logout time for the user
     FUserInfo.LogoutTime := Now;
@@ -256,46 +270,49 @@ implementation
     // Save statistics for the current user
     SaveStatistics(FUserInfo);
 
+
     // Check if the block manager has unsaved changes or if the default main block is being used
-    if not (FBlockManager.isSaved or FBlockManager.isDefaultMainBlock) then
-    begin
-      // Display a warning message box with options to save, discard, or cancel
-      Answer := MessageDlg(rsExitDlg, mtWarning, [mbYes, mbNo, mbCancel], 0);
-      case Answer of
-        mrYes:
-        begin
-          // Set the save file mode to JSON
-          SetSaveFileMode(fmJSON);
-
-          // Show the save dialog to choose a file path
-          if SaveDialog.Execute then
+    for I := 0 to FBlockManagers.Count - 1 do
+      if not (FBlockManagers[I].isSaved or FBlockManagers[I].isDefaultMainBlock) then
+      begin
+        // Display a warning message box with options to save, discard, or cancel
+        Answer := MessageDlg(rsExitDlgPart1 + FBlockManagers[I].SchemeName + rsExitDlgPart2,
+                  mtWarning, [mbYes, mbNo, mbCancel], 0);
+        case Answer of
+          mrYes:
           begin
-            // Set the path to the chosen file for the block manager
-            FBlockManager.PathToFile := SaveDialog.FileName;
+            // Set the save file mode to JSON
+            SetSaveFileMode(fmJSON);
 
-            // Save the schema using the block manager
-            SaveSchema(FBlockManager);
+            // Show the save dialog to choose a file path
+            if SaveDialog.Execute then
+            begin
+              // Set the path to the chosen file for the block manager
+              FBlockManagers[I].PathToFile := SaveDialog.FileName;
 
-            // Free the form and close it
+              // Save the schema using the block manager
+              SaveSchema(FBlockManagers[I]);
+
+              // Free the form and close it
+              Action := caFree;
+            end
+            else
+              // If the user cancels the save dialog, do not close the form
+              Action := caNone;
+          end;
+          mrNo:
+            // Discard changes and free the form to close it
             Action := caFree;
-          end
-          else
-            // If the user cancels the save dialog, do not close the form
+          mrCancel:
+            // Cancel the form close action and keep the form open
             Action := caNone;
         end;
-        mrNo:
-          // Discard changes and free the form to close it
-          Action := caFree;
-        mrCancel:
-          // Cancel the form close action and keep the form open
-          Action := caNone;
       end;
-    end;
   end;
 
   procedure TNassiShneiderman.FormCreate(Sender: TObject);
   const
-    MinFormWidth = 850 + 42;
+    MinFormWidth = 900 + 42;
     MinFormHeight = 550 + 42;
   begin
     // Clear user information
@@ -353,14 +370,14 @@ implementation
                                      DefaultAction, TBlockManager.BufferBlock));
 
     // Create an instance of the block manager and initialize the main block
-    FBlockManager := TBlockManager.Create(PaintBox);
-    FBlockManager.InitializeMainBlock;
+    FBlockManagers := TArrayList<TBlockManager>.Create(17);
+    AddNewSchema(OriginalName);
   end;
 
   procedure TNassiShneiderman.FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
   begin
     // Try to move the dedicated block based on the scroll position and the pressed key
-    FBlockManager.TryMoveDedicated(SetScrollPos, Key);
+    FBlockManagers[FCurrPos].TryMoveDedicated(SetScrollPos, Key);
 
     // Update the UI for the dedicated statement
     UpdateForDedicatedStatement;
@@ -382,7 +399,7 @@ implementation
   begin
     // If dragging is in progress, destroy the carry block
     if isDragging and (GetKeyState(VK_SHIFT) >= 0) then
-      FBlockManager.DestroyCarryBlock;
+      FBlockManagers[FCurrPos].DestroyCarryBlock;
 
     // Check if a key is already pressed
     if FisPressed then
@@ -409,7 +426,7 @@ implementation
   procedure TNassiShneiderman.PaintBoxPaint(Sender: TObject);
   begin
     // Draw the block manager content on the paint box
-    FBlockManager.Draw(GetVisibleImageScreen);
+    FBlockManagers[FCurrPos].Draw(GetVisibleImageScreen);
   end;
 
   procedure TNassiShneiderman.ScrollBoxMouseWheel(Sender: TObject;
@@ -456,21 +473,21 @@ implementation
     bool : Boolean;
   begin
     // Check if the dedicated statement is a TCaseBranching
-    bool := FBlockManager.DedicatedStatement is TCaseBranching;
+    bool := FBlockManagers[FCurrPos].DedicatedStatement is TCaseBranching;
 
     // Set the visibility of menu items based on the statement type
     MIAscSort.Visible:= bool;
     MIDescSort.Visible:= bool;
 
     // Check if there are undo actions in the undo stack
-    bool := FBlockManager.UndoStack.Count <> 0;
+    bool := FBlockManagers[FCurrPos].UndoStack.Count <> 0;
 
     // Enable/disable menu items based on the availability of undo actions
     MIUndo.Enabled:= bool;
     MIRedo.Enabled:= bool;
 
     // Check if the dedicated statement is non-default
-    bool := not isDefaultStatement(FBlockManager.DedicatedStatement);
+    bool := not isDefaultStatement(FBlockManagers[FCurrPos].DedicatedStatement);
 
     // Enable/disable menu items based on the dedicated statement type
     MIDelete.Enabled := bool;
@@ -481,7 +498,7 @@ implementation
   procedure TNassiShneiderman.DblClick(Sender: TObject);
   begin
     // Try to change the dedicated text on double-click
-    FBlockManager.TryChangeDedicatedText;
+    FBlockManagers[FCurrPos].TryChangeDedicatedText;
     FWasDbClick:= True;
   end;
 
@@ -489,9 +506,10 @@ implementation
     Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
   begin
     // Set the DedicatedStatement based on the coordinates (X, Y) using BinarySearchStatement
-    FBlockManager.DedicatedStatement := BinarySearchStatement(X, Y, FBlockManager.MainBlock);
+    FBlockManagers[FCurrPos].DedicatedStatement := BinarySearchStatement(X, Y,
+                                            FBlockManagers[FCurrPos].MainBlock);
 
-    if FBlockManager.DedicatedStatement <> nil then
+    if FBlockManagers[FCurrPos].DedicatedStatement <> nil then
     begin
       case Button of
         mbLeft:
@@ -505,7 +523,7 @@ implementation
         begin
           // Check if it's a right mouse button click
           if isDragging then
-            FBlockManager.DestroyCarryBlock;
+            FBlockManagers[FCurrPos].DestroyCarryBlock;
           PopupMenu.Popup(Mouse.CursorPos.X, Mouse.CursorPos.Y);
         end;
       end;
@@ -524,21 +542,21 @@ implementation
     if isDragging then
     begin
       // If dragging is in progress, update the hover position and move the carry block
-      FBlockManager.DefineHover(X, Y);
-      FBlockManager.MoveCarryBlock(X - FPrevMousePos.X, Y - FPrevMousePos.Y);
+      FBlockManagers[FCurrPos].DefineHover(X, Y);
+      FBlockManagers[FCurrPos].MoveCarryBlock(X - FPrevMousePos.X, Y - FPrevMousePos.Y);
 
       FPrevMousePos := Point(X, Y);
     end
     else if FMayDrag and ((Abs(FPrevMousePos.X - X) > AmountPixelToMove) or
          (Abs(FPrevMousePos.Y - Y) > AmountPixelToMove)) and
-         (FBlockManager.DedicatedStatement <> nil) then
+         (FBlockManagers[FCurrPos].DedicatedStatement <> nil) then
     begin
       // If the mouse has moved a sufficient distance and dragging is allowed, create the carry block
       FMayDrag := False;
       if isDragging then
-        FBlockManager.DestroyCarryBlock;
+        FBlockManagers[FCurrPos].DestroyCarryBlock;
 
-      FBlockManager.CreateCarryBlock;
+      FBlockManagers[FCurrPos].CreateCarryBlock;
     end;
   end;
 
@@ -550,22 +568,22 @@ implementation
     if isDragging then
     begin
       // If dragging was in progress, take action, destroy the carry block, and update the interface
-      FBlockManager.TryTakeAction;
-      FBlockManager.DestroyCarryBlock;
+      FBlockManagers[FCurrPos].TryTakeAction;
+      FBlockManagers[FCurrPos].DestroyCarryBlock;
     end;
   end;
 
   procedure TNassiShneiderman.MICopyClick(Sender: TObject);
   begin
     // Copy the dedicated statement
-    FBlockManager.TryCopyDedicated;
+    FBlockManagers[FCurrPos].TryCopyDedicated;
     UpdateForStack;
   end;
 
   procedure TNassiShneiderman.MICutClick(Sender: TObject);
   begin
     // Cut the dedicated statement
-    FBlockManager.TryCutDedicated;
+    FBlockManagers[FCurrPos].TryCutDedicated;
     UpdateForStack;
     UpdateForDedicatedStatement;
 
@@ -575,7 +593,7 @@ implementation
   procedure TNassiShneiderman.MIInsetClick(Sender: TObject);
   begin
     // Insert the buffer block
-    FBlockManager.TryInsertBufferBlock;
+    FBlockManagers[FCurrPos].TryInsertBufferBlock;
     UpdateForStack;
     UpdateForDedicatedStatement;
 
@@ -590,7 +608,8 @@ implementation
     Tag := TComponent(Sender).Tag;
 
     // Try to add a new statement to the block manager
-    FBlockManager.TryAddNewStatement(ConvertToStatementType(Tag mod 5), (Tag div 5) = 0);
+    FBlockManagers[FCurrPos].TryAddNewStatement(
+                            ConvertToStatementType(Tag mod 5), (Tag div 5) = 0);
 
     // Update the interface to reflect the changes in the stack and dedicated statement
     UpdateForStack;
@@ -599,10 +618,22 @@ implementation
     Inc(FUserInfo.AddStatementCount);
   end;
 
+  procedure TNassiShneiderman.cbMainChange(Sender: TObject);
+  begin
+    FCurrPos := cbMain.ItemIndex;
+
+    FBlockManagers[FCurrPos].Activate;
+  end;
+
+  procedure TNassiShneiderman.cbMainCloseUp(Sender: TObject);
+  begin
+    ActiveControl := nil;
+  end;
+
   procedure TNassiShneiderman.Sort(Sender: TObject);
   begin
     // Try to sort the dedicated case based on the tag value of the sender component
-    FBlockManager.TrySortDedicatedCase(TComponent(Sender).Tag);
+    FBlockManagers[FCurrPos].TrySortDedicatedCase(TComponent(Sender).Tag);
 
     // Update the interface to reflect the changes in the stack
     UpdateForStack;
@@ -616,73 +647,72 @@ implementation
     ActiveControl := nil;
 
     // Store the previous zoom factor
-    PrevZoomFactor := FBlockManager.ZoomFactor;
+    PrevZoomFactor := FBlockManagers[FCurrPos].ZoomFactor;
 
     // Set the zoom factor based on the selected position of tbSelectScale track bar
     case tbSelectScale.Position of
-      1: FBlockManager.ZoomFactor := 0.1;
-      2: FBlockManager.ZoomFactor := 0.3;
-      3: FBlockManager.ZoomFactor := 0.5;
-      4: FBlockManager.ZoomFactor := 0.8;
-      5: FBlockManager.ZoomFactor := 1;
-      6: FBlockManager.ZoomFactor := 1.2;
-      7: FBlockManager.ZoomFactor := 1.5;
-      8: FBlockManager.ZoomFactor := 1.7;
-      9: FBlockManager.ZoomFactor := 2;
-      10: FBlockManager.ZoomFactor := 4;
+      1: FBlockManagers[FCurrPos].ZoomFactor := 0.1;
+      2: FBlockManagers[FCurrPos].ZoomFactor := 0.3;
+      3: FBlockManagers[FCurrPos].ZoomFactor := 0.5;
+      4: FBlockManagers[FCurrPos].ZoomFactor := 0.8;
+      5: FBlockManagers[FCurrPos].ZoomFactor := 1;
+      6: FBlockManagers[FCurrPos].ZoomFactor := 1.2;
+      7: FBlockManagers[FCurrPos].ZoomFactor := 1.5;
+      8: FBlockManagers[FCurrPos].ZoomFactor := 1.7;
+      9: FBlockManagers[FCurrPos].ZoomFactor := 2;
+      10: FBlockManagers[FCurrPos].ZoomFactor := 2.2;
+      11: FBlockManagers[FCurrPos].ZoomFactor := 2.5;
+      12: FBlockManagers[FCurrPos].ZoomFactor := 2.7;
+      13: FBlockManagers[FCurrPos].ZoomFactor := 3;
+      14: FBlockManagers[FCurrPos].ZoomFactor := 5;
+      15: FBlockManagers[FCurrPos].ZoomFactor := 10;
+      16: FBlockManagers[FCurrPos].ZoomFactor := 20;
     end;
 
-    lblScaleView.Caption := ' ' + IntToStr(Round(FBlockManager.ZoomFactor * 100)) + '%';
+    lblScaleView.Caption := ' ' + IntToStr(Round(
+                            FBlockManagers[FCurrPos].ZoomFactor * 100)) + '% ';
 
     // Adjust the font height based on the new zoom factor
-    FBlockManager.Font.Height := Round(
-         FBlockManager.Font.Height * FBlockManager.ZoomFactor / PrevZoomFactor);
+    FBlockManagers[FCurrPos].Font.Height := Round(
+         FBlockManagers[FCurrPos].Font.Height *
+         FBlockManagers[FCurrPos].ZoomFactor / PrevZoomFactor);
 
     // Redefine the main block to apply the new font settings
-    FBlockManager.RedefineMainBlock;
+    FBlockManagers[FCurrPos].RedefineMainBlock;
   end;
 
   procedure TNassiShneiderman.actRedoExecute(Sender: TObject);
   begin
     // Try to redo the previous action in the block manager
-    FBlockManager.TryRedo;
+    FBlockManagers[FCurrPos].TryRedo;
 
     // Update the interface to reflect the changes in the stack and dedicated statement
     UpdateForStack;
     UpdateForDedicatedStatement;
   end;
 
-  procedure TNassiShneiderman.actNewExecute(Sender: TObject);
-  begin
-    // Check if the current scheme is saved or a default main block, or prompt for saving
-    if FBlockManager.isSaved or FBlockManager.isDefaultMainBlock or HandleSaveSchemePrompt then
-    begin
-      // Destroy the current block manager
-      FBlockManager.Destroy;
-
-      // Create a new block manager and initialize the main block
-      FBlockManager := TBlockManager.Create(PaintBox);
-      FBlockManager.InitializeMainBlock;
-    end;
-  end;
-
   procedure TNassiShneiderman.actOpenExecute(Sender: TObject);
   begin
-    // Check if the current scheme is saved or a default main block, or prompt for saving
-    if FBlockManager.isSaved or FBlockManager.isDefaultMainBlock or HandleSaveSchemePrompt then
+    // Set the open file mode to JSON
+    SetOpenFileMode(fmJSON);
+
+    // Execute the open dialog
+    if OpenDialog.Execute then
     begin
-      // Set the open file mode to JSON
-      SetOpenFileMode(fmJSON);
+      // Creating a New Schema
+      AddNewSchema('');
 
-      // Execute the open dialog
-      if OpenDialog.Execute then
-      begin
-        // Set the path to the selected file in the block manager
-        FBlockManager.PathToFile := OpenDialog.FileName;
+      // Set the path to the selected file in the block manager
+      FBlockManagers[FCurrPos].PathToFile := OpenDialog.FileName;
 
-        // Load the schema from the selected file
-        LoadSchema(FBlockManager);
-      end;
+      // Load the schema from the selected file
+      LoadSchema(FBlockManagers[FCurrPos]);
+
+      // Setting the schema name
+      cbMain.Items[FCurrPos] := FBlockManagers[FCurrPos].SchemeName;
+      cbMain.ItemIndex := FCurrPos;
+
+      UpdateForDedicatedStatement
     end;
   end;
 
@@ -701,9 +731,9 @@ implementation
     begin
       // Save the block manager's content to the selected file based on the file mode
       case FileMode of
-        fmSVG: SaveSVGFile(FBlockManager, SaveDialog.FileName);
-        fmBMP: SaveBMPFile(FBlockManager, SaveDialog.FileName);
-        fmPNG: SavePNGFile(FBlockManager, SaveDialog.FileName);
+        fmSVG: SaveSVGFile(FBlockManagers[FCurrPos], SaveDialog.FileName);
+        fmBMP: SaveBMPFile(FBlockManagers[FCurrPos], SaveDialog.FileName);
+        fmPNG: SavePNGFile(FBlockManagers[FCurrPos], SaveDialog.FileName);
       end;
     end;
   end;
@@ -725,35 +755,35 @@ implementation
       if FileExt = constExtJSON then
       begin
         // Set the path to the selected file in the block manager
-        FBlockManager.PathToFile := FileName;
+        FBlockManagers[FCurrPos].PathToFile := FileName;
 
         // Save the schema to the selected file
-        SaveSchema(FBlockManager);
+        SaveSchema(FBlockManagers[FCurrPos]);
       end
       else if FileExt = constExtSVG then
-        SaveSVGFile(FBlockManager, FileName)
+        SaveSVGFile(FBlockManagers[FCurrPos], FileName)
       else if FileExt = constExtBmp then
-        SaveBMPFile(FBlockManager, FileName)
+        SaveBMPFile(FBlockManagers[FCurrPos], FileName)
       else if FileExt = constExtPNG then
-        SavePNGFile(FBlockManager, FileName);
+        SavePNGFile(FBlockManagers[FCurrPos], FileName);
     end;
 
     // Update the enabled state of the "Save As" toolbar button based on the block manager's save state
-    tbSaveAs.Enabled := not FBlockManager.isSaved;
+    tbSaveAs.Enabled := not FBlockManagers[FCurrPos].isSaved;
   end;
 
   procedure TNassiShneiderman.actSaveExecute(Sender: TObject);
   begin
-    if FBlockManager.PathToFile <> '' then
+    if FBlockManagers[FCurrPos].PathToFile <> '' then
     begin
       // Save the schema to the current file
-      SaveSchema(FBlockManager);
+      SaveSchema(FBlockManagers[FCurrPos]);
     end
     else
       actSaveAsExecute(Sender);
 
     // Update the enabled state of the "Save As" toolbar button based on the block manager's save state
-    tbSaveAs.Enabled := not FBlockManager.isSaved;
+    tbSaveAs.Enabled := not FBlockManagers[FCurrPos].isSaved;
   end;
 
   procedure TNassiShneiderman.actHelpExecute(Sender: TObject);
@@ -783,10 +813,33 @@ implementation
     Inc(FUserInfo.HelpTime, SecondsBetween(Now, StartTime));
   end;
 
+  procedure TNassiShneiderman.actRenameExecute(Sender: TObject);
+  var
+    Name: string;
+  begin
+    Name := InputBox(rsNewSchemeName, rsNewSchemeContent, '');
+    if Name <> '' then
+    begin
+      FBlockManagers[FCurrPos].SchemeName := Name;
+      cbMain.Items[FCurrPos] := Name;
+      cbMain.ItemIndex := FCurrPos;
+    end;
+  end;
+
+  procedure TNassiShneiderman.actNewExecute(Sender: TObject);
+  var
+    Name: string;
+  begin
+    Name := InputBox(rsNewSchemeName, rsNewSchemeContent, '');
+    if Name <> '' then
+      AddNewSchema(Name);
+    UpdateForDedicatedStatement;
+  end;
+
   procedure TNassiShneiderman.actUndoExecute(Sender: TObject);
   begin
     // Try to undo the previous action in the block manager
-    FBlockManager.TryUndo;
+    FBlockManagers[FCurrPos].TryUndo;
 
     // Update the display for the block stack and the dedicated statement
     UpdateForStack;
@@ -796,7 +849,7 @@ implementation
   procedure TNassiShneiderman.DeleteStatement(Sender: TObject);
   begin
     // Try to delete the dedicated statement in the block manager
-    FBlockManager.TryDeleteDedicated;
+    FBlockManagers[FCurrPos].TryDeleteDedicated;
 
     // Update the display for the block stack and the dedicated statement
     UpdateForStack;
@@ -808,7 +861,7 @@ implementation
   procedure TNassiShneiderman.actChangeActionExecute(Sender: TObject);
   begin
     // Try to change the text of the dedicated statement in the block manager
-    FBlockManager.TryChangeDedicatedText;
+    FBlockManagers[FCurrPos].TryChangeDedicatedText;
 
     // Update the display for the block stack
     UpdateForStack;
@@ -823,16 +876,16 @@ implementation
     StartTime := Now;
 
     // Initialize the font dialog with the current font settings
-    FontDialog.Font := FBlockManager.Font;
+    FontDialog.Font := FBlockManagers[FCurrPos].Font;
 
     // Prompt the user to select a new font using the font dialog
     if FontDialog.Execute then
     begin
       // Update the font settings in the block manager with the selected font
-      FBlockManager.Font.Assign(FontDialog.Font);
+      FBlockManagers[FCurrPos].Font.Assign(FontDialog.Font);
 
       // Redefine the main block to apply the new font settings
-      FBlockManager.RedefineMainBlock;
+      FBlockManagers[FCurrPos].RedefineMainBlock;
     end;
 
     // Update the font setting time by calculating the time difference between the current time and the start time
@@ -846,17 +899,40 @@ implementation
     StartTime := Now;
 
     // Initialize the pen dialog with the current pen settings
-    FPenDialog.Pen := FBlockManager.Pen;
+    FPenDialog.Pen := FBlockManagers[FCurrPos].Pen;
 
     // Prompt the user to select new pen settings using the pen dialog
     if FPenDialog.Execute then
     begin
       // Update the pen settings in the block manager with the selected pen
-      FBlockManager.RedefineMainBlock;
+      FBlockManagers[FCurrPos].RedefineMainBlock;
     end;
 
     // Update the pen setting time by calculating the time difference between the current time and the start time
     Inc(FUserInfo.PenSettingTime, SecondsBetween(Now, StartTime));
+  end;
+
+  procedure TNassiShneiderman.actCloseExecute(Sender: TObject);
+  begin
+    // Check if the current scheme is saved or a default main block, or prompt for saving
+    if FBlockManagers[FCurrPos].isSaved or
+       FBlockManagers[FCurrPos].isDefaultMainBlock or HandleSaveSchemePrompt then
+    begin
+      // Destroy the current block manager
+      FBlockManagers[FCurrPos].Destroy;
+      FBlockManagers.Delete(FCurrPos);
+      cbMain.Items.Delete(FCurrPos);
+
+      if FBlockManagers.Count = 0 then
+        AddNewSchema(OriginalName)
+      else if FCurrPos = FBlockManagers.Count then
+        Dec(FCurrPos);
+
+      cbMain.ItemIndex := FCurrPos;
+
+      FBlockManagers[FCurrPos].Activate;
+      UpdateForDedicatedStatement;
+    end;
   end;
 
   procedure TNassiShneiderman.actChngGlSettingsExecute(Sender: TObject);
@@ -873,10 +949,11 @@ implementation
     if FGlobalSettingsDialog.Execute then
     begin
       // Apply the changes in global settings to the block manager
-      FBlockManager.ChangeGlobalSettings(PrevDefaultAction);
+      FBlockManagers[FCurrPos].ChangeGlobalSettings(PrevDefaultAction);
     end;
 
-    // Update the global settings time by calculating the time difference between the current time and the start time
+    // Update the global settings time by calculating the time difference
+    // between the current time and the start time
     Inc(FUserInfo.GlobalSettingsTime, SecondsBetween(Now, StartTime));
   end;
 
@@ -884,39 +961,44 @@ implementation
   var
     bool: Boolean;
   begin
-    bool:= FBlockManager.DedicatedStatement is TCaseBranching;
+    bool:= FBlockManagers[FCurrPos].DedicatedStatement is TCaseBranching;
     mnSortAsc.Enabled := bool;
     mnSortDesc.Enabled := bool;
 
-    bool := FBlockManager.DedicatedStatement <> nil;
+    bool := FBlockManagers[FCurrPos].DedicatedStatement <> nil;
     mnAdd.Enabled := bool;
     mnChangeAct.Enabled := bool;
-    mnDelete.Enabled := bool and not isDefaultStatement(FBlockManager.DedicatedStatement);
+    mnDelete.Enabled := bool and not isDefaultStatement(FBlockManagers[FCurrPos].DedicatedStatement);
   end;
 
   procedure TNassiShneiderman.mnEditClick(Sender: TObject);
   var
     bool: Boolean;
   begin
-    mnUndo.Enabled:= FBlockManager.UndoStack.Count <> 0;
-    mnRedo.Enabled:= FBlockManager.RedoStack.Count <> 0;
+    mnUndo.Enabled:= FBlockManagers[FCurrPos].UndoStack.Count <> 0;
+    mnRedo.Enabled:= FBlockManagers[FCurrPos].RedoStack.Count <> 0;
 
-    bool := FBlockManager.DedicatedStatement <> nil;
+    bool := FBlockManagers[FCurrPos].DedicatedStatement <> nil;
     mnInsert.Enabled := bool;
 
-    bool := bool and not isDefaultStatement(FBlockManager.DedicatedStatement);
+    bool := bool and not isDefaultStatement(FBlockManagers[FCurrPos].DedicatedStatement);
     mnCut.Enabled := bool;
     mnCopy.Enabled := bool;
   end;
 
   { Private methods }
   destructor TNassiShneiderman.Destroy;
+  var
+    I: Integer;
   begin
     TBlockManager.BufferBlock.Destroy;
     if TBlockManager.CarryBlock <> nil then
       TBlockManager.CarryBlock.Destroy;
 
-    FBlockManager.Destroy;
+    for I := 0 to FBlockManagers.Count - 1 do
+      FBlockManagers[I].Destroy;
+
+    FBlockManagers.Destroy;
 
     FPenDialog.Destroy;
     FGlobalSettingsDialog.Destroy;
@@ -924,49 +1006,10 @@ implementation
     inherited;
   end;
 
-  function TNassiShneiderman.HandleSaveSchemePrompt: Boolean;
-  var
-    Answer: Integer;
-  begin
-    // Prompt the user with a message dialog and store the user's answer
-    Answer := MessageDlg(rsExitDlg, mtWarning, [mbYes, mbNo, mbCancel], 0);
-
-    // Handle the user's answer
-    case Answer of
-      mrYes:
-      begin
-        // Set the save file mode to JSON
-        SetSaveFileMode(fmJSON);
-
-        // Prompt the user to select a file for saving the schema
-        if SaveDialog.Execute then
-        begin
-          // Update the path to the file in the block manager
-          FBlockManager.PathToFile := SaveDialog.FileName;
-
-          // Save the schema using the block manager
-          SaveSchema(FBlockManager);
-
-          // Return True indicating successful saving
-          Result := True;
-        end
-        else
-          // Return False indicating saving was canceled
-          Result := False;
-      end;
-      mrNo:
-        // Return True indicating no saving is required
-        Result := True;
-      mrCancel:
-        // Return False indicating canceling the operation
-        Result := False;
-    end;
-  end;
-
   procedure TNassiShneiderman.UpdateForStack;
   begin
-    tbUndo.Enabled:= FBlockManager.UndoStack.Count <> 0;
-    tbRedo.Enabled:= FBlockManager.RedoStack.Count <> 0;
+    tbUndo.Enabled:= FBlockManagers[FCurrPos].UndoStack.Count <> 0;
+    tbRedo.Enabled:= FBlockManagers[FCurrPos].RedoStack.Count <> 0;
   end;
 
   procedure TNassiShneiderman.SetOpenFileMode(const AMode: TFileMode);
@@ -1022,11 +1065,11 @@ implementation
   var
     bool: Boolean;
   begin
-    bool:= FBlockManager.DedicatedStatement is TCaseBranching;
+    bool:= FBlockManagers[FCurrPos].DedicatedStatement is TCaseBranching;
     tbSortDesc.Enabled := bool;
     tbSortAsc.Enabled := bool;
 
-    bool := FBlockManager.DedicatedStatement <> nil;
+    bool := FBlockManagers[FCurrPos].DedicatedStatement <> nil;
     tbInsert.Enabled := bool;
     tbAction.Enabled := bool;
     tbProcess.Enabled := bool;
@@ -1035,12 +1078,12 @@ implementation
     tbLoop.Enabled := bool;
     tbRevLoop.Enabled := bool;
 
-    bool := bool and not isDefaultStatement(FBlockManager.DedicatedStatement);
+    bool := bool and not isDefaultStatement(FBlockManagers[FCurrPos].DedicatedStatement);
     tbCut.Enabled := bool;
     tbCopy.Enabled := bool;
     tbDelete.Enabled := bool;
 
-    tbSaveAs.Enabled := not FBlockManager.isSaved;
+    tbSaveAs.Enabled := not FBlockManagers[FCurrPos].isSaved;
   end;
 
   function TNassiShneiderman.isDragging: Boolean;
@@ -1077,6 +1120,54 @@ implementation
          AStatement.GetYBottom - VisibleImageScreen.FBottomRight.Y + Stock;
       $06 {1100}:
          ScrollBox.VertScrollBar.Position := AStatement.YStart - Stock;
+    end;
+  end;
+
+  procedure TNassiShneiderman.AddNewSchema(const AName: string);
+  begin
+    FBlockManagers.Add(TBlockManager.Create(PaintBox, AName));
+    cbMain.AddItem(AName, nil);
+    FCurrPos := FBlockManagers.Count - 1;
+    cbMain.ItemIndex := FCurrPos;
+  end;
+
+  function TNassiShneiderman.HandleSaveSchemePrompt: Boolean;
+  var
+    Answer: Integer;
+  begin
+    // Prompt the user with a message dialog and store the user's answer
+    Answer := MessageDlg(rsExitDlgPart1 + FBlockManagers[FCurrPos].SchemeName + rsExitDlgPart2,
+              mtWarning, [mbYes, mbNo, mbCancel], 0);
+
+    // Handle the user's answer
+    case Answer of
+      mrYes:
+      begin
+        // Set the save file mode to JSON
+        SetSaveFileMode(fmJSON);
+
+        // Prompt the user to select a file for saving the schema
+        if SaveDialog.Execute then
+        begin
+          // Update the path to the file in the block manager
+          FBlockManagers[FCurrPos].PathToFile := SaveDialog.FileName;
+
+          // Save the schema using the block manager
+          SaveSchema(FBlockManagers[FCurrPos]);
+
+          // Return True indicating successful saving
+          Result := True;
+        end
+        else
+          // Return False indicating saving was canceled
+          Result := False;
+      end;
+      mrNo:
+        // Return True indicating no saving is required
+        Result := True;
+      mrCancel:
+        // Return False indicating canceling the operation
+        Result := False;
     end;
   end;
 end.

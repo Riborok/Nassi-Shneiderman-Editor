@@ -219,6 +219,8 @@ implementation
           begin
             AddPair('Pen', PenToJSON(Pen));
             AddPair('Font', FontToJSON(Font));
+            AddPair('SchemeName', SchemeName);
+            AddPair('ZoomFactor', TJSONNumber.Create(ZoomFactor));
             AddPair('MainBlock', BlockToJSON(MainBlock));
           end;
           AddPair('DefaultAction', uBase.DefaultAction);
@@ -247,6 +249,8 @@ implementation
           begin
             JSONToPen(TJSONObject(GetValue('Pen')), Pen);
             JSONToFont(TJSONObject(GetValue('Font')), Font);
+            SchemeName := Json.GetValue('SchemeName').Value;
+            ZoomFactor := Json.GetValue('ZoomFactor').Value.ToSingle;
             MainBlock := JSONToBlock(TJSONObject(GetValue('MainBlock')), nil, PaintBox.Canvas);
             TIfBranching.RedefineSizesForIfBranching(MainBlock);
           end;

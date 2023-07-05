@@ -37,6 +37,7 @@ type
 
     FHighlightColor, FArrowColor, FOKColor, FCancelColor: TColor;
   private
+    FSchemeName : string;
     FMainBlock : TBlock;
     FDedicatedStatement: TStatement;
     FPaintBox: TPaintBox;
@@ -57,8 +58,9 @@ type
 
     procedure SetPathToFile(const APath: string);
   public
-    constructor Create(const APaintBox: TPaintBox);
+    constructor Create(const APaintBox: TPaintBox; const ASchemeName: string);
     destructor Destroy;
+    property SchemeName: string read FSchemeName write FSchemeName;
     property MainBlock: TBlock read FMainBlock write ChangeMainBlock;
 
     property DedicatedStatement: TStatement read FDedicatedStatement write ChangeDedicated;
@@ -84,7 +86,6 @@ type
     { MainBlock }
     procedure RedefineMainBlock;
     procedure ChangeGlobalSettings(const AOldDefaultAction: string);
-    procedure InitializeMainBlock;
     function isDefaultMainBlock: Boolean;
 
     { BufferBlock }
@@ -120,6 +121,7 @@ type
 
     { View update }
     procedure Draw(const AVisibleImageRect: TVisibleImageRect);
+    procedure Activate; inline;
   end;
 
 implementation
@@ -153,8 +155,9 @@ implementation
     inherited;
   end;
 
-  constructor TBlockManager.Create(const APaintBox: TPaintBox);
+  constructor TBlockManager.Create(const APaintBox: TPaintBox; const ASchemeName: string);
   begin
+    FSchemeName := ASchemeName;
     FZoomFactor := 1;
 
     FPaintBox:= APaintBox;
@@ -183,7 +186,11 @@ implementation
     PathToFile:= '';
     FisSaved:= False;
 
-    FPaintBox.Invalidate;
+    FMainBlock:= TBlock.Create(SchemeIndent, FPaintBox.Canvas);
+    FMainBlock.AddUnknownStatement(uBase.DefaultStatement.Create(DefaultAction, FMainBlock),
+                                                            SchemeIndent);
+
+    Activate;
   end;
 
   { MainBlock }
@@ -215,13 +222,6 @@ implementation
     FMainBlock:= ANewBlock;
     FDedicatedStatement := nil;
     PaintBox.Invalidate;
-  end;
-
-  procedure TBlockManager.InitializeMainBlock;
-  begin
-    FMainBlock:= TBlock.Create(SchemeIndent, FPaintBox.Canvas);
-    FMainBlock.AddUnknownStatement(uBase.DefaultStatement.Create(DefaultAction, FMainBlock),
-                                                            SchemeIndent);
   end;
 
   function TBlockManager.isDefaultMainBlock: Boolean;
@@ -644,5 +644,10 @@ implementation
     TryDrawCarryBlock(AVisibleImageRect);
 
     FMainBlock.DrawBlock(AVisibleImageRect);
+  end;
+
+  procedure TBlockManager.Activate;
+  begin
+    FPaintBox.Invalidate;
   end;
 end.
