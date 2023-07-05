@@ -9,7 +9,8 @@ uses
   uStatementSearch, System.Actions, Vcl.ActnList, Vcl.ToolWin, Types, uBlockManager,
   Vcl.ComCtrls, uAdditionalTypes, frmPenSetting, System.ImageList, Vcl.ImgList,
   System.SysUtils, uGlobalSave, uLocalSave, frmHelp, uStatementConverter, uDialogMessages,
-  frmGlobalSettings, System.UITypes, uExport, uStatistics, uArrayList;
+  frmGlobalSettings, System.UITypes, uExport, uStatistics, uArrayList,
+  uZoomAndPositionTransfer;
 
 type
   TNassiShneiderman = class(TForm)
@@ -163,6 +164,10 @@ type
     lblScaleView: TLabel;
     sep8: TToolButton;
     cbMain: TComboBox;
+    actClose: TAction;
+    tbClose: TToolButton;
+    actRename: TAction;
+    tbRename: TToolButton;
 
     procedure FormCreate(Sender: TObject);
 
@@ -206,6 +211,8 @@ type
     procedure actNewExecute(Sender: TObject);
     procedure cbMainChange(Sender: TObject);
     procedure cbMainCloseUp(Sender: TObject);
+    procedure actCloseExecute(Sender: TObject);
+    procedure actRenameExecute(Sender: TObject);
   private const
     OriginalName = 'Main';
   private type
@@ -237,6 +244,9 @@ type
     procedure SetSaveFileMode(const AMode: TFileMode);
 
     procedure AddNewSchema(const AName: string);
+    function HandleSaveSchemePrompt: Boolean;
+
+    procedure SetScaleView; inline;
   public
     destructor Destroy; override;
   end;
@@ -305,7 +315,7 @@ implementation
 
   procedure TNassiShneiderman.FormCreate(Sender: TObject);
   const
-    MinFormWidth = 850 + 42;
+    MinFormWidth = 900 + 42;
     MinFormHeight = 550 + 42;
   begin
     // Clear user information
@@ -615,7 +625,12 @@ implementation
   begin
     FCurrPos := cbMain.ItemIndex;
 
-    PaintBox.Invalidate;
+
+    tbSelectScale.Position := GetPosition(FBlockManagers[FCurrPos].ZoomFactor);
+    SetScaleView;
+
+    FBlockManagers[FCurrPos].Activate;
+    UpdateForDedicatedStatement;
   end;
 
   procedure TNassiShneiderman.cbMainCloseUp(Sender: TObject);
@@ -643,21 +658,9 @@ implementation
     PrevZoomFactor := FBlockManagers[FCurrPos].ZoomFactor;
 
     // Set the zoom factor based on the selected position of tbSelectScale track bar
-    case tbSelectScale.Position of
-      1: FBlockManagers[FCurrPos].ZoomFactor := 0.1;
-      2: FBlockManagers[FCurrPos].ZoomFactor := 0.3;
-      3: FBlockManagers[FCurrPos].ZoomFactor := 0.5;
-      4: FBlockManagers[FCurrPos].ZoomFactor := 0.8;
-      5: FBlockManagers[FCurrPos].ZoomFactor := 1;
-      6: FBlockManagers[FCurrPos].ZoomFactor := 1.2;
-      7: FBlockManagers[FCurrPos].ZoomFactor := 1.5;
-      8: FBlockManagers[FCurrPos].ZoomFactor := 1.7;
-      9: FBlockManagers[FCurrPos].ZoomFactor := 2;
-      10: FBlockManagers[FCurrPos].ZoomFactor := 4;
-    end;
+    FBlockManagers[FCurrPos].ZoomFactor := GetZoomFactor(tbSelectScale.Position);
 
-    lblScaleView.Caption := ' ' + IntToStr(Round(
-                            FBlockManagers[FCurrPos].ZoomFactor * 100)) + '% ';
+    SetScaleView;
 
     // Adjust the font height based on the new zoom factor
     FBlockManagers[FCurrPos].Font.Height := Round(
@@ -697,6 +700,12 @@ implementation
 
       // Setting the schema name
       cbMain.Items[FCurrPos] := FBlockManagers[FCurrPos].SchemeName;
+      cbMain.ItemIndex := FCurrPos;
+
+      tbSelectScale.Position := GetPosition(FBlockManagers[FCurrPos].ZoomFactor);
+      SetScaleView;
+
+      UpdateForDedicatedStatement
     end;
   end;
 
@@ -762,6 +771,7 @@ implementation
     begin
       // Save the schema to the current file
       SaveSchema(FBlockManagers[FCurrPos]);
+      FBlockManagers[FCurrPos].isSaved := True;
     end
     else
       actSaveAsExecute(Sender);
@@ -797,6 +807,19 @@ implementation
     Inc(FUserInfo.HelpTime, SecondsBetween(Now, StartTime));
   end;
 
+  procedure TNassiShneiderman.actRenameExecute(Sender: TObject);
+  var
+    Name: string;
+  begin
+    Name := InputBox(rsNewSchemeName, rsNewSchemeContent, '');
+    if Name <> '' then
+    begin
+      FBlockManagers[FCurrPos].SchemeName := Name;
+      cbMain.Items[FCurrPos] := Name;
+      cbMain.ItemIndex := FCurrPos;
+    end;
+  end;
+
   procedure TNassiShneiderman.actNewExecute(Sender: TObject);
   var
     Name: string;
@@ -804,6 +827,11 @@ implementation
     Name := InputBox(rsNewSchemeName, rsNewSchemeContent, '');
     if Name <> '' then
       AddNewSchema(Name);
+
+    tbSelectScale.Position := GetPosition(FBlockManagers[FCurrPos].ZoomFactor);
+    SetScaleView;
+
+    UpdateForDedicatedStatement;
   end;
 
   procedure TNassiShneiderman.actUndoExecute(Sender: TObject);
@@ -882,6 +910,33 @@ implementation
     Inc(FUserInfo.PenSettingTime, SecondsBetween(Now, StartTime));
   end;
 
+  procedure TNassiShneiderman.actCloseExecute(Sender: TObject);
+  begin
+    // Check if the current scheme is saved or a default main block, or prompt for saving
+    if FBlockManagers[FCurrPos].isSaved or
+       FBlockManagers[FCurrPos].isDefaultMainBlock or HandleSaveSchemePrompt then
+    begin
+      // Destroy the current block manager
+      FBlockManagers[FCurrPos].Destroy;
+      FBlockManagers.Delete(FCurrPos);
+      cbMain.Items.Delete(FCurrPos);
+
+      if FBlockManagers.Count = 0 then
+        AddNewSchema(OriginalName)
+      else if FCurrPos = FBlockManagers.Count then
+        Dec(FCurrPos);
+
+      cbMain.ItemIndex := FCurrPos;
+
+      FBlockManagers[FCurrPos].Activate;
+
+      tbSelectScale.Position := GetPosition(FBlockManagers[FCurrPos].ZoomFactor);
+      SetScaleView;
+
+      UpdateForDedicatedStatement;
+    end;
+  end;
+
   procedure TNassiShneiderman.actChngGlSettingsExecute(Sender: TObject);
   var
     PrevDefaultAction: string;
@@ -899,7 +954,8 @@ implementation
       FBlockManagers[FCurrPos].ChangeGlobalSettings(PrevDefaultAction);
     end;
 
-    // Update the global settings time by calculating the time difference between the current time and the start time
+    // Update the global settings time by calculating the time difference
+    // between the current time and the start time
     Inc(FUserInfo.GlobalSettingsTime, SecondsBetween(Now, StartTime));
   end;
 
@@ -977,7 +1033,7 @@ implementation
 
   procedure TNassiShneiderman.SetSaveFileMode(const AMode: TFileMode);
   begin
-    SaveDialog.FileName := '';
+    SaveDialog.FileName := FBlockManagers[FCurrPos].SchemeName;
     case AMode of
       fmJSON:
       begin
@@ -1075,5 +1131,51 @@ implementation
     cbMain.AddItem(AName, nil);
     FCurrPos := FBlockManagers.Count - 1;
     cbMain.ItemIndex := FCurrPos;
+  end;
+
+  function TNassiShneiderman.HandleSaveSchemePrompt: Boolean;
+  var
+    Answer: Integer;
+  begin
+    // Prompt the user with a message dialog and store the user's answer
+    Answer := MessageDlg(rsExitDlgPart1 + FBlockManagers[FCurrPos].SchemeName + rsExitDlgPart2,
+              mtWarning, [mbYes, mbNo, mbCancel], 0);
+
+    // Handle the user's answer
+    case Answer of
+      mrYes:
+      begin
+        // Set the save file mode to JSON
+        SetSaveFileMode(fmJSON);
+
+        // Prompt the user to select a file for saving the schema
+        if SaveDialog.Execute then
+        begin
+          // Update the path to the file in the block manager
+          FBlockManagers[FCurrPos].PathToFile := SaveDialog.FileName;
+
+          // Save the schema using the block manager
+          SaveSchema(FBlockManagers[FCurrPos]);
+
+          // Return True indicating successful saving
+          Result := True;
+        end
+        else
+          // Return False indicating saving was canceled
+          Result := False;
+      end;
+      mrNo:
+        // Return True indicating no saving is required
+        Result := True;
+      mrCancel:
+        // Return False indicating canceling the operation
+        Result := False;
+    end;
+  end;
+
+  procedure TNassiShneiderman.SetScaleView;
+  begin
+    lblScaleView.Caption := ' ' + IntToStr(Trunc(
+                            FBlockManagers[FCurrPos].ZoomFactor * 100)) + '% ';
   end;
 end.

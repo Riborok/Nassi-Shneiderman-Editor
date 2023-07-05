@@ -9,7 +9,8 @@ uses
   uStatementSearch, System.Actions, Vcl.ActnList, Vcl.ToolWin, Types, uBlockManager,
   Vcl.ComCtrls, uAdditionalTypes, frmPenSetting, System.ImageList, Vcl.ImgList,
   System.SysUtils, uGlobalSave, uLocalSave, frmHelp, uStatementConverter, uDialogMessages,
-  frmGlobalSettings, System.UITypes, uExport, uStatistics, uArrayList;
+  frmGlobalSettings, System.UITypes, uExport, uStatistics, uArrayList,
+  uZoomAndPositionTransfer;
 
 type
   TNassiShneiderman = class(TForm)
@@ -162,7 +163,11 @@ type
     tbSelectScale: TTrackBar;
     lblScaleView: TLabel;
     sep8: TToolButton;
-    lbMain: TListBox;
+    cbMain: TComboBox;
+    actClose: TAction;
+    tbClose: TToolButton;
+    actRename: TAction;
+    tbRename: TToolButton;
 
     procedure FormCreate(Sender: TObject);
 
@@ -201,9 +206,13 @@ type
     procedure actSaveAsExecute(Sender: TObject);
     procedure actSaveExecute(Sender: TObject);
     procedure actOpenExecute(Sender: TObject);
-    procedure actNewExecute(Sender: TObject);
     procedure actExportExecute(Sender: TObject);
     procedure tbSelectScaleChange(Sender: TObject);
+    procedure actNewExecute(Sender: TObject);
+    procedure cbMainChange(Sender: TObject);
+    procedure cbMainCloseUp(Sender: TObject);
+    procedure actCloseExecute(Sender: TObject);
+    procedure actRenameExecute(Sender: TObject);
   private const
     OriginalName = 'Main';
   private type
@@ -234,8 +243,10 @@ type
     procedure SetOpenFileMode(const AMode: TFileMode);
     procedure SetSaveFileMode(const AMode: TFileMode);
 
-    function HandleSaveSchemePrompt: Boolean;
     procedure AddNewSchema(const AName: string);
+    function HandleSaveSchemePrompt: Boolean;
+
+    procedure SetScaleView; inline;
   public
     destructor Destroy; override;
   end;
@@ -251,7 +262,7 @@ implementation
 
   procedure TNassiShneiderman.FormClose(Sender: TObject; var Action: TCloseAction);
   var
-    Answer: integer;
+    Answer, I: Integer;
   begin
     // Set the logout time for the user
     FUserInfo.LogoutTime := Now;
@@ -262,46 +273,49 @@ implementation
     // Save statistics for the current user
     SaveStatistics(FUserInfo);
 
+
     // Check if the block manager has unsaved changes or if the default main block is being used
-    if not (FBlockManager.isSaved or FBlockManager.isDefaultMainBlock) then
-    begin
-      // Display a warning message box with options to save, discard, or cancel
-      Answer := MessageDlg(rsExitDlg, mtWarning, [mbYes, mbNo, mbCancel], 0);
-      case Answer of
-        mrYes:
-        begin
-          // Set the save file mode to JSON
-          SetSaveFileMode(fmJSON);
-
-          // Show the save dialog to choose a file path
-          if SaveDialog.Execute then
+    for I := 0 to FBlockManagers.Count - 1 do
+      if not (FBlockManagers[I].isSaved or FBlockManagers[I].isDefaultMainBlock) then
+      begin
+        // Display a warning message box with options to save, discard, or cancel
+        Answer := MessageDlg(rsExitDlgPart1 + FBlockManagers[I].SchemeName + rsExitDlgPart2,
+                  mtWarning, [mbYes, mbNo, mbCancel], 0);
+        case Answer of
+          mrYes:
           begin
-            // Set the path to the chosen file for the block manager
-            FBlockManager.PathToFile := SaveDialog.FileName;
+            // Set the save file mode to JSON
+            SetSaveFileMode(fmJSON);
 
-            // Save the schema using the block manager
-            SaveSchema(FBlockManager);
+            // Show the save dialog to choose a file path
+            if SaveDialog.Execute then
+            begin
+              // Set the path to the chosen file for the block manager
+              FBlockManagers[I].PathToFile := SaveDialog.FileName;
 
-            // Free the form and close it
+              // Save the schema using the block manager
+              SaveSchema(FBlockManagers[I]);
+
+              // Free the form and close it
+              Action := caFree;
+            end
+            else
+              // If the user cancels the save dialog, do not close the form
+              Action := caNone;
+          end;
+          mrNo:
+            // Discard changes and free the form to close it
             Action := caFree;
-          end
-          else
-            // If the user cancels the save dialog, do not close the form
+          mrCancel:
+            // Cancel the form close action and keep the form open
             Action := caNone;
         end;
-        mrNo:
-          // Discard changes and free the form to close it
-          Action := caFree;
-        mrCancel:
-          // Cancel the form close action and keep the form open
-          Action := caNone;
       end;
-    end;
   end;
 
   procedure TNassiShneiderman.FormCreate(Sender: TObject);
   const
-    MinFormWidth = 850 + 42;
+    MinFormWidth = 900 + 42;
     MinFormHeight = 550 + 42;
   begin
     // Clear user information
@@ -361,7 +375,6 @@ implementation
     // Create an instance of the block manager and initialize the main block
     FBlockManagers := TArrayList<TBlockManager>.Create(17);
     AddNewSchema(OriginalName);
-    FCurrPos := 0;
   end;
 
   procedure TNassiShneiderman.FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
@@ -608,6 +621,23 @@ implementation
     Inc(FUserInfo.AddStatementCount);
   end;
 
+  procedure TNassiShneiderman.cbMainChange(Sender: TObject);
+  begin
+    FCurrPos := cbMain.ItemIndex;
+
+
+    tbSelectScale.Position := GetPosition(FBlockManagers[FCurrPos].ZoomFactor);
+    SetScaleView;
+
+    FBlockManagers[FCurrPos].Activate;
+    UpdateForDedicatedStatement;
+  end;
+
+  procedure TNassiShneiderman.cbMainCloseUp(Sender: TObject);
+  begin
+    ActiveControl := nil;
+  end;
+
   procedure TNassiShneiderman.Sort(Sender: TObject);
   begin
     // Try to sort the dedicated case based on the tag value of the sender component
@@ -628,21 +658,9 @@ implementation
     PrevZoomFactor := FBlockManagers[FCurrPos].ZoomFactor;
 
     // Set the zoom factor based on the selected position of tbSelectScale track bar
-    case tbSelectScale.Position of
-      1: FBlockManagers[FCurrPos].ZoomFactor := 0.1;
-      2: FBlockManagers[FCurrPos].ZoomFactor := 0.3;
-      3: FBlockManagers[FCurrPos].ZoomFactor := 0.5;
-      4: FBlockManagers[FCurrPos].ZoomFactor := 0.8;
-      5: FBlockManagers[FCurrPos].ZoomFactor := 1;
-      6: FBlockManagers[FCurrPos].ZoomFactor := 1.2;
-      7: FBlockManagers[FCurrPos].ZoomFactor := 1.5;
-      8: FBlockManagers[FCurrPos].ZoomFactor := 1.7;
-      9: FBlockManagers[FCurrPos].ZoomFactor := 2;
-      10: FBlockManagers[FCurrPos].ZoomFactor := 4;
-    end;
+    FBlockManagers[FCurrPos].ZoomFactor := GetZoomFactor(tbSelectScale.Position);
 
-    lblScaleView.Caption := ' ' + IntToStr(Round(
-                            FBlockManagers[FCurrPos].ZoomFactor * 100)) + '% ';
+    SetScaleView;
 
     // Adjust the font height based on the new zoom factor
     FBlockManagers[FCurrPos].Font.Height := Round(
@@ -663,37 +681,31 @@ implementation
     UpdateForDedicatedStatement;
   end;
 
-  procedure TNassiShneiderman.actNewExecute(Sender: TObject);
-  begin
-    // Check if the current scheme is saved or a default main block, or prompt for saving
-    if FBlockManagers[FCurrPos].isSaved or FBlockManagers[FCurrPos].isDefaultMainBlock or HandleSaveSchemePrompt then
-    begin
-      // Destroy the current block manager
-      FBlockManagers[FCurrPos].Destroy;
-
-      // Create a new block manager and initialize the main block
-      FBlockManagers[FCurrPos] := TBlockManager.Create(PaintBox);
-      FBlockManagers[FCurrPos].InitializeMainBlock;
-    end;
-  end;
-
   procedure TNassiShneiderman.actOpenExecute(Sender: TObject);
   begin
-    // Check if the current scheme is saved or a default main block, or prompt for saving
-    if FBlockManagers[FCurrPos].isSaved or FBlockManagers[FCurrPos].isDefaultMainBlock or HandleSaveSchemePrompt then
+    // Set the open file mode to JSON
+    SetOpenFileMode(fmJSON);
+
+    // Execute the open dialog
+    if OpenDialog.Execute then
     begin
-      // Set the open file mode to JSON
-      SetOpenFileMode(fmJSON);
+      // Creating a New Schema
+      AddNewSchema('');
 
-      // Execute the open dialog
-      if OpenDialog.Execute then
-      begin
-        // Set the path to the selected file in the block manager
-        FBlockManagers[FCurrPos].PathToFile := OpenDialog.FileName;
+      // Set the path to the selected file in the block manager
+      FBlockManagers[FCurrPos].PathToFile := OpenDialog.FileName;
 
-        // Load the schema from the selected file
-        LoadSchema(FBlockManagers[FCurrPos]);
-      end;
+      // Load the schema from the selected file
+      LoadSchema(FBlockManagers[FCurrPos]);
+
+      // Setting the schema name
+      cbMain.Items[FCurrPos] := FBlockManagers[FCurrPos].SchemeName;
+      cbMain.ItemIndex := FCurrPos;
+
+      tbSelectScale.Position := GetPosition(FBlockManagers[FCurrPos].ZoomFactor);
+      SetScaleView;
+
+      UpdateForDedicatedStatement
     end;
   end;
 
@@ -759,6 +771,7 @@ implementation
     begin
       // Save the schema to the current file
       SaveSchema(FBlockManagers[FCurrPos]);
+      FBlockManagers[FCurrPos].isSaved := True;
     end
     else
       actSaveAsExecute(Sender);
@@ -792,6 +805,33 @@ implementation
 
     // Update the help time by calculating the time difference between the current time and the start time
     Inc(FUserInfo.HelpTime, SecondsBetween(Now, StartTime));
+  end;
+
+  procedure TNassiShneiderman.actRenameExecute(Sender: TObject);
+  var
+    Name: string;
+  begin
+    Name := InputBox(rsNewSchemeName, rsNewSchemeContent, '');
+    if Name <> '' then
+    begin
+      FBlockManagers[FCurrPos].SchemeName := Name;
+      cbMain.Items[FCurrPos] := Name;
+      cbMain.ItemIndex := FCurrPos;
+    end;
+  end;
+
+  procedure TNassiShneiderman.actNewExecute(Sender: TObject);
+  var
+    Name: string;
+  begin
+    Name := InputBox(rsNewSchemeName, rsNewSchemeContent, '');
+    if Name <> '' then
+      AddNewSchema(Name);
+
+    tbSelectScale.Position := GetPosition(FBlockManagers[FCurrPos].ZoomFactor);
+    SetScaleView;
+
+    UpdateForDedicatedStatement;
   end;
 
   procedure TNassiShneiderman.actUndoExecute(Sender: TObject);
@@ -870,6 +910,33 @@ implementation
     Inc(FUserInfo.PenSettingTime, SecondsBetween(Now, StartTime));
   end;
 
+  procedure TNassiShneiderman.actCloseExecute(Sender: TObject);
+  begin
+    // Check if the current scheme is saved or a default main block, or prompt for saving
+    if FBlockManagers[FCurrPos].isSaved or
+       FBlockManagers[FCurrPos].isDefaultMainBlock or HandleSaveSchemePrompt then
+    begin
+      // Destroy the current block manager
+      FBlockManagers[FCurrPos].Destroy;
+      FBlockManagers.Delete(FCurrPos);
+      cbMain.Items.Delete(FCurrPos);
+
+      if FBlockManagers.Count = 0 then
+        AddNewSchema(OriginalName)
+      else if FCurrPos = FBlockManagers.Count then
+        Dec(FCurrPos);
+
+      cbMain.ItemIndex := FCurrPos;
+
+      FBlockManagers[FCurrPos].Activate;
+
+      tbSelectScale.Position := GetPosition(FBlockManagers[FCurrPos].ZoomFactor);
+      SetScaleView;
+
+      UpdateForDedicatedStatement;
+    end;
+  end;
+
   procedure TNassiShneiderman.actChngGlSettingsExecute(Sender: TObject);
   var
     PrevDefaultAction: string;
@@ -887,7 +954,8 @@ implementation
       FBlockManagers[FCurrPos].ChangeGlobalSettings(PrevDefaultAction);
     end;
 
-    // Update the global settings time by calculating the time difference between the current time and the start time
+    // Update the global settings time by calculating the time difference
+    // between the current time and the start time
     Inc(FUserInfo.GlobalSettingsTime, SecondsBetween(Now, StartTime));
   end;
 
@@ -940,45 +1008,6 @@ implementation
     inherited;
   end;
 
-  function TNassiShneiderman.HandleSaveSchemePrompt: Boolean;
-  var
-    Answer: Integer;
-  begin
-    // Prompt the user with a message dialog and store the user's answer
-    Answer := MessageDlg(rsExitDlg, mtWarning, [mbYes, mbNo, mbCancel], 0);
-
-    // Handle the user's answer
-    case Answer of
-      mrYes:
-      begin
-        // Set the save file mode to JSON
-        SetSaveFileMode(fmJSON);
-
-        // Prompt the user to select a file for saving the schema
-        if SaveDialog.Execute then
-        begin
-          // Update the path to the file in the block manager
-          FBlockManagers[FCurrPos].PathToFile := SaveDialog.FileName;
-
-          // Save the schema using the block manager
-          SaveSchema(FBlockManagers[FCurrPos]);
-
-          // Return True indicating successful saving
-          Result := True;
-        end
-        else
-          // Return False indicating saving was canceled
-          Result := False;
-      end;
-      mrNo:
-        // Return True indicating no saving is required
-        Result := True;
-      mrCancel:
-        // Return False indicating canceling the operation
-        Result := False;
-    end;
-  end;
-
   procedure TNassiShneiderman.UpdateForStack;
   begin
     tbUndo.Enabled:= FBlockManagers[FCurrPos].UndoStack.Count <> 0;
@@ -1004,7 +1033,7 @@ implementation
 
   procedure TNassiShneiderman.SetSaveFileMode(const AMode: TFileMode);
   begin
-    SaveDialog.FileName := '';
+    SaveDialog.FileName := FBlockManagers[FCurrPos].SchemeName;
     case AMode of
       fmJSON:
       begin
@@ -1099,7 +1128,54 @@ implementation
   procedure TNassiShneiderman.AddNewSchema(const AName: string);
   begin
     FBlockManagers.Add(TBlockManager.Create(PaintBox, AName));
-    lbMain.AddItem(AName, nil);
-    Inc(FCurrPos);
+    cbMain.AddItem(AName, nil);
+    FCurrPos := FBlockManagers.Count - 1;
+    cbMain.ItemIndex := FCurrPos;
+  end;
+
+  function TNassiShneiderman.HandleSaveSchemePrompt: Boolean;
+  var
+    Answer: Integer;
+  begin
+    // Prompt the user with a message dialog and store the user's answer
+    Answer := MessageDlg(rsExitDlgPart1 + FBlockManagers[FCurrPos].SchemeName + rsExitDlgPart2,
+              mtWarning, [mbYes, mbNo, mbCancel], 0);
+
+    // Handle the user's answer
+    case Answer of
+      mrYes:
+      begin
+        // Set the save file mode to JSON
+        SetSaveFileMode(fmJSON);
+
+        // Prompt the user to select a file for saving the schema
+        if SaveDialog.Execute then
+        begin
+          // Update the path to the file in the block manager
+          FBlockManagers[FCurrPos].PathToFile := SaveDialog.FileName;
+
+          // Save the schema using the block manager
+          SaveSchema(FBlockManagers[FCurrPos]);
+
+          // Return True indicating successful saving
+          Result := True;
+        end
+        else
+          // Return False indicating saving was canceled
+          Result := False;
+      end;
+      mrNo:
+        // Return True indicating no saving is required
+        Result := True;
+      mrCancel:
+        // Return False indicating canceling the operation
+        Result := False;
+    end;
+  end;
+
+  procedure TNassiShneiderman.SetScaleView;
+  begin
+    lblScaleView.Caption := ' ' + IntToStr(Trunc(
+                            FBlockManagers[FCurrPos].ZoomFactor * 100)) + '% ';
   end;
 end.

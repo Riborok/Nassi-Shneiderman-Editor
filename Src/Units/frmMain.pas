@@ -223,7 +223,7 @@ type
 
     FPrevMousePos: TPoint;
 
-    FisPressed: Boolean;
+    KeyKeysIsPressed: Boolean;
 
     FMayDrag, FWasDbClick: Boolean;
 
@@ -344,7 +344,7 @@ implementation
     Self.DoubleBuffered := True;
 
     // Initialize variables for mouse interaction
-    FisPressed := False;
+    KeyKeysIsPressed := False;
     FMayDrag := False;
     FWasDbClick := False;
 
@@ -389,7 +389,7 @@ implementation
   procedure TNassiShneiderman.FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
   begin
     // Set the flag indicating that no key is pressed
-    FisPressed := False;
+    KeyKeysIsPressed := False;
   end;
 
   procedure TNassiShneiderman.actExitExecute(Sender: TObject);
@@ -404,20 +404,43 @@ implementation
     if isDragging and (GetKeyState(VK_SHIFT) >= 0) then
       FBlockManagers[FCurrPos].DestroyCarryBlock;
 
-    // Check if a key is already pressed
-    if FisPressed then
+    // Check if a key keys is already pressed
+    if KeyKeysIsPressed then
       Handled := True
+    else if GetKeyState(VK_CONTROL) < 0 then
+      case Msg.CharCode of
+        VK_UP:
+        begin
+          if FBlockManagers.Count - 1 > FCurrPos then
+          begin
+            Inc(FCurrPos);
+            cbMain.ItemIndex := FCurrPos;
+            FBlockManagers[FCurrPos].Activate;
+          end;
+          Handled := True;
+        end;
+        VK_DOWN:
+        begin
+          if FCurrPos <> 0 then
+          begin
+            Dec(FCurrPos);
+            cbMain.ItemIndex := FCurrPos;
+            FBlockManagers[FCurrPos].Activate;
+          end;
+          Handled := True;
+        end;
+      end
     else if GetKeyState(VK_RETURN) < 0 then
-      FisPressed := True
+      KeyKeysIsPressed := True
     else
     begin
       // Handle specific key combinations
       case Msg.CharCode of
         VK_Z, VK_X, VK_C, VK_V:
-          FisPressed := True;
+          KeyKeysIsPressed := True;
         VK_RIGHT, VK_LEFT:
         begin
-          FisPressed := True;
+          KeyKeysIsPressed := True;
           // Trigger FormKeyDown for specific keys only if CTRL or SHIFT is not pressed
           if (GetKeyState(VK_CONTROL) >= 0) or (GetKeyState(VK_SHIFT) >= 0) then
             FormKeyDown(nil, Msg.CharCode, []);
