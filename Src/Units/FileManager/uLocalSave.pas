@@ -208,9 +208,16 @@ implementation
   procedure SaveSchema(const ABlockManager: TBlockManager);
   var
     Json: TJSONObject;
+    PrevFontHeight: Integer;
   begin
     if ABlockManager.PathToFile <> '' then
     begin
+      PrevFontHeight := ABlockManager.Font.Height;
+      ABlockManager.Font.Height := Round(ABlockManager.Font.Height / ABlockManager.ZoomFactor);
+      ABlockManager.PaintBox.Canvas.Pen := ABlockManager.Pen;
+      ABlockManager.PaintBox.Canvas.Font := ABlockManager.Font;
+      ABlockManager.RedefineMainBlock;
+
       Json := TJSONObject.Create;
       try
         with Json do
@@ -220,7 +227,6 @@ implementation
             AddPair('Pen', PenToJSON(Pen));
             AddPair('Font', FontToJSON(Font));
             AddPair('SchemeName', SchemeName);
-            AddPair('ZoomFactor', TJSONNumber.Create(ZoomFactor));
             AddPair('MainBlock', BlockToJSON(MainBlock));
           end;
           AddPair('DefaultAction', uBase.DefaultAction);
@@ -229,6 +235,9 @@ implementation
       finally
         Json.Destroy;
       end;
+
+      ABlockManager.Font.Height := PrevFontHeight;
+      ABlockManager.RedefineMainBlock;
     end;
   end;
 
@@ -250,7 +259,6 @@ implementation
             JSONToPen(TJSONObject(GetValue('Pen')), Pen);
             JSONToFont(TJSONObject(GetValue('Font')), Font);
             SchemeName := Json.GetValue('SchemeName').Value;
-            ZoomFactor := Json.GetValue('ZoomFactor').Value.ToSingle;
             MainBlock := JSONToBlock(TJSONObject(GetValue('MainBlock')), nil, PaintBox.Canvas);
             TIfBranching.RedefineSizesForIfBranching(MainBlock);
           end;
