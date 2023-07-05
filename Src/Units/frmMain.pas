@@ -440,6 +440,7 @@ implementation
   begin
     if ssCtrl in Shift then
     begin
+      FBlockManagers[FCurrPos].isSaved := False;
       if WheelDelta > 0 then
         tbSelectScale.Position:= tbSelectScale.Position + 1
       else
@@ -1033,7 +1034,7 @@ implementation
 
   procedure TNassiShneiderman.SetSaveFileMode(const AMode: TFileMode);
   begin
-    SaveDialog.FileName := '';
+    SaveDialog.FileName := FBlockManagers[FCurrPos].SchemeName;
     case AMode of
       fmJSON:
       begin

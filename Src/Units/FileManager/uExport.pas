@@ -34,7 +34,14 @@ implementation
   var
     VisibleImageRect: TVisibleImageRect;
     Bitmap: TBitmap;
+    PrevFontHeight: Integer;
   begin
+    PrevFontHeight := ABlockManager.Font.Height;
+    ABlockManager.Font.Height := Round(ABlockManager.Font.Height / ABlockManager.ZoomFactor);
+    ABlockManager.PaintBox.Canvas.Pen := ABlockManager.Pen;
+    ABlockManager.PaintBox.Canvas.Font := ABlockManager.Font;
+    ABlockManager.RedefineMainBlock;
+
     Bitmap := TBitmap.Create;
     try
       InitializeBitmap(Bitmap, ABlockManager);
@@ -42,13 +49,17 @@ implementation
       InitializeVisibleImageRect(Bitmap, VisibleImageRect);
 
       ABlockManager.MainBlock.InstallCanvas(Bitmap.Canvas);
+
       ABlockManager.MainBlock.DrawBlock(VisibleImageRect);
 
       Bitmap.SaveToFile(AFileName);
     finally
       Bitmap.Destroy;
     end;
+
     ABlockManager.MainBlock.InstallCanvas(ABlockManager.PaintBox.Canvas);
+    ABlockManager.Font.Height := PrevFontHeight;
+    ABlockManager.RedefineMainBlock;
   end;
 
   procedure SavePNGFile(const ABlockManager: TBlockManager; const AFileName: string);
@@ -56,7 +67,14 @@ implementation
     Bitmap: TBitmap;
     PNG: TPNGImage;
     VisibleImageRect: TVisibleImageRect;
+    PrevFontHeight: Integer;
   begin
+    PrevFontHeight := ABlockManager.Font.Height;
+    ABlockManager.Font.Height := Round(ABlockManager.Font.Height / ABlockManager.ZoomFactor);
+    ABlockManager.PaintBox.Canvas.Pen := ABlockManager.Pen;
+    ABlockManager.PaintBox.Canvas.Font := ABlockManager.Font;
+    ABlockManager.RedefineMainBlock;
+
     Bitmap := TBitmap.Create;
     try
       InitializeBitmap(Bitmap, ABlockManager);
@@ -64,6 +82,7 @@ implementation
       InitializeVisibleImageRect(Bitmap, VisibleImageRect);
 
       ABlockManager.MainBlock.InstallCanvas(Bitmap.Canvas);
+
       ABlockManager.MainBlock.DrawBlock(VisibleImageRect);
 
       PNG := TPNGImage.Create;
@@ -76,7 +95,10 @@ implementation
     finally
       Bitmap.Destroy;
     end;
+
     ABlockManager.MainBlock.InstallCanvas(ABlockManager.PaintBox.Canvas);
+    ABlockManager.Font.Height := PrevFontHeight;
+    ABlockManager.RedefineMainBlock;
   end;
 
   { SVG }
@@ -335,16 +357,20 @@ implementation
   procedure SaveSVGFile(const ABlockManager: TBlockManager; const AFileName: string);
   var
     SVG: TStringList;
+    PrevFontHeight: Integer;
   begin
+    PrevFontHeight := ABlockManager.Font.Height;
+    ABlockManager.Font.Height := Round(ABlockManager.Font.Height / ABlockManager.ZoomFactor);
+    ABlockManager.PaintBox.Canvas.Pen := ABlockManager.Pen;
+    ABlockManager.PaintBox.Canvas.Font := ABlockManager.Font;
+    ABlockManager.RedefineMainBlock;
+    ABlockManager.PaintBox.Canvas.Font.Size := Round(CorrectionToSvg * ABlockManager.Font.Size);
+
     SVG := TStringList.Create;
     try
       SetSVGOpenTag(SVG, ABlockManager.MainBlock.XLast + SchemeIndent,
                     ABlockManager.MainBlock.Statements[ABlockManager.MainBlock.
                     Statements.Count - 1].GetYBottom + SchemeIndent);
-
-      ABlockManager.PaintBox.Canvas.Pen := ABlockManager.Pen;
-      ABlockManager.PaintBox.Canvas.Font := ABlockManager.Font;
-      ABlockManager.PaintBox.Canvas.Font.Size := Round(CorrectionToSvg * ABlockManager.Font.Size);
 
       DrawBlock(SVG, ABlockManager.MainBlock);
 
@@ -354,6 +380,9 @@ implementation
     finally
       SVG.Destroy;
     end;
+
+    ABlockManager.Font.Height := PrevFontHeight;
+    ABlockManager.RedefineMainBlock;
   end;
 
 end.
