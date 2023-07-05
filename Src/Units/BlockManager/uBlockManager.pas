@@ -73,7 +73,7 @@ type
     property PaintBox: TPaintBox read FPaintBox;
 
     property PathToFile: string read FPathToFile write SetPathToFile;
-    property isSaved: Boolean read FisSaved;
+    property isSaved: Boolean read FisSaved write FisSaved;
 
     class property CarryBlock: TBlock read FCarryBlock;
     class property BufferBlock: TBlock read FBufferBlock write FBufferBlock;

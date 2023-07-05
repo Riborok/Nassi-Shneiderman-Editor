@@ -55,7 +55,8 @@ uses
   uStatementConverter in 'Units\Support\uStatementConverter.pas',
   uDialogMessages in 'Units\Support\uDialogMessages.pas',
   uExport in 'Units\FileManager\uExport.pas',
-  uStatistics in 'Units\FileManager\uStatistics.pas';
+  uStatistics in 'Units\FileManager\uStatistics.pas',
+  uZoomAndPositionTransfer in 'Units\Support\uZoomAndPositionTransfer.pas';
 
 {$R *.res}
 

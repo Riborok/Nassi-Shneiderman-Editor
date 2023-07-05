@@ -9,7 +9,8 @@ uses
   uStatementSearch, System.Actions, Vcl.ActnList, Vcl.ToolWin, Types, uBlockManager,
   Vcl.ComCtrls, uAdditionalTypes, frmPenSetting, System.ImageList, Vcl.ImgList,
   System.SysUtils, uGlobalSave, uLocalSave, frmHelp, uStatementConverter, uDialogMessages,
-  frmGlobalSettings, System.UITypes, uExport, uStatistics, uArrayList;
+  frmGlobalSettings, System.UITypes, uExport, uStatistics, uArrayList,
+  uZoomAndPositionTransfer;
 
 type
   TNassiShneiderman = class(TForm)
@@ -244,6 +245,8 @@ type
 
     procedure AddNewSchema(const AName: string);
     function HandleSaveSchemePrompt: Boolean;
+
+    procedure SetScaleView; inline;
   public
     destructor Destroy; override;
   end;
@@ -622,7 +625,12 @@ implementation
   begin
     FCurrPos := cbMain.ItemIndex;
 
+
+    tbSelectScale.Position := GetPosition(FBlockManagers[FCurrPos].ZoomFactor);
+    SetScaleView;
+
     FBlockManagers[FCurrPos].Activate;
+    UpdateForDedicatedStatement;
   end;
 
   procedure TNassiShneiderman.cbMainCloseUp(Sender: TObject);
@@ -650,27 +658,9 @@ implementation
     PrevZoomFactor := FBlockManagers[FCurrPos].ZoomFactor;
 
     // Set the zoom factor based on the selected position of tbSelectScale track bar
-    case tbSelectScale.Position of
-      1: FBlockManagers[FCurrPos].ZoomFactor := 0.1;
-      2: FBlockManagers[FCurrPos].ZoomFactor := 0.3;
-      3: FBlockManagers[FCurrPos].ZoomFactor := 0.5;
-      4: FBlockManagers[FCurrPos].ZoomFactor := 0.8;
-      5: FBlockManagers[FCurrPos].ZoomFactor := 1;
-      6: FBlockManagers[FCurrPos].ZoomFactor := 1.2;
-      7: FBlockManagers[FCurrPos].ZoomFactor := 1.5;
-      8: FBlockManagers[FCurrPos].ZoomFactor := 1.7;
-      9: FBlockManagers[FCurrPos].ZoomFactor := 2;
-      10: FBlockManagers[FCurrPos].ZoomFactor := 2.2;
-      11: FBlockManagers[FCurrPos].ZoomFactor := 2.5;
-      12: FBlockManagers[FCurrPos].ZoomFactor := 2.7;
-      13: FBlockManagers[FCurrPos].ZoomFactor := 3;
-      14: FBlockManagers[FCurrPos].ZoomFactor := 5;
-      15: FBlockManagers[FCurrPos].ZoomFactor := 10;
-      16: FBlockManagers[FCurrPos].ZoomFactor := 20;
-    end;
+    FBlockManagers[FCurrPos].ZoomFactor := GetZoomFactor(tbSelectScale.Position);
 
-    lblScaleView.Caption := ' ' + IntToStr(Round(
-                            FBlockManagers[FCurrPos].ZoomFactor * 100)) + '% ';
+    SetScaleView;
 
     // Adjust the font height based on the new zoom factor
     FBlockManagers[FCurrPos].Font.Height := Round(
@@ -711,6 +701,9 @@ implementation
       // Setting the schema name
       cbMain.Items[FCurrPos] := FBlockManagers[FCurrPos].SchemeName;
       cbMain.ItemIndex := FCurrPos;
+
+      tbSelectScale.Position := GetPosition(FBlockManagers[FCurrPos].ZoomFactor);
+      SetScaleView;
 
       UpdateForDedicatedStatement
     end;
@@ -778,6 +771,7 @@ implementation
     begin
       // Save the schema to the current file
       SaveSchema(FBlockManagers[FCurrPos]);
+      FBlockManagers[FCurrPos].isSaved := True;
     end
     else
       actSaveAsExecute(Sender);
@@ -833,6 +827,10 @@ implementation
     Name := InputBox(rsNewSchemeName, rsNewSchemeContent, '');
     if Name <> '' then
       AddNewSchema(Name);
+
+    tbSelectScale.Position := GetPosition(FBlockManagers[FCurrPos].ZoomFactor);
+    SetScaleView;
+
     UpdateForDedicatedStatement;
   end;
 
@@ -931,6 +929,10 @@ implementation
       cbMain.ItemIndex := FCurrPos;
 
       FBlockManagers[FCurrPos].Activate;
+
+      tbSelectScale.Position := GetPosition(FBlockManagers[FCurrPos].ZoomFactor);
+      SetScaleView;
+
       UpdateForDedicatedStatement;
     end;
   end;
@@ -1169,5 +1171,11 @@ implementation
         // Return False indicating canceling the operation
         Result := False;
     end;
+  end;
+
+  procedure TNassiShneiderman.SetScaleView;
+  begin
+    lblScaleView.Caption := ' ' + IntToStr(Trunc(
+                            FBlockManagers[FCurrPos].ZoomFactor * 100)) + '% ';
   end;
 end.
