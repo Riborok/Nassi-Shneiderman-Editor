@@ -62,9 +62,10 @@ Export options available in: PNG, BMP, SVG.
 ---
 
 # Shortcuts:
+
 Alt + F4 - Сlose the program
 
-
+---
 
 Ctrl + N - Create a new diagram
 
@@ -76,13 +77,13 @@ Ctrl + S - Save current diagram
 
 Ctrl + Alt + S - Save current scheme with specified path
 
-
+---
 
 Ctrl + Z - Undo the last action
 
 Shift + Ctrl + Z - Redo the last action
 
-
+---
 
 Ctrl + X - Cut the seletced element
 
@@ -90,13 +91,13 @@ Ctrl + C - Copy the seletced element
 
 Ctrl + V - Paste the copied or cut element after the selected element
 
-
+---
 
 Enter - Edit the selected element
 
 Del - Delete the selected element
 
-
+---
 
 F2 - Insert a new process after the selected element
 
@@ -108,7 +109,7 @@ F5 - Insert a new testing loop after the selected element
 
 F6 - Insert a new reversed testing loop after the selected element
 
-
+---
 
 Shift + F2 - Insert a new process before the selected element
 
@@ -120,7 +121,7 @@ Shift + F5 - Insert a new testing loop before the selected element
 
 Shift + F6 - Insert a new reversed testing loop before the selected element
 
-
+---
 
 Up - Move selected block up
 
@@ -130,13 +131,13 @@ Right - Move selected block right
 
 Down - Move selected block down
 
-
+---
 
 Shift + Ctrl + Right - Sort case blocks in ascending order
 
 Shift + Ctrl + Left - Sort case blocks in descending order
 
-
+---
 
 Shift + Ctrl + F - Edit font
 
@@ -144,13 +145,13 @@ Shift + Ctrl + P - Edit pen
 
 Shift + Ctrl + G - Edit global settings
 
-
+---
 
 F1 - Information and details about the program's functionality
 
 Shift + F1 - Information about the author of the program
 
-
+---
 
 Ctrl + R - Rename the current diagram
 
@@ -158,7 +159,7 @@ Ctrl + Up - Change the diagram to the diagram preceding it in the list
 
 Ctrl + Down - Change the diagram to the diagram following it in the list
 
-
+---
 
 MouseWheelUp - Scroll up
 
@@ -168,7 +169,7 @@ Shift + MouseWheelUp - Schroll left
 
 Shift + MouseWheelDown - Schroll right
 
-
+---
 
 Ctrl + MouseWheelUp - Zoom in the diagram
 
