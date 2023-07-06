@@ -656,18 +656,21 @@ implementation
   const
     Stock = 42 shl 2;
     Correction = 5;
+  var
+    StockWithScaling : Integer;
   begin
     FPaintBox.Canvas.Font := FFont;
     FPaintBox.Canvas.Pen := FPen;
+    StockWithScaling := Round(Stock * FZoomFactor);
 
-    FPaintBox.Width := Max(FMainBlock.XLast + Stock,
+    FPaintBox.Width := Max(FMainBlock.XLast + StockWithScaling,
                        AVisibleImageRect.FBottomRight.X -
                        AVisibleImageRect.FTopLeft.X - Correction);
-    FPaintBox.Height := Max(FMainBlock.Statements.GetLast.GetYBottom + Stock,
+    FPaintBox.Height := Max(FMainBlock.Statements.GetLast.GetYBottom + StockWithScaling,
                         AVisibleImageRect.FBottomRight.Y -
                         AVisibleImageRect.FTopLeft.Y - Correction);
 
-    AVisibleImageRect.Expand(Stock);
+    AVisibleImageRect.Expand(StockWithScaling);
 
     if FDedicatedStatement <> nil then
       ColorizeRect(FPaintBox.Canvas,CreateRect(FDedicatedStatement), FHighlightColor);

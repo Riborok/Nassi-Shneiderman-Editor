@@ -44,7 +44,8 @@ type
 
     FUndoStack, FRedoStack: TAutoClearStack<ICommand>;
 
-    FZoomFactor : Single;
+    FZoomFactor : Real;
+    FPenWidthWithoutScale, FFontHeightWithoutScale : Integer;
     FPen: TPen;
     FFont: TFont;
 
@@ -67,13 +68,19 @@ type
     property UndoStack: TAutoClearStack<ICommand> read FUndoStack;
     property RedoStack: TAutoClearStack<ICommand> read FRedoStack;
 
-    property ZoomFactor: Single read FZoomFactor write FZoomFactor;
+    procedure RecoverAfterZoom;
+
+    property ZoomFactor: Real read FZoomFactor write FZoomFactor;
+    property PenWidthWithoutScale: Integer read FPenWidthWithoutScale  write FPenWidthWithoutScale;
+    procedure SetPenWidth; inline;
+    property FontHeightWithoutScale: Integer read FFontHeightWithoutScale write FFontHeightWithoutScale;
+    procedure SetFontHeight; inline;
     property Font: TFont read FFont;
     property Pen: TPen read FPen;
     property PaintBox: TPaintBox read FPaintBox;
 
     property PathToFile: string read FPathToFile write SetPathToFile;
-    property isSaved: Boolean read FisSaved;
+    property isSaved: Boolean read FisSaved write FisSaved;
 
     class property CarryBlock: TBlock read FCarryBlock;
     class property BufferBlock: TBlock read FBufferBlock write FBufferBlock;
@@ -121,9 +128,31 @@ type
 
     { View update }
     procedure Draw(const AVisibleImageRect: TVisibleImageRect);
+    procedure Activate; inline;
   end;
 
 implementation
+
+  procedure TBlockManager.RecoverAfterZoom;
+  begin
+    SetFontHeight;
+    SetPenWidth;
+    FMainBlock.SetStartIndent(Round(SchemeIndent * FZoomFactor));
+  end;
+
+  procedure TBlockManager.SetFontHeight;
+  begin
+    FFont.Height := Round(FFontHeightWithoutScale * FZoomFactor);
+    if FFont.Height = 0 then
+      FFont.Height := 1;
+  end;
+
+  procedure TBlockManager.SetPenWidth;
+  begin
+    FPen.Width := Round(FPenWidthWithoutScale * FZoomFactor);
+    if FPen.Width = 0 then
+      FPen.Width := 1;
+  end;
 
   procedure TBlockManager.SetPathToFile(const APath: string);
   begin
@@ -173,6 +202,9 @@ implementation
     FPen.Style := SchemeInitialPenStyle;
     FPen.Mode := SchemeInitialPenMode;
 
+    FPenWidthWithoutScale := FPen.Width;
+    FFontHeightWithoutScale := FFont.Height;
+
     FPaintBox.Canvas.Font := FFont;
     FPaintBox.Canvas.Pen := FPen;
 
@@ -189,7 +221,7 @@ implementation
     FMainBlock.AddUnknownStatement(uBase.DefaultStatement.Create(DefaultAction, FMainBlock),
                                                             SchemeIndent);
 
-    FPaintBox.Invalidate;
+    Activate;
   end;
 
   { MainBlock }
@@ -643,5 +675,10 @@ implementation
     TryDrawCarryBlock(AVisibleImageRect);
 
     FMainBlock.DrawBlock(AVisibleImageRect);
+  end;
+
+  procedure TBlockManager.Activate;
+  begin
+    FPaintBox.Invalidate;
   end;
 end.
