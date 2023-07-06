@@ -2,7 +2,7 @@ unit uConstants;
 
 interface
 const
-  SchemeIndent = 10;
+  SchemeIndent = 14;
   Space = ' ';
   mmFontSize = 14;
   mmFontName = 'Times New Roman';

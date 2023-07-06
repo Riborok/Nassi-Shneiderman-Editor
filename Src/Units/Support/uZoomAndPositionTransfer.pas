@@ -2,12 +2,12 @@ unit uZoomAndPositionTransfer;
 
 interface
 
-function GetZoomFactor(const APos: Integer): Single; inline;
-function GetPosition(const AZoomFactor: Single): Integer; inline;
+function GetZoomFactor(const APos: Integer): Real; inline;
+function GetPosition(const AZoomFactor: Real): Integer; inline;
 
 implementation
 
-  function GetZoomFactor(const APos: Integer): Single;
+  function GetZoomFactor(const APos: Integer): Real;
   begin
     case APos of
       1: Result := 0.25;
@@ -30,7 +30,7 @@ implementation
     end;
   end;
 
-  function GetPosition(const AZoomFactor: Single): Integer;
+  function GetPosition(const AZoomFactor: Real): Integer;
   begin
     if AZoomFactor <= 0.25 then
       Result := 1

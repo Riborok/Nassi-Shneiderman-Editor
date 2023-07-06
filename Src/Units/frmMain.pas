@@ -671,24 +671,16 @@ implementation
   end;
 
   procedure TNassiShneiderman.tbSelectScaleChange(Sender: TObject);
-  var
-    PrevZoomFactor: Single;
   begin
     // Reset focus
     ActiveControl := nil;
-
-    // Store the previous zoom factor
-    PrevZoomFactor := FBlockManagers[FCurrPos].ZoomFactor;
 
     // Set the zoom factor based on the selected position of tbSelectScale track bar
     FBlockManagers[FCurrPos].ZoomFactor := GetZoomFactor(tbSelectScale.Position);
 
     SetScaleView;
 
-    // Adjust the font height based on the new zoom factor
-    FBlockManagers[FCurrPos].Font.Height := Round(
-         FBlockManagers[FCurrPos].Font.Height *
-         FBlockManagers[FCurrPos].ZoomFactor / PrevZoomFactor);
+    FBlockManagers[FCurrPos].RecoverAfterZoom;
 
     // Redefine the main block to apply the new font settings
     FBlockManagers[FCurrPos].RedefineMainBlock;
@@ -893,12 +885,9 @@ implementation
   procedure TNassiShneiderman.actChngFontExecute(Sender: TObject);
   var
     StartTime: TDateTime;
-    PrevFontHeight: Integer;
   begin
     StartTime := Now;
-    PrevFontHeight := FBlockManagers[FCurrPos].Font.Height;
-    FBlockManagers[FCurrPos].Font.Height := Round(FBlockManagers[FCurrPos].Font.Height
-                                         / FBlockManagers[FCurrPos].ZoomFactor);
+    FBlockManagers[FCurrPos].Font.Height := FBlockManagers[FCurrPos].FontHeightWithoutScale;
 
     // Initialize the font dialog with the current font settings
     FontDialog.Font := FBlockManagers[FCurrPos].Font;
@@ -908,15 +897,15 @@ implementation
     begin
       // Update the font settings in the block manager with the selected font
       FBlockManagers[FCurrPos].Font.Assign(FontDialog.Font);
+      FBlockManagers[FCurrPos].FontHeightWithoutScale := FontDialog.Font.Height;
 
-      FBlockManagers[FCurrPos].Font.Height := Round(FBlockManagers[FCurrPos].Font.Height
-                                           * FBlockManagers[FCurrPos].ZoomFactor);
+      FBlockManagers[FCurrPos].SetFontHeight;
 
       // Redefine the main block to apply the new font settings
       FBlockManagers[FCurrPos].RedefineMainBlock;
     end
     else
-      FBlockManagers[FCurrPos].Font.Height := PrevFontHeight;
+      FBlockManagers[FCurrPos].SetFontHeight;
 
     // Update the font setting time by calculating the time difference between the current time and the start time
     Inc(FUserInfo.FontSettingTime, SecondsBetween(Now, StartTime));
@@ -927,6 +916,7 @@ implementation
     StartTime: TDateTime;
   begin
     StartTime := Now;
+    FBlockManagers[FCurrPos].Pen.Width := FBlockManagers[FCurrPos].PenWidthWithoutScale;
 
     // Initialize the pen dialog with the current pen settings
     FPenDialog.Pen := FBlockManagers[FCurrPos].Pen;
@@ -934,9 +924,15 @@ implementation
     // Prompt the user to select new pen settings using the pen dialog
     if FPenDialog.Execute then
     begin
+      FBlockManagers[FCurrPos].PenWidthWithoutScale := FBlockManagers[FCurrPos].Pen.Width;
+
+      FBlockManagers[FCurrPos].SetPenWidth;
+
       // Update the pen settings in the block manager with the selected pen
       FBlockManagers[FCurrPos].RedefineMainBlock;
-    end;
+    end
+    else
+      FBlockManagers[FCurrPos].SetPenWidth;
 
     // Update the pen setting time by calculating the time difference between the current time and the start time
     Inc(FUserInfo.PenSettingTime, SecondsBetween(Now, StartTime));

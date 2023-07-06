@@ -229,6 +229,8 @@ type
     function GetMask(const AVisibleImageRect: TVisibleImageRect): Integer; inline;
 
     procedure InstallCanvas(const ACanvas: TCanvas);
+
+    procedure SetStartIndent(const ANewIndent: Integer);
   end;
 
   var
@@ -975,6 +977,15 @@ implementation
     for I := 0 to FStatements.Count - 1 do
       if FStatements[I] is TOperator then
         TOperator(FStatements[I]).InstallCanvas(ACanvas);
+  end;
+
+  procedure TBlock.SetStartIndent(const ANewIndent: Integer);
+  var
+    I: Integer;
+  begin
+    Self.FXStart := ANewIndent;
+    for I := 0 to FStatements.Count - 1 do
+      FStatements[I].FYStart := ANewIndent;
   end;
 
   { TOperator }

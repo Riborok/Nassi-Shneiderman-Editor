@@ -208,12 +208,16 @@ implementation
   procedure SaveSchema(const ABlockManager: TBlockManager);
   var
     Json: TJSONObject;
-    PrevFontHeight: Integer;
+    PrevHeight, PrevWidth: Integer;
   begin
     if ABlockManager.PathToFile <> '' then
     begin
-      PrevFontHeight := ABlockManager.Font.Height;
-      ABlockManager.Font.Height := Round(ABlockManager.Font.Height / ABlockManager.ZoomFactor);
+      PrevHeight := ABlockManager.Font.Height;
+      PrevWidth := ABlockManager.Pen.Width;
+
+      ABlockManager.Font.Height := ABlockManager.FontHeightWithoutScale;
+      ABlockManager.Pen.Width := ABlockManager.PenWidthWithoutScale;
+
       ABlockManager.RedefineMainBlock;
 
       Json := TJSONObject.Create;
@@ -234,7 +238,8 @@ implementation
         Json.Destroy;
       end;
 
-      ABlockManager.Font.Height := PrevFontHeight;
+      ABlockManager.Pen.Width := PrevWidth;
+      ABlockManager.Font.Height := PrevHeight;
       ABlockManager.RedefineMainBlock;
     end;
   end;

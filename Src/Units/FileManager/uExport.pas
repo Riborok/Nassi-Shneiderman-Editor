@@ -34,10 +34,14 @@ implementation
   var
     VisibleImageRect: TVisibleImageRect;
     Bitmap: TBitmap;
-    PrevFontHeight: Integer;
+    PrevHeight, PrevWidth: Integer;
   begin
-    PrevFontHeight := ABlockManager.Font.Height;
-    ABlockManager.Font.Height := Round(ABlockManager.Font.Height / ABlockManager.ZoomFactor);
+    PrevHeight := ABlockManager.Font.Height;
+    PrevWidth := ABlockManager.Pen.Width;
+
+    ABlockManager.Font.Height := ABlockManager.FontHeightWithoutScale;
+    ABlockManager.Pen.Width := ABlockManager.PenWidthWithoutScale;
+
     ABlockManager.RedefineMainBlock;
 
     Bitmap := TBitmap.Create;
@@ -56,7 +60,8 @@ implementation
     end;
 
     ABlockManager.MainBlock.InstallCanvas(ABlockManager.PaintBox.Canvas);
-    ABlockManager.Font.Height := PrevFontHeight;
+    ABlockManager.Pen.Width := PrevWidth;
+    ABlockManager.Font.Height := PrevHeight;
     ABlockManager.RedefineMainBlock;
   end;
 
@@ -65,10 +70,14 @@ implementation
     Bitmap: TBitmap;
     PNG: TPNGImage;
     VisibleImageRect: TVisibleImageRect;
-    PrevFontHeight: Integer;
+    PrevHeight, PrevWidth: Integer;
   begin
-    PrevFontHeight := ABlockManager.Font.Height;
-    ABlockManager.Font.Height := Round(ABlockManager.Font.Height / ABlockManager.ZoomFactor);
+    PrevHeight := ABlockManager.Font.Height;
+    PrevWidth := ABlockManager.Pen.Width;
+
+    ABlockManager.Font.Height := ABlockManager.FontHeightWithoutScale;
+    ABlockManager.Pen.Width := ABlockManager.PenWidthWithoutScale;
+
     ABlockManager.RedefineMainBlock;
 
     Bitmap := TBitmap.Create;
@@ -93,7 +102,8 @@ implementation
     end;
 
     ABlockManager.MainBlock.InstallCanvas(ABlockManager.PaintBox.Canvas);
-    ABlockManager.Font.Height := PrevFontHeight;
+    ABlockManager.Pen.Width := PrevWidth;
+    ABlockManager.Font.Height := PrevHeight;
     ABlockManager.RedefineMainBlock;
   end;
 
@@ -353,10 +363,14 @@ implementation
   procedure SaveSVGFile(const ABlockManager: TBlockManager; const AFileName: string);
   var
     SVG: TStringList;
-    PrevFontHeight: Integer;
+    PrevHeight, PrevWidth: Integer;
   begin
-    PrevFontHeight := ABlockManager.Font.Height;
-    ABlockManager.Font.Height := Round(ABlockManager.Font.Height / ABlockManager.ZoomFactor);
+    PrevHeight := ABlockManager.Font.Height;
+    PrevWidth := ABlockManager.Pen.Width;
+
+    ABlockManager.Font.Height := ABlockManager.FontHeightWithoutScale;
+    ABlockManager.Pen.Width := ABlockManager.PenWidthWithoutScale;
+
     ABlockManager.RedefineMainBlock;
     ABlockManager.PaintBox.Canvas.Font.Size := Round(CorrectionToSvg * ABlockManager.Font.Size);
 
@@ -375,7 +389,8 @@ implementation
       SVG.Destroy;
     end;
 
-    ABlockManager.Font.Height := PrevFontHeight;
+    ABlockManager.Pen.Width := PrevWidth;
+    ABlockManager.Font.Height := PrevHeight;
     ABlockManager.RedefineMainBlock;
   end;
 
