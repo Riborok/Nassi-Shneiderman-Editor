@@ -4,7 +4,7 @@ interface
 uses
   UBlockManager, uBase, System.JSON, System.Classes, uIfBranching, Vcl.Graphics,
   System.SysUtils, System.IOUtils, System.UITypes, uCaseBranching, uAdditionalTypes,
-  uStatementConverter, System.Generics.Collections, Vcl.Dialogs, uDialogMessages;
+  uStatementConverter, System.Generics.Collections, Vcl.Dialogs, uDialogMessages, uConstants;
 
   procedure SaveSchema(const ABlockManager: TBlockManager);
   procedure LoadSchema(const ABlockManager: TBlockManager);
@@ -218,6 +218,7 @@ implementation
       ABlockManager.Font.Height := ABlockManager.FontHeightWithoutScale;
       ABlockManager.Pen.Width := ABlockManager.PenWidthWithoutScale;
 
+      ABlockManager.MainBlock.SetStartIndent(SchemeIndent);
       ABlockManager.RedefineMainBlock;
 
       Json := TJSONObject.Create;
@@ -240,6 +241,7 @@ implementation
 
       ABlockManager.Pen.Width := PrevWidth;
       ABlockManager.Font.Height := PrevHeight;
+      ABlockManager.MainBlock.SetStartIndent(Round(SchemeIndent * ABlockManager.ZoomFactor));
       ABlockManager.RedefineMainBlock;
     end;
   end;

@@ -42,6 +42,7 @@ implementation
     ABlockManager.Font.Height := ABlockManager.FontHeightWithoutScale;
     ABlockManager.Pen.Width := ABlockManager.PenWidthWithoutScale;
 
+    ABlockManager.MainBlock.SetStartIndent(SchemeIndent);
     ABlockManager.RedefineMainBlock;
 
     Bitmap := TBitmap.Create;
@@ -62,6 +63,7 @@ implementation
     ABlockManager.MainBlock.InstallCanvas(ABlockManager.PaintBox.Canvas);
     ABlockManager.Pen.Width := PrevWidth;
     ABlockManager.Font.Height := PrevHeight;
+    ABlockManager.MainBlock.SetStartIndent(Round(SchemeIndent * ABlockManager.ZoomFactor));
     ABlockManager.RedefineMainBlock;
   end;
 
@@ -78,6 +80,7 @@ implementation
     ABlockManager.Font.Height := ABlockManager.FontHeightWithoutScale;
     ABlockManager.Pen.Width := ABlockManager.PenWidthWithoutScale;
 
+    ABlockManager.MainBlock.SetStartIndent(SchemeIndent);
     ABlockManager.RedefineMainBlock;
 
     Bitmap := TBitmap.Create;
@@ -104,6 +107,7 @@ implementation
     ABlockManager.MainBlock.InstallCanvas(ABlockManager.PaintBox.Canvas);
     ABlockManager.Pen.Width := PrevWidth;
     ABlockManager.Font.Height := PrevHeight;
+    ABlockManager.MainBlock.SetStartIndent(Round(SchemeIndent * ABlockManager.ZoomFactor));
     ABlockManager.RedefineMainBlock;
   end;
 
@@ -371,6 +375,7 @@ implementation
     ABlockManager.Font.Height := ABlockManager.FontHeightWithoutScale;
     ABlockManager.Pen.Width := ABlockManager.PenWidthWithoutScale;
 
+    ABlockManager.MainBlock.SetStartIndent(SchemeIndent);
     ABlockManager.RedefineMainBlock;
     ABlockManager.PaintBox.Canvas.Font.Size := Round(CorrectionToSvg * ABlockManager.Font.Size);
 
@@ -391,6 +396,7 @@ implementation
 
     ABlockManager.Pen.Width := PrevWidth;
     ABlockManager.Font.Height := PrevHeight;
+    ABlockManager.MainBlock.SetStartIndent(Round(SchemeIndent * ABlockManager.ZoomFactor));
     ABlockManager.RedefineMainBlock;
   end;
 

@@ -286,6 +286,8 @@ implementation
         case Answer of
           mrYes:
           begin
+            FCurrPos := I;
+
             // Set the save file mode to JSON
             SetSaveFileMode(fmJSON);
 
