@@ -246,6 +246,8 @@ type
     procedure AddNewSchema(const AName: string);
     function HandleSaveSchemePrompt: Boolean;
 
+    procedure ChangeScheme;
+
     procedure SetScaleView; inline;
   public
     destructor Destroy; override;
@@ -416,7 +418,7 @@ implementation
           begin
             Inc(FCurrPos);
             cbMain.ItemIndex := FCurrPos;
-            FBlockManagers[FCurrPos].Activate;
+            ChangeScheme;
           end;
           Handled := True;
         end;
@@ -426,7 +428,7 @@ implementation
           begin
             Dec(FCurrPos);
             cbMain.ItemIndex := FCurrPos;
-            FBlockManagers[FCurrPos].Activate;
+            ChangeScheme;
           end;
           Handled := True;
         end;
@@ -646,13 +648,7 @@ implementation
   procedure TNassiShneiderman.cbMainChange(Sender: TObject);
   begin
     FCurrPos := cbMain.ItemIndex;
-
-
-    tbSelectScale.Position := GetPosition(FBlockManagers[FCurrPos].ZoomFactor);
-    SetScaleView;
-
-    FBlockManagers[FCurrPos].Activate;
-    UpdateForDedicatedStatement;
+    ChangeScheme;
   end;
 
   procedure TNassiShneiderman.cbMainCloseUp(Sender: TObject);
@@ -1198,6 +1194,14 @@ implementation
         // Return False indicating canceling the operation
         Result := False;
     end;
+  end;
+
+  procedure TNassiShneiderman.ChangeScheme;
+  begin
+    tbSelectScale.Position := GetPosition(FBlockManagers[FCurrPos].ZoomFactor);
+    SetScaleView;
+    FBlockManagers[FCurrPos].Activate;
+    UpdateForDedicatedStatement;
   end;
 
   procedure TNassiShneiderman.SetScaleView;
