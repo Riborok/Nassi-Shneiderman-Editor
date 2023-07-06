@@ -65,7 +65,7 @@ Export options available in: PNG, BMP, SVG.
 
 Alt + F4 - Сlose the program
 
----
+<br>
 
 Ctrl + N - Create a new diagram
 
@@ -77,13 +77,13 @@ Ctrl + S - Save current diagram
 
 Ctrl + Alt + S - Save current scheme with specified path
 
----
+<br>
 
 Ctrl + Z - Undo the last action
 
 Shift + Ctrl + Z - Redo the last action
 
----
+<br>
 
 Ctrl + X - Cut the seletced element
 
@@ -91,13 +91,13 @@ Ctrl + C - Copy the seletced element
 
 Ctrl + V - Paste the copied or cut element after the selected element
 
----
+<br>
 
 Enter - Edit the selected element
 
 Del - Delete the selected element
 
----
+<br>
 
 F2 - Insert a new process after the selected element
 
@@ -109,7 +109,7 @@ F5 - Insert a new testing loop after the selected element
 
 F6 - Insert a new reversed testing loop after the selected element
 
----
+<br>
 
 Shift + F2 - Insert a new process before the selected element
 
@@ -121,7 +121,7 @@ Shift + F5 - Insert a new testing loop before the selected element
 
 Shift + F6 - Insert a new reversed testing loop before the selected element
 
----
+<br>
 
 Up - Move selected block up
 
@@ -131,13 +131,13 @@ Right - Move selected block right
 
 Down - Move selected block down
 
----
+<br>
 
 Shift + Ctrl + Right - Sort case blocks in ascending order
 
 Shift + Ctrl + Left - Sort case blocks in descending order
 
----
+<br>
 
 Shift + Ctrl + F - Edit font
 
@@ -145,13 +145,13 @@ Shift + Ctrl + P - Edit pen
 
 Shift + Ctrl + G - Edit global settings
 
----
+<br>
 
 F1 - Information and details about the program's functionality
 
 Shift + F1 - Information about the author of the program
 
----
+<br>
 
 Ctrl + R - Rename the current diagram
 
@@ -159,7 +159,7 @@ Ctrl + Up - Change the diagram to the diagram preceding it in the list
 
 Ctrl + Down - Change the diagram to the diagram following it in the list
 
----
+<br>
 
 MouseWheelUp - Scroll up
 
@@ -169,7 +169,7 @@ Shift + MouseWheelUp - Schroll left
 
 Shift + MouseWheelDown - Schroll right
 
----
+<br>
 
 Ctrl + MouseWheelUp - Zoom in the diagram
 
