@@ -414,9 +414,9 @@ implementation
       case Msg.CharCode of
         VK_UP:
         begin
-          if FBlockManagers.Count - 1 > FCurrPos then
+          if FCurrPos <> 0 then
           begin
-            Inc(FCurrPos);
+            Dec(FCurrPos);
             cbMain.ItemIndex := FCurrPos;
             ChangeScheme;
           end;
@@ -424,9 +424,9 @@ implementation
         end;
         VK_DOWN:
         begin
-          if FCurrPos <> 0 then
+          if FBlockManagers.Count - 1 > FCurrPos then
           begin
-            Dec(FCurrPos);
+            Inc(FCurrPos);
             cbMain.ItemIndex := FCurrPos;
             ChangeScheme;
           end;
