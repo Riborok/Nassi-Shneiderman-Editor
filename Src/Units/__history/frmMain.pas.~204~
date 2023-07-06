@@ -9,7 +9,8 @@ uses
   uStatementSearch, System.Actions, Vcl.ActnList, Vcl.ToolWin, Types, uBlockManager,
   Vcl.ComCtrls, uAdditionalTypes, frmPenSetting, System.ImageList, Vcl.ImgList,
   System.SysUtils, uGlobalSave, uLocalSave, frmHelp, uStatementConverter, uDialogMessages,
-  frmGlobalSettings, System.UITypes, uExport, uStatistics, uArrayList;
+  frmGlobalSettings, System.UITypes, uExport, uStatistics, uArrayList,
+  uZoomAndPositionTransfer;
 
 type
   TNassiShneiderman = class(TForm)
@@ -165,6 +166,8 @@ type
     cbMain: TComboBox;
     actClose: TAction;
     tbClose: TToolButton;
+    actRename: TAction;
+    tbRename: TToolButton;
 
     procedure FormCreate(Sender: TObject);
 
@@ -209,6 +212,7 @@ type
     procedure cbMainChange(Sender: TObject);
     procedure cbMainCloseUp(Sender: TObject);
     procedure actCloseExecute(Sender: TObject);
+    procedure actRenameExecute(Sender: TObject);
   private const
     OriginalName = 'Main';
   private type
@@ -219,7 +223,7 @@ type
 
     FPrevMousePos: TPoint;
 
-    FisPressed: Boolean;
+    KeyKeysIsPressed: Boolean;
 
     FMayDrag, FWasDbClick: Boolean;
 
@@ -241,6 +245,8 @@ type
 
     procedure AddNewSchema(const AName: string);
     function HandleSaveSchemePrompt: Boolean;
+
+    procedure SetScaleView; inline;
   public
     destructor Destroy; override;
   end;
@@ -338,7 +344,7 @@ implementation
     Self.DoubleBuffered := True;
 
     // Initialize variables for mouse interaction
-    FisPressed := False;
+    KeyKeysIsPressed := False;
     FMayDrag := False;
     FWasDbClick := False;
 
@@ -383,7 +389,7 @@ implementation
   procedure TNassiShneiderman.FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
   begin
     // Set the flag indicating that no key is pressed
-    FisPressed := False;
+    KeyKeysIsPressed := False;
   end;
 
   procedure TNassiShneiderman.actExitExecute(Sender: TObject);
@@ -398,20 +404,43 @@ implementation
     if isDragging and (GetKeyState(VK_SHIFT) >= 0) then
       FBlockManagers[FCurrPos].DestroyCarryBlock;
 
-    // Check if a key is already pressed
-    if FisPressed then
+    // Check if a key keys is already pressed
+    if KeyKeysIsPressed then
       Handled := True
+    else if GetKeyState(VK_CONTROL) < 0 then
+      case Msg.CharCode of
+        VK_UP:
+        begin
+          if FBlockManagers.Count - 1 > FCurrPos then
+          begin
+            Inc(FCurrPos);
+            cbMain.ItemIndex := FCurrPos;
+            FBlockManagers[FCurrPos].Activate;
+          end;
+          Handled := True;
+        end;
+        VK_DOWN:
+        begin
+          if FCurrPos <> 0 then
+          begin
+            Dec(FCurrPos);
+            cbMain.ItemIndex := FCurrPos;
+            FBlockManagers[FCurrPos].Activate;
+          end;
+          Handled := True;
+        end;
+      end
     else if GetKeyState(VK_RETURN) < 0 then
-      FisPressed := True
+      KeyKeysIsPressed := True
     else
     begin
       // Handle specific key combinations
       case Msg.CharCode of
         VK_Z, VK_X, VK_C, VK_V:
-          FisPressed := True;
+          KeyKeysIsPressed := True;
         VK_RIGHT, VK_LEFT:
         begin
-          FisPressed := True;
+          KeyKeysIsPressed := True;
           // Trigger FormKeyDown for specific keys only if CTRL or SHIFT is not pressed
           if (GetKeyState(VK_CONTROL) >= 0) or (GetKeyState(VK_SHIFT) >= 0) then
             FormKeyDown(nil, Msg.CharCode, []);
@@ -619,7 +648,12 @@ implementation
   begin
     FCurrPos := cbMain.ItemIndex;
 
-    PaintBox.Invalidate;
+
+    tbSelectScale.Position := GetPosition(FBlockManagers[FCurrPos].ZoomFactor);
+    SetScaleView;
+
+    FBlockManagers[FCurrPos].Activate;
+    UpdateForDedicatedStatement;
   end;
 
   procedure TNassiShneiderman.cbMainCloseUp(Sender: TObject);
@@ -647,21 +681,9 @@ implementation
     PrevZoomFactor := FBlockManagers[FCurrPos].ZoomFactor;
 
     // Set the zoom factor based on the selected position of tbSelectScale track bar
-    case tbSelectScale.Position of
-      1: FBlockManagers[FCurrPos].ZoomFactor := 0.1;
-      2: FBlockManagers[FCurrPos].ZoomFactor := 0.3;
-      3: FBlockManagers[FCurrPos].ZoomFactor := 0.5;
-      4: FBlockManagers[FCurrPos].ZoomFactor := 0.8;
-      5: FBlockManagers[FCurrPos].ZoomFactor := 1;
-      6: FBlockManagers[FCurrPos].ZoomFactor := 1.2;
-      7: FBlockManagers[FCurrPos].ZoomFactor := 1.5;
-      8: FBlockManagers[FCurrPos].ZoomFactor := 1.7;
-      9: FBlockManagers[FCurrPos].ZoomFactor := 2;
-      10: FBlockManagers[FCurrPos].ZoomFactor := 4;
-    end;
+    FBlockManagers[FCurrPos].ZoomFactor := GetZoomFactor(tbSelectScale.Position);
 
-    lblScaleView.Caption := ' ' + IntToStr(Round(
-                            FBlockManagers[FCurrPos].ZoomFactor * 100)) + '% ';
+    SetScaleView;
 
     // Adjust the font height based on the new zoom factor
     FBlockManagers[FCurrPos].Font.Height := Round(
@@ -701,6 +723,12 @@ implementation
 
       // Setting the schema name
       cbMain.Items[FCurrPos] := FBlockManagers[FCurrPos].SchemeName;
+      cbMain.ItemIndex := FCurrPos;
+
+      tbSelectScale.Position := GetPosition(FBlockManagers[FCurrPos].ZoomFactor);
+      SetScaleView;
+
+      UpdateForDedicatedStatement
     end;
   end;
 
@@ -766,6 +794,7 @@ implementation
     begin
       // Save the schema to the current file
       SaveSchema(FBlockManagers[FCurrPos]);
+      FBlockManagers[FCurrPos].isSaved := True;
     end
     else
       actSaveAsExecute(Sender);
@@ -801,6 +830,19 @@ implementation
     Inc(FUserInfo.HelpTime, SecondsBetween(Now, StartTime));
   end;
 
+  procedure TNassiShneiderman.actRenameExecute(Sender: TObject);
+  var
+    Name: string;
+  begin
+    Name := InputBox(rsNewSchemeName, rsNewSchemeContent, '');
+    if Name <> '' then
+    begin
+      FBlockManagers[FCurrPos].SchemeName := Name;
+      cbMain.Items[FCurrPos] := Name;
+      cbMain.ItemIndex := FCurrPos;
+    end;
+  end;
+
   procedure TNassiShneiderman.actNewExecute(Sender: TObject);
   var
     Name: string;
@@ -808,6 +850,11 @@ implementation
     Name := InputBox(rsNewSchemeName, rsNewSchemeContent, '');
     if Name <> '' then
       AddNewSchema(Name);
+
+    tbSelectScale.Position := GetPosition(FBlockManagers[FCurrPos].ZoomFactor);
+    SetScaleView;
+
+    UpdateForDedicatedStatement;
   end;
 
   procedure TNassiShneiderman.actUndoExecute(Sender: TObject);
@@ -903,6 +950,13 @@ implementation
         Dec(FCurrPos);
 
       cbMain.ItemIndex := FCurrPos;
+
+      FBlockManagers[FCurrPos].Activate;
+
+      tbSelectScale.Position := GetPosition(FBlockManagers[FCurrPos].ZoomFactor);
+      SetScaleView;
+
+      UpdateForDedicatedStatement;
     end;
   end;
 
@@ -1002,7 +1056,7 @@ implementation
 
   procedure TNassiShneiderman.SetSaveFileMode(const AMode: TFileMode);
   begin
-    SaveDialog.FileName := '';
+    SaveDialog.FileName := FBlockManagers[FCurrPos].SchemeName;
     case AMode of
       fmJSON:
       begin
@@ -1140,5 +1194,11 @@ implementation
         // Return False indicating canceling the operation
         Result := False;
     end;
+  end;
+
+  procedure TNassiShneiderman.SetScaleView;
+  begin
+    lblScaleView.Caption := ' ' + IntToStr(Trunc(
+                            FBlockManagers[FCurrPos].ZoomFactor * 100)) + '% ';
   end;
 end.

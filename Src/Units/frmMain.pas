@@ -893,8 +893,12 @@ implementation
   procedure TNassiShneiderman.actChngFontExecute(Sender: TObject);
   var
     StartTime: TDateTime;
+    PrevFontHeight: Integer;
   begin
     StartTime := Now;
+    PrevFontHeight := FBlockManagers[FCurrPos].Font.Height;
+    FBlockManagers[FCurrPos].Font.Height := Round(FBlockManagers[FCurrPos].Font.Height
+                                         / FBlockManagers[FCurrPos].ZoomFactor);
 
     // Initialize the font dialog with the current font settings
     FontDialog.Font := FBlockManagers[FCurrPos].Font;
@@ -905,9 +909,14 @@ implementation
       // Update the font settings in the block manager with the selected font
       FBlockManagers[FCurrPos].Font.Assign(FontDialog.Font);
 
+      FBlockManagers[FCurrPos].Font.Height := Round(FBlockManagers[FCurrPos].Font.Height
+                                           * FBlockManagers[FCurrPos].ZoomFactor);
+
       // Redefine the main block to apply the new font settings
       FBlockManagers[FCurrPos].RedefineMainBlock;
-    end;
+    end
+    else
+      FBlockManagers[FCurrPos].Font.Height := PrevFontHeight;
 
     // Update the font setting time by calculating the time difference between the current time and the start time
     Inc(FUserInfo.FontSettingTime, SecondsBetween(Now, StartTime));
