@@ -3,8 +3,8 @@ object NassiShneiderman: TNassiShneiderman
   Top = 0
   BorderIcons = [biSystemMenu, biMinimize, biMaximize, biHelp]
   Caption = 'Nassi Shneiderman'
-  ClientHeight = 617
-  ClientWidth = 897
+  ClientHeight = 614
+  ClientWidth = 921
   Color = clCream
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -2137,7 +2137,7 @@ object NassiShneiderman: TNassiShneiderman
   object tbMain: TToolBar
     Left = 0
     Top = 0
-    Width = 897
+    Width = 921
     Height = 35
     BorderWidth = 1
     ButtonHeight = 27
@@ -2152,6 +2152,7 @@ object NassiShneiderman: TNassiShneiderman
     ParentDoubleBuffered = False
     TabOrder = 0
     Transparent = False
+    ExplicitWidth = 881
     object tbNew: TToolButton
       Left = 0
       Top = 0
@@ -2377,7 +2378,7 @@ object NassiShneiderman: TNassiShneiderman
     object tbGlSettings: TToolButton
       Left = 788
       Top = 0
-      Hint = 'Global settings'
+      Hint = 'Edit global settings'
       Action = actChngGlSettings
       ParentShowHint = False
       ShowHint = True
@@ -2411,8 +2412,8 @@ object NassiShneiderman: TNassiShneiderman
     AlignWithMargins = True
     Left = 3
     Top = 67
-    Width = 891
-    Height = 547
+    Width = 915
+    Height = 544
     HorzScrollBar.Tracking = True
     VertScrollBar.Tracking = True
     Align = alClient
@@ -2420,6 +2421,8 @@ object NassiShneiderman: TNassiShneiderman
     ParentColor = False
     TabOrder = 1
     OnMouseWheel = ScrollBoxMouseWheel
+    ExplicitWidth = 875
+    ExplicitHeight = 543
     object PaintBox: TPaintBox
       Left = -2
       Top = 1
@@ -2441,7 +2444,7 @@ object NassiShneiderman: TNassiShneiderman
   object tbarMenu: TToolBar
     Left = 0
     Top = 35
-    Width = 897
+    Width = 921
     Height = 29
     ButtonHeight = 29
     ButtonWidth = 32
@@ -2457,6 +2460,7 @@ object NassiShneiderman: TNassiShneiderman
     ShowHint = True
     TabOrder = 2
     Transparent = False
+    ExplicitWidth = 881
     object lblScale: TLabel
       Left = 0
       Top = 0
@@ -2535,8 +2539,8 @@ object NassiShneiderman: TNassiShneiderman
     end
   end
   object ilIcons: TImageList
-    Left = 856
-    Top = 296
+    Left = 784
+    Top = 304
     Bitmap = {
       494C01011D002800040010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000008000000001002000000000000080
@@ -3604,8 +3608,8 @@ object NassiShneiderman: TNassiShneiderman
   object PopupMenu: TPopupMenu
     Images = ilIcons
     OnPopup = PopupMenuPopup
-    Left = 856
-    Top = 369
+    Left = 784
+    Top = 377
     object MIAdd: TMenuItem
       Caption = 'Add Statement'
       object MIAfter: TMenuItem
@@ -3697,8 +3701,8 @@ object NassiShneiderman: TNassiShneiderman
   end
   object alActions: TActionList
     Images = ilIcons
-    Left = 776
-    Top = 297
+    Left = 696
+    Top = 305
     object actAfterProcess: TAction
       Caption = 'Process'
       ImageIndex = 0
@@ -3909,8 +3913,8 @@ object NassiShneiderman: TNassiShneiderman
   object MainMenu: TMainMenu
     Tag = 1
     Images = ilIcons
-    Left = 776
-    Top = 368
+    Left = 696
+    Top = 376
     object mnFile: TMenuItem
       Caption = 'File'
       object mnNew: TMenuItem
@@ -4063,19 +4067,19 @@ object NassiShneiderman: TNassiShneiderman
     Font.Height = -11
     Font.Name = 'Tahoma'
     Font.Style = []
-    Left = 859
+    Left = 787
     Top = 444
   end
   object ColorDialog: TColorDialog
-    Left = 779
+    Left = 699
     Top = 444
   end
   object SaveDialog: TSaveDialog
-    Left = 779
-    Top = 222
+    Left = 699
+    Top = 238
   end
   object OpenDialog: TOpenDialog
-    Left = 859
-    Top = 222
+    Left = 787
+    Top = 238
   end
 end

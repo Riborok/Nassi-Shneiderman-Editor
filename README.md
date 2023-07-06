@@ -58,3 +58,64 @@ If the operator is a case statement, you need to provide conditions for it. You 
 Export options available in: PNG, BMP, SVG.
 
 ![](Images/Import.png)
+
+---
+
+# Shortcuts:
+Alt + F4 - Сlose the program
+
+Ctrl + N - Create a new diagram
+Ctrl + Del - Close the current diagram
+Ctrl + O - Open diagram
+Ctrl + S - Save current diagram
+Ctrl + Alt + S - Save current scheme with specified path
+
+Ctrl + Z - Undo the last action
+Shift + Ctrl + Z - Redo the last action
+
+Ctrl + X - Cut the seletced element
+Ctrl + C - Copy the seletced element
+Ctrl + V - Paste the copied or cut element after the selected element
+
+Enter - Edit the selected element
+Del - Delete the selected element
+
+F2 - Insert a new process after the selected element
+F3 - Insert a new branching block after the selected element
+F4 - Insert a new multiple branching block after the selected element
+F5 - Insert a new testing loop after the selected element
+F6 - Insert a new reversed testing loop after the selected element
+
+Shift + F2 - Insert a new process before the selected element
+Shift + F3 - Insert a new branching block before the selected element
+Shift + F4 - Insert a new multiple branching block before the selected element
+Shift + F5 - Insert a new testing loop before the selected element
+Shift + F6 - Insert a new reversed testing loop before the selected element
+
+Up - Move selected block up
+Left - Move selected block left
+Right - Move selected block right
+Down - Move selected block down
+
+Shift + Ctrl + Right - Sort case blocks in ascending order
+Shift + Ctrl + Left - Sort case blocks in descending order
+
+Shift + Ctrl + F - Edit font
+Shift + Ctrl + P - Edit pen
+Shift + Ctrl + G - Edit global settings
+
+F1 - Information and details about the program's functionality
+Shift + F1 - Information about the author of the program
+
+Ctrl + R - Rename the current diagram
+Ctrl + Up - Change the diagram to the diagram preceding it in the list
+Ctrl + Down - Change the diagram to the diagram following it in the list
+
+MouseWheelUp - Scroll up
+MouseWheelDown - Scroll down
+Shift + MouseWheelUp - Schroll left
+Shift + MouseWheelDown - Schroll right
+
+Ctrl + MouseWheelUp - Zoom in the diagram
+Ctrl + MouseWheelDown - Zoom out the diagram
+

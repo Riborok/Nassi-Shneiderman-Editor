@@ -189,7 +189,6 @@ type
     procedure MouseMove(Sender: TObject; Shift: TShiftState; X,
       Y: Integer);
     procedure actChangeActionExecute(Sender: TObject);
-    procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure PaintBoxPaint(Sender: TObject);
     procedure actUndoExecute(Sender: TObject);
     procedure actRedoExecute(Sender: TObject);
@@ -213,6 +212,7 @@ type
     procedure cbMainCloseUp(Sender: TObject);
     procedure actCloseExecute(Sender: TObject);
     procedure actRenameExecute(Sender: TObject);
+    procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
   private const
     OriginalName = 'Main';
   private type
@@ -377,7 +377,8 @@ implementation
     AddNewSchema(OriginalName);
   end;
 
-  procedure TNassiShneiderman.FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+  procedure TNassiShneiderman.FormKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
   begin
     // Try to move the dedicated block based on the scroll position and the pressed key
     FBlockManagers[FCurrPos].TryMoveDedicated(SetScrollPos, Key);
@@ -429,24 +430,22 @@ implementation
           end;
           Handled := True;
         end;
-      end
-    else if GetKeyState(VK_RETURN) < 0 then
-      KeyKeysIsPressed := True
-    else
-    begin
-      // Handle specific key combinations
-      case Msg.CharCode of
         VK_Z, VK_X, VK_C, VK_V:
           KeyKeysIsPressed := True;
         VK_RIGHT, VK_LEFT:
         begin
           KeyKeysIsPressed := True;
+
           // Trigger FormKeyDown for specific keys only if CTRL or SHIFT is not pressed
           if (GetKeyState(VK_CONTROL) >= 0) or (GetKeyState(VK_SHIFT) >= 0) then
-            FormKeyDown(nil, Msg.CharCode, []);
+          begin
+            FBlockManagers[FCurrPos].TryMoveDedicated(SetScrollPos, Msg.CharCode);
+            UpdateForDedicatedStatement;
+          end;
         end;
-      end;
-    end;
+      end
+    else if GetKeyState(VK_RETURN) < 0 then
+      KeyKeysIsPressed := True;
   end;
 
   procedure TNassiShneiderman.PaintBoxPaint(Sender: TObject);

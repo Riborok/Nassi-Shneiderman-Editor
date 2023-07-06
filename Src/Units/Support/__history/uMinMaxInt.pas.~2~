@@ -2,8 +2,8 @@ unit uMinMaxInt;
 
 interface
 
-  function Max(const AFirst, ASecond: Integer): Integer; inline;
-  function Min(const AFirst, ASecond: Integer): Integer; inline;
+  function Max(const AFirst, ASecond: Integer): Integer;
+  function Min(const AFirst, ASecond: Integer): Integer;
 
 implementation
 
