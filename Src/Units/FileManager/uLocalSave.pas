@@ -214,8 +214,6 @@ implementation
     begin
       PrevFontHeight := ABlockManager.Font.Height;
       ABlockManager.Font.Height := Round(ABlockManager.Font.Height / ABlockManager.ZoomFactor);
-      ABlockManager.PaintBox.Canvas.Pen := ABlockManager.Pen;
-      ABlockManager.PaintBox.Canvas.Font := ABlockManager.Font;
       ABlockManager.RedefineMainBlock;
 
       Json := TJSONObject.Create;

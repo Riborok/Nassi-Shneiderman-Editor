@@ -4,7 +4,7 @@ interface
 uses
   UBlockManager, uBase, System.JSON, System.Classes, uIfBranching, Vcl.Graphics,
   System.SysUtils, System.IOUtils, System.UITypes, uCaseBranching, uAdditionalTypes,
-  uStatementConverter, System.Generics.Collections;
+  uStatementConverter, System.Generics.Collections, Vcl.Dialogs, uDialogMessages;
 
   procedure SaveSchema(const ABlockManager: TBlockManager);
   procedure LoadSchema(const ABlockManager: TBlockManager);
@@ -136,7 +136,7 @@ implementation
     I, StatementIndex: Integer;
   begin
     Result := TJSONObject.Create;
-    StatementIndex := ConvertToStatementIndex(TStatementClass(AStatement.ClassType));
+    StatementIndex := AStatement.GetSerialNumber;
     Result.AddPair('StatementIndex', TJSONNumber.Create(StatementIndex));
 
     if StatementIndex = 2 {2: TCaseBranching} then
@@ -208,9 +208,16 @@ implementation
   procedure SaveSchema(const ABlockManager: TBlockManager);
   var
     Json: TJSONObject;
+    PrevFontHeight: Integer;
   begin
     if ABlockManager.PathToFile <> '' then
     begin
+      PrevFontHeight := ABlockManager.Font.Height;
+      ABlockManager.Font.Height := Round(ABlockManager.Font.Height / ABlockManager.ZoomFactor);
+      ABlockManager.PaintBox.Canvas.Pen := ABlockManager.Pen;
+      ABlockManager.PaintBox.Canvas.Font := ABlockManager.Font;
+      ABlockManager.RedefineMainBlock;
+
       Json := TJSONObject.Create;
       try
         with Json do
@@ -219,13 +226,18 @@ implementation
           begin
             AddPair('Pen', PenToJSON(Pen));
             AddPair('Font', FontToJSON(Font));
+            AddPair('SchemeName', SchemeName);
             AddPair('MainBlock', BlockToJSON(MainBlock));
           end;
+          AddPair('DefaultAction', uBase.DefaultAction);
         end;
         TFile.WriteAllText(ABlockManager.PathToFile, Json.ToJSON, TEncoding.UTF8);
       finally
         Json.Destroy;
       end;
+
+      ABlockManager.Font.Height := PrevFontHeight;
+      ABlockManager.RedefineMainBlock;
     end;
   end;
 
@@ -233,6 +245,7 @@ implementation
   procedure LoadSchema(const ABlockManager: TBlockManager);
   var
     Json: TJSONObject;
+    OldDefaultAction: string;
   begin
     if TFile.Exists(ABlockManager.PathToFile) and
        SameText(TPath.GetExtension(ABlockManager.PathToFile), '.json') then
@@ -245,12 +258,18 @@ implementation
           begin
             JSONToPen(TJSONObject(GetValue('Pen')), Pen);
             JSONToFont(TJSONObject(GetValue('Font')), Font);
+            SchemeName := Json.GetValue('SchemeName').Value;
             MainBlock := JSONToBlock(TJSONObject(GetValue('MainBlock')), nil, PaintBox.Canvas);
+            TIfBranching.RedefineSizesForIfBranching(MainBlock);
           end;
+          OldDefaultAction := Json.GetValue('DefaultAction').Value;
+          if OldDefaultAction <> uBase.DefaultAction then
+            ABlockManager.MainBlock.SetNewActionForDefaultStatements(OldDefaultAction);
         end;
-      finally
-        Json.Destroy;
+      except
+        ShowMessage(rsErrorFile);
       end;
+      Json.Destroy;
     end;
   end;
 end.
