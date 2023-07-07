@@ -486,7 +486,10 @@ implementation
 
     AInsertedStatement.Initialize;
 
-    FixYInBlock(AIndex + 1);
+    Inc(AIndex);
+    if FStatements.Count <> AIndex then
+      FixYInBlock(AIndex);
+
     PromptFixYInBaseBlocks;
   end;
 
