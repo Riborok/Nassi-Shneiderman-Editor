@@ -10,7 +10,7 @@ uses
   Vcl.ComCtrls, uAdditionalTypes, frmPenSetting, System.ImageList, Vcl.ImgList,
   System.SysUtils, uGlobalSave, uLocalSave, frmHelp, uStatementConverter, uDialogMessages,
   frmGlobalSettings, System.UITypes, uExport, uStatistics, uArrayList,
-  uZoomAndPositionTransfer;
+  uZoomAndPositionTransfer, uMinMaxInt;
 
 type
   TNassiShneiderman = class(TForm)
@@ -218,6 +218,8 @@ type
   private type
     TFileMode = (fmJSON = 0, fmSvg, fmBmp, fmPng, fmStat, fmAll);
   private
+    AmountPixelToMove : Integer;
+
     FPenDialog: TPenDialog;
     FGlobalSettingsDialog: TGlobalSettingsDialog;
 
@@ -249,6 +251,7 @@ type
     procedure ChangeScheme;
 
     procedure SetScaleView; inline;
+    procedure UpdateAmountPixelToMove; inline;
   public
     destructor Destroy; override;
   end;
@@ -379,6 +382,7 @@ implementation
     // Create an instance of the block manager and initialize the main block
     FBlockManagers := TArrayList<TBlockManager>.Create(17);
     AddNewSchema(OriginalName);
+    UpdateAmountPixelToMove;
   end;
 
   procedure TNassiShneiderman.FormKeyDown(Sender: TObject; var Key: Word;
@@ -565,8 +569,6 @@ implementation
 
   procedure TNassiShneiderman.MouseMove(Sender: TObject; Shift: TShiftState;
     X, Y: Integer);
-  const
-    AmountPixelToMove = 42;
   begin
     if isDragging then
     begin
@@ -674,6 +676,8 @@ implementation
 
     // Set the zoom factor based on the selected position of tbSelectScale track bar
     FBlockManagers[FCurrPos].ZoomFactor := GetZoomFactor(tbSelectScale.Position);
+
+    UpdateAmountPixelToMove;
 
     SetScaleView;
 
@@ -897,6 +901,8 @@ implementation
       FBlockManagers[FCurrPos].FontHeightWithoutScale := FontDialog.Font.Height;
 
       FBlockManagers[FCurrPos].SetFontHeight;
+
+      UpdateAmountPixelToMove;
 
       // Redefine the main block to apply the new font settings
       FBlockManagers[FCurrPos].RedefineMainBlock;
@@ -1204,11 +1210,21 @@ implementation
     SetScaleView;
     FBlockManagers[FCurrPos].Activate;
     UpdateForDedicatedStatement;
+    UpdateAmountPixelToMove;
   end;
 
   procedure TNassiShneiderman.SetScaleView;
   begin
     lblScaleView.Caption := ' ' + IntToStr(Trunc(
                             FBlockManagers[FCurrPos].ZoomFactor * 100)) + '% ';
+  end;
+
+  procedure TNassiShneiderman.UpdateAmountPixelToMove;
+  const
+    MaxValue = 342;
+    MinValue = 7;
+  begin
+    AmountPixelToMove := Min(Round(FBlockManagers[FCurrPos].ZoomFactor *
+                         FBlockManagers[FCurrPos].Font.Size) + MinValue, MaxValue);
   end;
 end.

@@ -568,17 +568,18 @@ implementation
 
   procedure TBlockManager.TryTakeAction;
   begin
-    case FHoveredStatement.State of
-      stBefore, stAfter:
-        AddToUndoStack(TCommandTransferAnotherBlock.Create(
-                       FHoveredStatement.Statement,
-                       Boolean(Ord(FHoveredStatement.State)),
-                       FDedicatedStatement));
-      stSwap:
-        AddToUndoStack(TCommandSwapStatements.Create(
-                       FHoveredStatement.Statement,
-                       FDedicatedStatement));
-    end;
+    if FHoveredStatement.Statement <> nil then
+      case FHoveredStatement.State of
+        stBefore, stAfter:
+          AddToUndoStack(TCommandTransferAnotherBlock.Create(
+                         FHoveredStatement.Statement,
+                         Boolean(Ord(FHoveredStatement.State)),
+                         FDedicatedStatement));
+        stSwap:
+          AddToUndoStack(TCommandSwapStatements.Create(
+                         FHoveredStatement.Statement,
+                         FDedicatedStatement));
+      end;
   end;
 
   procedure TBlockManager.DestroyCarryBlock;

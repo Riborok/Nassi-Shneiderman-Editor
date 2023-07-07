@@ -44,7 +44,8 @@ type
 
     FUndoStack, FRedoStack: TAutoClearStack<ICommand>;
 
-    FZoomFactor : Single;
+    FZoomFactor : Real;
+    FPenWidthWithoutScale, FFontHeightWithoutScale : Integer;
     FPen: TPen;
     FFont: TFont;
 
@@ -67,7 +68,13 @@ type
     property UndoStack: TAutoClearStack<ICommand> read FUndoStack;
     property RedoStack: TAutoClearStack<ICommand> read FRedoStack;
 
-    property ZoomFactor: Single read FZoomFactor write FZoomFactor;
+    procedure RecoverAfterZoom;
+
+    property ZoomFactor: Real read FZoomFactor write FZoomFactor;
+    property PenWidthWithoutScale: Integer read FPenWidthWithoutScale  write FPenWidthWithoutScale;
+    procedure SetPenWidth; inline;
+    property FontHeightWithoutScale: Integer read FFontHeightWithoutScale write FFontHeightWithoutScale;
+    procedure SetFontHeight; inline;
     property Font: TFont read FFont;
     property Pen: TPen read FPen;
     property PaintBox: TPaintBox read FPaintBox;
@@ -126,6 +133,27 @@ type
 
 implementation
 
+  procedure TBlockManager.RecoverAfterZoom;
+  begin
+    SetFontHeight;
+    SetPenWidth;
+    FMainBlock.SetStartIndent(Round(SchemeIndent * FZoomFactor));
+  end;
+
+  procedure TBlockManager.SetFontHeight;
+  begin
+    FFont.Height := Round(FFontHeightWithoutScale * FZoomFactor);
+    if FFont.Height = 0 then
+      FFont.Height := 1;
+  end;
+
+  procedure TBlockManager.SetPenWidth;
+  begin
+    FPen.Width := Round(FPenWidthWithoutScale * FZoomFactor);
+    if FPen.Width = 0 then
+      FPen.Width := 1;
+  end;
+
   procedure TBlockManager.SetPathToFile(const APath: string);
   begin
     FisSaved:= True;
@@ -173,6 +201,9 @@ implementation
     FPen.Width := SchemeInitialPenWidth;
     FPen.Style := SchemeInitialPenStyle;
     FPen.Mode := SchemeInitialPenMode;
+
+    FPenWidthWithoutScale := FPen.Width;
+    FFontHeightWithoutScale := FFont.Height;
 
     FPaintBox.Canvas.Font := FFont;
     FPaintBox.Canvas.Pen := FPen;
@@ -625,18 +656,21 @@ implementation
   const
     Stock = 42 shl 2;
     Correction = 5;
+  var
+    StockWithScaling : Integer;
   begin
     FPaintBox.Canvas.Font := FFont;
     FPaintBox.Canvas.Pen := FPen;
+    StockWithScaling := Round(Stock * FZoomFactor);
 
-    FPaintBox.Width := Max(FMainBlock.XLast + Stock,
+    FPaintBox.Width := Max(FMainBlock.XLast + StockWithScaling,
                        AVisibleImageRect.FBottomRight.X -
                        AVisibleImageRect.FTopLeft.X - Correction);
-    FPaintBox.Height := Max(FMainBlock.Statements.GetLast.GetYBottom + Stock,
+    FPaintBox.Height := Max(FMainBlock.Statements.GetLast.GetYBottom + StockWithScaling,
                         AVisibleImageRect.FBottomRight.Y -
                         AVisibleImageRect.FTopLeft.Y - Correction);
 
-    AVisibleImageRect.Expand(Stock);
+    AVisibleImageRect.Expand(StockWithScaling);
 
     if FDedicatedStatement <> nil then
       ColorizeRect(FPaintBox.Canvas,CreateRect(FDedicatedStatement), FHighlightColor);
