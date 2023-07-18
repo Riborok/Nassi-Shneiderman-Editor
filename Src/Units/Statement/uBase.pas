@@ -84,7 +84,7 @@ type
     procedure ChangeAction(const AAction: String);
 
     // Set the optimal Y last
-    procedure SetOptimalYLast;
+    procedure SetOptimalYLast; inline;
 
     function GetSerialNumber: Integer; virtual; abstract;
 
@@ -839,6 +839,9 @@ implementation
       CurrBlock:= CurrOperator.BaseBlock;
 
       CurrOperator.AlignBlocks;
+
+      if not CurrOperator.IsPreсOperator then
+        CurrOperator.SetOptimalYLast;
 
       CurrBlock.FixYStatement(CurrBlock.FindStatementIndex(CurrOperator.FYStart) + 1);
     end;

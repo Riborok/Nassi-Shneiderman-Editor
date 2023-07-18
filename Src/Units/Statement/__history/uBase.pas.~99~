@@ -84,7 +84,7 @@ type
     procedure ChangeAction(const AAction: String);
 
     // Set the optimal Y last
-    procedure SetOptimalYLast;
+    procedure SetOptimalYLast; inline;
 
     function GetSerialNumber: Integer; virtual; abstract;
 
@@ -176,6 +176,8 @@ type
     procedure FixYInBlock(const Index: Integer);
     procedure PromptFixYInBaseBlocks;
 
+    procedure FixYStatement(AIndex: Integer = 0);
+
     procedure RedefineBlock(const AIndex: Integer = 0);
   public
     constructor Create(const ABaseOperator: TOperator); overload;
@@ -206,8 +208,6 @@ type
     procedure ChangeXLastBlock(const ANewXLast: Integer);
     function FindOptimalXLast: Integer;
 
-    procedure FixYStatement(AIndex: Integer = 0);
-
     procedure SetOptimalXLastBlock;
 
     procedure DrawBlock(const AVisibleImageRect: TVisibleImageRect);
@@ -220,6 +220,8 @@ type
 
     procedure RedefineSizes;
 
+    procedure AdjustStatements;
+
     // Set the dimensions after adding and if this statement is the last one,
     // it asks the previous to set the optimal height
     procedure Install(const Index: Integer);
@@ -227,6 +229,8 @@ type
     function GetMask(const AVisibleImageRect: TVisibleImageRect): Integer; inline;
 
     procedure InstallCanvas(const ACanvas: TCanvas);
+
+    procedure SetStartIndent(const ANewIndent: Integer);
   end;
 
   var
@@ -297,8 +301,8 @@ implementation
     FAction := AAction;
     SetActionSizes;
 
-    BaseBlock.SetOptimalXLastBlock;
     SetOptimalYLast;
+    BaseBlock.SetOptimalXLastBlock;
 
     BaseBlock.FixYInBlock(BaseBlock.FindStatementIndex(FYStart));
     BaseBlock.PromptFixYInBaseBlocks;
@@ -482,7 +486,10 @@ implementation
 
     AInsertedStatement.Initialize;
 
-    FixYInBlock(AIndex + 1);
+    Inc(AIndex);
+    if FStatements.Count <> AIndex then
+      FixYInBlock(AIndex);
+
     PromptFixYInBaseBlocks;
   end;
 
@@ -644,6 +651,32 @@ implementation
       end;
   end;
 
+  procedure TBlock.AdjustStatements;
+  var
+    I: Integer;
+    procedure AdjustOtherStatements(const ABlocks: TBlockArr); inline;
+    var
+      I: Integer;
+    begin
+      for I := 0 to High(ABlocks) do
+        ABlocks[I].AdjustStatements;
+    end;
+  begin
+    if BaseOperator <> nil then
+      FStatements[0].Lower(BaseOperator.GetBlockYStart - FStatements[0].FYStart);
+
+    if FStatements[0] is TOperator then
+      AdjustOtherStatements(TOperator(FStatements[0]).FBlocks);
+
+    for I := 1 to FStatements.Count - 1 do
+    begin
+      FStatements[I].Lower(FStatements[I - 1].GetYBottom - FStatements[I].FYStart);
+
+      if FStatements[I] is TOperator then
+        AdjustOtherStatements(TOperator(FStatements[I]).FBlocks);
+    end;
+  end;
+
   procedure TBlock.MoveRight(const AOffset: Integer);
   var
     I: Integer;
@@ -730,41 +763,49 @@ implementation
 
   procedure TBlock.SetNewActionForDefaultStatements(const AOldDefaultAction: string);
   var
-    Blocks : TBlockArr;
-    I, J: Integer;
+    I: Integer;
+
+    procedure CheckForOperator(const AStatement: TStatement; const AOldDefaultAction: string); inline;
+    var
+      Blocks : TBlockArr;
+      J: Integer;
+    begin
+      if AStatement is TOperator then
+      begin
+        Blocks := TOperator(AStatement).Blocks;
+        for J := 0 to High(Blocks) do
+          Blocks[J].SetNewActionForDefaultStatements(AOldDefaultAction);
+      end;
+    end;
+    procedure CheckForDefault(const ABlock: TBlock; var AIndex: Integer; const AOldDefaultAction: string); inline;
+    begin
+      with ABlock do
+      begin
+        if FStatements[AIndex] is DefaultStatement then
+        begin
+          if FStatements[AIndex].FAction = AOldDefaultAction then
+            FStatements[AIndex].ChangeAction(DefaultAction)
+          else if FStatements[AIndex].FAction = DefaultAction then
+          begin
+            RemoveStatementAt(AIndex);
+            Dec(AIndex);
+          end;
+        end;
+      end;
+    end;
   begin
     I:= 0;
     while I < Statements.Count - 1 do
     begin
-
-      if Statements[I] is TOperator then
-      begin
-        Blocks := TOperator(Statements[I]).Blocks;
-        for J := 0 to High(Blocks) do
-          Blocks[J].SetNewActionForDefaultStatements(AOldDefaultAction);
-      end;
-
-      if Statements[I] is DefaultStatement then
-      begin
-        if Statements[I].FAction = AOldDefaultAction then
-          Statements[I].ChangeAction(DefaultAction)
-        else if Statements[I].FAction = DefaultAction then
-        begin
-          RemoveStatementAt(I);
-          Dec(I);
-        end;
-      end;
-
+      CheckForOperator(Statements[I], AOldDefaultAction);
+      CheckForDefault(Self, I, AOldDefaultAction);
       Inc(I);
     end;
+
     I:= Statements.Count - 1;
-    if Statements[I] is DefaultStatement then
-    begin
-      if Statements[I].FAction = AOldDefaultAction then
-        Statements[I].ChangeAction(DefaultAction)
-      else if Statements[I].FAction = DefaultAction then
-        RemoveStatementAt(I);
-    end;
+
+    CheckForOperator(Statements[I], AOldDefaultAction);
+    CheckForDefault(Self, I, AOldDefaultAction);
   end;
 
   function TBlock.FindStatementIndex(const AFYStart: Integer): Integer;
@@ -941,6 +982,15 @@ implementation
         TOperator(FStatements[I]).InstallCanvas(ACanvas);
   end;
 
+  procedure TBlock.SetStartIndent(const ANewIndent: Integer);
+  var
+    I: Integer;
+  begin
+    Self.FXStart := ANewIndent;
+    for I := 0 to FStatements.Count - 1 do
+      FStatements[I].FYStart := ANewIndent;
+  end;
+
   { TOperator }
   constructor TOperator.Create(const AAction : String);
   begin
@@ -1043,11 +1093,7 @@ implementation
         for I := 0 to High(FBlocks) do
           FBlocks[I].Statements.GetLast.SetYBottom(AYBottom);
       False:
-      begin
         FYLast := AYBottom;
-        for I := 0 to High(FBlocks) do
-          FBlocks[I].FStatements.GetLast.SetYBottom(YLast - GetOptimaWidth);
-      end;
     end;
   end;
 
@@ -1100,6 +1146,7 @@ implementation
   var
     I, MaxYLast, CurrYLast: Integer;
   begin
+    SetOptimalYLast;
     if Length(FBlocks) > 1 then
     begin
       MaxYLast := FBlocks[0].GetLastStatement.GetMaxOptimalYBottom;
