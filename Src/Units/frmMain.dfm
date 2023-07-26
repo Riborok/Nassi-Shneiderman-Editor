@@ -2152,6 +2152,7 @@ object NassiShneiderman: TNassiShneiderman
     ParentDoubleBuffered = False
     TabOrder = 0
     Transparent = False
+    ExplicitWidth = 885
     object tbNew: TToolButton
       Left = 0
       Top = 0
@@ -2420,6 +2421,8 @@ object NassiShneiderman: TNassiShneiderman
     ParentColor = False
     TabOrder = 1
     OnMouseWheel = ScrollBoxMouseWheel
+    ExplicitWidth = 879
+    ExplicitHeight = 535
     object PaintBox: TPaintBox
       Left = -2
       Top = 1
@@ -2457,6 +2460,7 @@ object NassiShneiderman: TNassiShneiderman
     ShowHint = True
     TabOrder = 2
     Transparent = False
+    ExplicitWidth = 885
     object lblScale: TLabel
       Left = 0
       Top = 0
