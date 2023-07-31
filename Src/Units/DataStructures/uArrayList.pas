@@ -4,14 +4,17 @@ interface
 
 type
   TArrayList<T> = class
+  private const
+    MinInitialCapacity = 1;
   private
     FArray: array of T;
     FCount: Integer;
     procedure CapacityInc;
+    procedure CapacityDec;
     function GetItem(const AIndex: Integer): T;
     procedure SetItem(const AIndex: Integer; const AValue: T);
   public
-    constructor Create(const AInitialCapacity: Integer = 0);
+    constructor Create(AInitialCapacity: Integer = MinInitialCapacity);
     destructor Destroy; override;
     procedure Delete(const AIndex: Integer);
     procedure Add(const Item: T);
@@ -24,8 +27,10 @@ type
 
 implementation
 
-  constructor TArrayList<T>.Create(const AInitialCapacity: Integer = 0);
+  constructor TArrayList<T>.Create(AInitialCapacity: Integer = MinInitialCapacity);
   begin
+    if AInitialCapacity < MinInitialCapacity then
+      AInitialCapacity := MinInitialCapacity;
     FCount := 0;
     SetLength(FArray, AInitialCapacity);
   end;
@@ -53,6 +58,9 @@ implementation
       FArray[I] := FArray[I + 1];
 
     Dec(FCount);
+
+    if (Length(FArray) >= 4) and (FCount <= Length(FArray) shr 2) then
+      CapacityDec;
   end;
 
   procedure TArrayList<T>.Insert(const AItem: T; const AIndex: Integer);
@@ -92,7 +100,12 @@ implementation
 
   procedure TArrayList<T>.CapacityInc;
   begin
-    SetLength(FArray, Length(FArray) shl 1 + 4);
+    SetLength(FArray, Length(FArray) shl 1);
+  end;
+
+  procedure TArrayList<T>.CapacityDec;
+  begin
+    SetLength(FArray, Length(FArray) shr 1);
   end;
 
 end.

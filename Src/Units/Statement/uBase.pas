@@ -152,6 +152,8 @@ type
 
   { TBlock }
   TBlock = class
+  private const
+    InitialCapacity = 2;
   private
     // FCanvas is a reference to the canvas used for drawing
     FCanvas: TCanvas;
@@ -407,13 +409,13 @@ implementation
 
   constructor TBlock.Create(const ABaseOperator: TOperator);
   begin
-    FStatements := TArrayList<TStatement>.Create(14);
+    FStatements := TArrayList<TStatement>.Create(InitialCapacity);
     FBaseOperator := ABaseOperator;
   end;
 
   constructor TBlock.Create(const AXStart: Integer; const ACanvas: TCanvas);
   begin
-    FStatements := TArrayList<TStatement>.Create(14);
+    FStatements := TArrayList<TStatement>.Create(InitialCapacity);
     FCanvas := ACanvas;
     FXStart := AXStart;
   end;
