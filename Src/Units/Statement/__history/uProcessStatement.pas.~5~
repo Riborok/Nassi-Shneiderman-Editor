@@ -25,17 +25,8 @@ implementation
   begin
     DrawRect(BaseBlock.XStart, BaseBlock.XLast, FYStart, FYLast, BaseBlock.Canvas);
 
-    if FAction <> DefaultAction then
-      DrawText(BaseBlock.Canvas, BaseBlock.XStart + ((BaseBlock.XLast - BaseBlock.XStart) shr 1)
-        - (FActionSize.Width shr 1), FYStart + FYIndentText, Action)
-    else
-      DrawRect (
-        BaseBlock.XStart + FXMinIndentText,
-        BaseBlock.XLast - FXMinIndentText,
-        FYStart + FYIndentText,
-        FYLast - FYIndentText,
-        BaseBlock.Canvas
-      );
+    DrawText(BaseBlock.Canvas, BaseBlock.XStart + ((BaseBlock.XLast - BaseBlock.XStart) shr 1)
+      - (FActionSize.Width shr 1), FYStart + FYIndentText, Action);
   end;
 
   function TProcessStatement.GetOptimalYLast: Integer;

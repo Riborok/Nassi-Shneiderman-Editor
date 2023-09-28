@@ -5,7 +5,7 @@ interface
 type
   TArrayList<T> = class
   private const
-    MinInitialCapacity = 2;
+    MinInitialCapacity = 1;
   private
     FArray: array of T;
     FCount: Integer;
@@ -59,7 +59,7 @@ implementation
 
     Dec(FCount);
 
-    if (Length(FArray) >= MinInitialCapacity shl 1) and (FCount <= Length(FArray) shr 2) then
+    if (Length(FArray) >= 4) and (FCount <= Length(FArray) shr 2) then
       CapacityDec;
   end;
 
