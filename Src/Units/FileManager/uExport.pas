@@ -35,6 +35,7 @@ implementation
     VisibleImageRect: TVisibleImageRect;
     Bitmap: TBitmap;
     PrevHeight, PrevWidth: Integer;
+    prevFlagValue: boolean;
   begin
     PrevHeight := ABlockManager.Font.Height;
     PrevWidth := ABlockManager.Pen.Width;
@@ -42,6 +43,8 @@ implementation
     ABlockManager.Font.Height := ABlockManager.FontHeightWithoutScale;
     ABlockManager.Pen.Width := ABlockManager.PenWidthWithoutScale;
 
+    prevFlagValue := isHighlightDefaultBlocks;
+    isHighlightDefaultBlocks := false;
     ABlockManager.MainBlock.SetStartIndent(SchemeIndent);
     ABlockManager.RedefineMainBlock;
 
@@ -63,6 +66,7 @@ implementation
     ABlockManager.MainBlock.InstallCanvas(ABlockManager.PaintBox.Canvas);
     ABlockManager.Pen.Width := PrevWidth;
     ABlockManager.Font.Height := PrevHeight;
+    isHighlightDefaultBlocks := prevFlagValue;
     ABlockManager.MainBlock.SetStartIndent(Round(SchemeIndent * ABlockManager.ZoomFactor));
     ABlockManager.RedefineMainBlock;
   end;
@@ -73,6 +77,7 @@ implementation
     PNG: TPNGImage;
     VisibleImageRect: TVisibleImageRect;
     PrevHeight, PrevWidth: Integer;
+    prevFlagValue: boolean;
   begin
     PrevHeight := ABlockManager.Font.Height;
     PrevWidth := ABlockManager.Pen.Width;
@@ -80,6 +85,8 @@ implementation
     ABlockManager.Font.Height := ABlockManager.FontHeightWithoutScale;
     ABlockManager.Pen.Width := ABlockManager.PenWidthWithoutScale;
 
+    prevFlagValue := isHighlightDefaultBlocks;
+    isHighlightDefaultBlocks := false;
     ABlockManager.MainBlock.SetStartIndent(SchemeIndent);
     ABlockManager.RedefineMainBlock;
 
@@ -107,6 +114,7 @@ implementation
     ABlockManager.MainBlock.InstallCanvas(ABlockManager.PaintBox.Canvas);
     ABlockManager.Pen.Width := PrevWidth;
     ABlockManager.Font.Height := PrevHeight;
+    isHighlightDefaultBlocks := prevFlagValue;
     ABlockManager.MainBlock.SetStartIndent(Round(SchemeIndent * ABlockManager.ZoomFactor));
     ABlockManager.RedefineMainBlock;
   end;

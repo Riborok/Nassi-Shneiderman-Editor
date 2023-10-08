@@ -25,10 +25,10 @@ implementation
   begin
     DrawRect(BaseBlock.XStart, BaseBlock.XLast, FYStart, FYLast, BaseBlock.Canvas);
 
-    if FAction <> DefaultAction then
+    if not isDefaultStatement(self) then
       DrawText(BaseBlock.Canvas, BaseBlock.XStart + ((BaseBlock.XLast - BaseBlock.XStart) shr 1)
         - (FActionSize.Width shr 1), FYStart + FYIndentText, Action)
-    else
+    else if isHighlightDefaultBlocks then
       DrawRect (
         BaseBlock.XStart + FXMinIndentText,
         BaseBlock.XLast - FXMinIndentText,

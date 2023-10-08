@@ -1,0 +1,403 @@
+unit uExport;
+
+interface
+uses
+  uBlockManager, Vcl.Graphics, Vcl.ExtCtrls, uAdditionalTypes, uConstants, PNGImage,
+  System.SysUtils, Classes, uBase, uCaseBranching, uFirstLoop, uIfBranching, uLastLoop,
+  uProcessStatement, System.UITypes, System.IOUtils, System.Types;
+
+procedure SaveBMPFile(const ABlockManager: TBlockManager; const AFileName: string);
+procedure SavePNGFile(const ABlockManager: TBlockManager; const AFileName: string);
+procedure SaveSVGFile(const ABlockManager: TBlockManager; const AFileName: string);
+
+implementation
+
+  procedure InitializeVisibleImageRect(const ABitmap: TBitmap;
+                                       out AVisibleImageRect: TVisibleImageRect);
+  begin
+    AVisibleImageRect.FTopLeft.X := 0;
+    AVisibleImageRect.FTopLeft.Y := 0;
+    AVisibleImageRect.FBottomRight.X := ABitmap.Width;
+    AVisibleImageRect.FBottomRight.Y := ABitmap.Height;
+  end;
+
+  procedure InitializeBitmap(const ABitmap: TBitmap; const ABlockManager: TBlockManager);
+  begin
+    ABitmap.Width := ABlockManager.MainBlock.XLast + SchemeIndent;
+    ABitmap.Height := ABlockManager.MainBlock.Statements[ABlockManager.MainBlock.
+                      Statements.Count - 1].GetYBottom + SchemeIndent;
+    ABitmap.Canvas.Font := ABlockManager.Font;
+    ABitmap.Canvas.Pen := ABlockManager.Pen;
+  end;
+
+  procedure SaveBMPFile(const ABlockManager: TBlockManager; const AFileName: string);
+  var
+    VisibleImageRect: TVisibleImageRect;
+    Bitmap: TBitmap;
+    PrevHeight, PrevWidth: Integer;
+  begin
+    PrevHeight := ABlockManager.Font.Height;
+    PrevWidth := ABlockManager.Pen.Width;
+
+    ABlockManager.Font.Height := ABlockManager.FontHeightWithoutScale;
+    ABlockManager.Pen.Width := ABlockManager.PenWidthWithoutScale;
+
+    ABlockManager.MainBlock.SetStartIndent(SchemeIndent);
+    ABlockManager.RedefineMainBlock;
+
+    Bitmap := TBitmap.Create;
+    try
+      InitializeBitmap(Bitmap, ABlockManager);
+
+      InitializeVisibleImageRect(Bitmap, VisibleImageRect);
+
+      ABlockManager.MainBlock.InstallCanvas(Bitmap.Canvas);
+
+      ABlockManager.MainBlock.DrawBlock(VisibleImageRect);
+
+      Bitmap.SaveToFile(AFileName);
+    finally
+      Bitmap.Destroy;
+    end;
+
+    ABlockManager.MainBlock.InstallCanvas(ABlockManager.PaintBox.Canvas);
+    ABlockManager.Pen.Width := PrevWidth;
+    ABlockManager.Font.Height := PrevHeight;
+    ABlockManager.MainBlock.SetStartIndent(Round(SchemeIndent * ABlockManager.ZoomFactor));
+    ABlockManager.RedefineMainBlock;
+  end;
+
+  procedure SavePNGFile(const ABlockManager: TBlockManager; const AFileName: string);
+  var
+    Bitmap: TBitmap;
+    PNG: TPNGImage;
+    VisibleImageRect: TVisibleImageRect;
+    PrevHeight, PrevWidth: Integer;
+  begin
+    PrevHeight := ABlockManager.Font.Height;
+    PrevWidth := ABlockManager.Pen.Width;
+
+    ABlockManager.Font.Height := ABlockManager.FontHeightWithoutScale;
+    ABlockManager.Pen.Width := ABlockManager.PenWidthWithoutScale;
+
+    ABlockManager.MainBlock.SetStartIndent(SchemeIndent);
+    ABlockManager.RedefineMainBlock;
+
+    Bitmap := TBitmap.Create;
+    try
+      InitializeBitmap(Bitmap, ABlockManager);
+
+      InitializeVisibleImageRect(Bitmap, VisibleImageRect);
+
+      ABlockManager.MainBlock.InstallCanvas(Bitmap.Canvas);
+
+      ABlockManager.MainBlock.DrawBlock(VisibleImageRect);
+
+      PNG := TPNGImage.Create;
+      try
+        PNG.Assign(Bitmap);
+        PNG.SaveToFile(AFileName);
+      finally
+        PNG.Destroy;
+      end;
+    finally
+      Bitmap.Destroy;
+    end;
+
+    ABlockManager.MainBlock.InstallCanvas(ABlockManager.PaintBox.Canvas);
+    ABlockManager.Pen.Width := PrevWidth;
+    ABlockManager.Font.Height := PrevHeight;
+    ABlockManager.MainBlock.SetStartIndent(Round(SchemeIndent * ABlockManager.ZoomFactor));
+    ABlockManager.RedefineMainBlock;
+  end;
+
+  { SVG }
+
+  const
+    SVGHead = '<?xml version="1.0" encoding="UTF-8" standalone="no"?>' +
+              '<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" ' +
+              '"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">';
+    clrFill: TColor = clWhite;
+    CorrectionToSvg = 1.333;
+    CorrectionToCanv = 1 / CorrectionToSvg;
+
+  function ColorToRGBString(const AColor: TColor): string;
+  var
+    RGB: Longint;
+    R, G, B: Byte;
+  begin
+    RGB := ColorToRGB(AColor);
+    R := (RGB and $000000FF);
+    G := (RGB and $0000FF00) shr 8;
+    B := (RGB and $00FF0000) shr 16;
+    Result := Format('#%.2x%.2x%.2x', [R, G, B]);
+  end;
+
+  procedure SetSVGOpenTag(const SVG: TStringList; const AWidth, AHeight: Integer);
+  begin
+    SVG.Add('<svg xmlns="http://www.w3.org/2000/svg" ' +
+            'xmlns:xlink="http://www.w3.org/1999/xlink" ' +
+            'width="' + IntToStr(AWidth) + 'px" ' +
+            'height="' + IntToStr(AHeight) + 'px" ' +
+            'version="1.1">');
+  end;
+
+  procedure DrawRectangle(const SVG: TStringList; const AXStart, AXLast, AYStart, AYLast: Integer; const APen: TPen);
+  begin
+    SVG.Add('<rect x="' + IntToStr(AXStart) + 'px" y="' + IntToStr(AYStart) + 'px" width="' + IntToStr(AXLast - AXStart) + 'px" height="' + IntToStr(AYLast - AYStart) + 'px" stroke="' + ColorToRGBString(APen.Color) + '" stroke-width="' + IntToStr(APen.Width) + 'px" fill="' + ColorToRGBString(clrFill) + '" />');
+  end;
+
+  procedure DrawLine(const SVG: TStringList; const AXStart, AXLast, AYStart, AYLast: Integer; const APen: TPen);
+  begin
+    SVG.Add('<line x1="' + IntToStr(AXStart) + 'px" y1="' + IntToStr(AYStart) + 'px" x2="' + IntToStr(AXLast) + 'px" y2="' + IntToStr(AYLast) + 'px" stroke="' + ColorToRGBString(APen.Color) + '" stroke-width="' + IntToStr(APen.Width) + 'px" />');
+  end;
+
+  procedure DrawText(const SVG: TStringList; AXStart, AYStart: Integer; const ACanvas: TCanvas; const AText: string);
+  var
+    Lines: TStringDynArray;
+    I, Indent: Integer;
+  begin
+    Lines := AText.Split([sLineBreak]);
+
+    Indent := Round(CorrectionToCanv * ACanvas.TextHeight(Space));
+
+    for I := 0 to High(Lines) do
+      SVG.Add('<text x="' + IntToStr(AXStart) + 'px" y="' + IntToStr(AYStart + Indent * I) + 'px" font-family="' + ACanvas.Font.Name + '" font-size="' + IntToStr(ACanvas.Font.Size) + 'px" fill="' + ColorToRGBString(ACanvas.Font.Color) + '">' + Lines[I] + '</text>');
+  end;
+
+  procedure DrawInvertedTriangle(const SVG: TStringList; const AXStart, AXMiddle, AXLast, AYStart, AYLast: Integer; const APen: TPen);
+  begin
+    SVG.Add('<line x1="' + IntToStr(AXStart) + 'px" y1="' + IntToStr(AYStart) + 'px" x2="' + IntToStr(AXMiddle) + 'px" y2="' + IntToStr(AYLast) + 'px" stroke="' + ColorToRGBString(APen.Color) + '" stroke-width="' + IntToStr(APen.Width) + 'px" />');
+    SVG.Add('<line x1="' + IntToStr(AXLast) + 'px" y1="' + IntToStr(AYStart) + 'px" x2="' + IntToStr(AXMiddle) + 'px" y2="' + IntToStr(AYLast) + 'px" stroke="' + ColorToRGBString(APen.Color) + '" stroke-width="' + IntToStr(APen.Width) + 'px" />');
+  end;
+
+  procedure DrawUnfinishedHorRectForLoop(const SVG: TStringList; const AXStart, AXMiddle, AXLast, AYStart, AYLast: Integer; const APen: TPen);
+  begin
+    SVG.Add('<line x1="' + IntToStr(AXStart) + 'px" y1="' + IntToStr(AYStart) + 'px" x2="' + IntToStr(AXLast) + 'px" y2="' + IntToStr(AYStart) + 'px" stroke="' + ColorToRGBString(APen.Color) + '" stroke-width="' + IntToStr(APen.Width) + 'px" />');
+    SVG.Add('<line x1="' + IntToStr(AXLast) + 'px" y1="' + IntToStr(AYStart) + 'px" x2="' + IntToStr(AXLast) + 'px" y2="' + IntToStr(AYLast) + 'px" stroke="' + ColorToRGBString(APen.Color) + '" stroke-width="' + IntToStr(APen.Width) + 'px" />');
+    SVG.Add('<line x1="' + IntToStr(AXLast) + 'px" y1="' + IntToStr(AYLast) + 'px" x2="' + IntToStr(AXMiddle) + 'px" y2="' + IntToStr(AYLast) + 'px" stroke="' + ColorToRGBString(APen.Color) + '" stroke-width="' + IntToStr(APen.Width) + 'px" />');
+  end;
+
+  procedure DrawUnfinishedVertRectForLoop(const SVG: TStringList; const AXStart, AXLast, AYStart, AYMiddle, AYLast: Integer; const APen: TPen);
+  begin
+    SVG.Add('<line x1="' + IntToStr(AXStart) + 'px" y1="' + IntToStr(AYStart) + 'px" x2="' + IntToStr(AXStart) + 'px" y2="' + IntToStr(AYLast) + 'px" stroke="' + ColorToRGBString(APen.Color) + '" stroke-width="' + IntToStr(APen.Width) + 'px" />');
+    SVG.Add('<line x1="' + IntToStr(AXStart) + 'px" y1="' + IntToStr(AYLast) + 'px" x2="' + IntToStr(AXLast) + 'px" y2="' + IntToStr(AYLast) + 'px" stroke="' + ColorToRGBString(APen.Color) + '" stroke-width="' + IntToStr(APen.Width) + 'px" />');
+    SVG.Add('<line x1="' + IntToStr(AXLast) + 'px" y1="' + IntToStr(AYLast) + 'px" x2="' + IntToStr(AXLast) + 'px" y2="' + IntToStr(AYMiddle) + 'px" stroke="' + ColorToRGBString(APen.Color) + '" stroke-width="' + IntToStr(APen.Width) + 'px" />');
+  end;
+
+  procedure DrawProcess(const SVG: TStringList; const AProcessStatement: TProcessStatement);
+  begin
+    with AProcessStatement do
+    begin
+      DrawRectangle(SVG, BaseBlock.XStart, BaseBlock.XLast,
+                    YStart, YLast, BaseBlock.Canvas.Pen);
+      DrawText(SVG,
+               BaseBlock.XStart + ((BaseBlock.XLast - BaseBlock.XStart) shr 1)
+               - (ActionSize.Width shr 1),
+               YStart + Round(BaseBlock.Canvas.Font.Size * CorrectionToCanv) + YIndentText,
+               BaseBlock.Canvas, Action);
+    end;
+  end;
+
+  procedure DrawBlock(const SVG: TStringList; const ABlock: TBlock); forward;
+
+  procedure DrawIfBranching(const SVG: TStringList; const AIfBranching: TIfBranching);
+  begin
+    with AIfBranching do
+    begin
+      DrawRectangle(SVG, BaseBlock.XStart, BaseBlock.XLast,
+                    YStart, YLast, BaseBlock.Canvas.Pen);
+
+      DrawInvertedTriangle(SVG, BaseBlock.XStart, Blocks[1].XStart, BaseBlock.XLast,
+                           YStart, YLast, BaseBlock.Canvas.Pen);
+
+      DrawText(SVG,
+               Blocks[0].XStart +
+               GetAvailablePartWidth(Blocks[0].XLast - Blocks[0].XStart, TrueSize.Height + YIndentText) +
+               GetAvailablePartWidth(BaseBlock.XLast - BaseBlock.XStart, ActionSize.Height) shr 1 -
+               ActionSize.Width shr 1,
+               YStart + Round(BaseBlock.Canvas.Font.Size * CorrectionToCanv) + YIndentText,
+               BaseBlock.Canvas, Action);
+
+      DrawText(SVG,
+               Blocks[0].XStart + GetAvailablePartWidth(
+               Blocks[0].XLast - Blocks[0].XStart, TrueSize.Height) shr 1 -
+               TrueSize.Width shr 1,
+               YStart + Round(BaseBlock.Canvas.Font.Size * CorrectionToCanv) + YIndentText shl 1 + ActionSize.Height,
+               BaseBlock.Canvas, TIfBranching.TrueCond);
+
+      DrawText(SVG,
+               Blocks[1].XLast - GetAvailablePartWidth(
+               Blocks[1].XLast - Blocks[1].XStart, FalseSize.Height) shr 1 -
+               FalseSize.Width shr 1,
+               YStart + Round(BaseBlock.Canvas.Font.Size * CorrectionToCanv) + YIndentText shl 1 + ActionSize.Height,
+               BaseBlock.Canvas, TIfBranching.FalseCond);
+
+      DrawBlock(SVG, Blocks[0]);
+      DrawBlock(SVG, Blocks[1]);
+    end;
+  end;
+
+  procedure DrawCaseBranching(const SVG: TStringList; const ACaseBranching: TCaseBranching);
+  var
+    I: Integer;
+    YTriangleHeight : Integer;
+    LeftTriangleWidth : Integer;
+    PartLeftTriangleWidth : Integer;
+  begin
+    with ACaseBranching do
+    begin
+
+      // Calculate the height of a triangle
+      YTriangleHeight:= YStart + ActionSize.Height + YIndentText shl 1;
+
+      // Drawing the main block
+      DrawRectangle(SVG, BaseBlock.XStart, BaseBlock.XLast,
+                    YStart, YLast, BaseBlock.Canvas.Pen);
+
+      // Drawing a triangle
+      DrawInvertedTriangle(SVG, BaseBlock.XStart, Blocks[High(Blocks)].XStart,
+                           BaseBlock.XLast, YStart, YTriangleHeight, BaseBlock.Canvas.Pen);
+
+      // Draw a line that connects the vertex of the triangle and
+      // the lower base of the operator
+      DrawLine(SVG, Blocks[High(Blocks)].XStart,
+               Blocks[High(Blocks)].XStart, YTriangleHeight, YLast, BaseBlock.Canvas.Pen);
+
+      { Draw the lines that connect the side of the triangle to the side of the block }
+
+      // Calculate the width to the left of the vertex of the triangle
+      LeftTriangleWidth:= 0;
+      for I := 0 to High(Blocks) - 1 do
+        Inc(LeftTriangleWidth, Blocks[I].XLast - Blocks[I].XStart);
+
+      // Find the Y coordinate for each block
+      PartLeftTriangleWidth:= LeftTriangleWidth;
+      for I := 0 to High(Blocks) - 2 do
+      begin
+        Dec(PartLeftTriangleWidth, Blocks[I].XLast - Blocks[I].XStart);
+
+        DrawLine(SVG, Blocks[I].XLast, Blocks[I].XLast,
+            YTriangleHeight - (YTriangleHeight - YStart) *
+            PartLeftTriangleWidth div LeftTriangleWidth,
+            YLast, BaseBlock.Canvas.Pen);
+      end;
+
+      { End }
+
+      // Drawing the action
+      DrawText(SVG,
+              BaseBlock.XStart
+              +
+              LeftTriangleWidth * (ActionSize.Height +  YIndentText) div (YTriangleHeight - YStart)
+              +
+              (BaseBlock.XLast - BaseBlock.XStart) * YIndentText div (YTriangleHeight - YStart) shr 1
+              -
+              ActionSize.Width shr 1
+              ,
+              YStart + Round(BaseBlock.Canvas.Font.Size * CorrectionToCanv) + YIndentText, BaseBlock.Canvas, Action);
+
+      // Drawing the conditions
+      Inc(YTriangleHeight, YIndentText);
+      for I := 0 to High(Conds) do
+        DrawText(SVG,
+                Blocks[I].XStart + ((Blocks[I].XLast - Blocks[I].XStart) shr 1)
+                - (CondsSizes[I].Width shr 1),
+                YTriangleHeight, BaseBlock.Canvas, Conds[I]);
+
+      for I := 0 to High(Blocks) do
+        DrawBlock(SVG, Blocks[I]);
+    end;
+  end;
+
+  procedure DrawFirstLoop(const SVG: TStringList; const AFirstLoop: TFirstLoop);
+  begin
+    with AFirstLoop do
+    begin
+      DrawUnfinishedVertRectForLoop(SVG, BaseBlock.XStart, BaseBlock.XLast, YStart,
+                         YLast, GetYBottom, BaseBlock.Canvas.Pen);
+
+      DrawUnfinishedHorRectForLoop(SVG, BaseBlock.XStart, Blocks[0].XStart,
+                         BaseBlock.XLast, YStart, YLast, BaseBlock.Canvas.Pen);
+
+      DrawText(SVG,
+               BaseBlock.XStart + ((BaseBlock.XLast - BaseBlock.XStart) shr 1)
+               - (ActionSize.Width shr 1),
+               YStart + Round(BaseBlock.Canvas.Font.Size * CorrectionToCanv) + YIndentText,
+               BaseBlock.Canvas, Action);
+
+      DrawBlock(SVG, Blocks[0]);
+    end;
+  end;
+
+  procedure DrawLastLoop(const SVG: TStringList; const ALastLoop: TLastLoop);
+  begin
+    with ALastLoop do
+    begin
+      DrawUnfinishedVertRectForLoop(SVG, BaseBlock.XStart, BaseBlock.XLast, YLast,
+                         GetYBottom, YStart, BaseBlock.Canvas.Pen);
+
+      DrawUnfinishedHorRectForLoop(SVG, BaseBlock.XStart, Blocks[0].XStart,
+                         BaseBlock.XLast, YLast, YStart, BaseBlock.Canvas.Pen);
+
+      DrawText(SVG,
+               BaseBlock.XStart + ((BaseBlock.XLast - BaseBlock.XStart) shr 1)
+               - (ActionSize.Width shr 1),
+               GetBlockYBottom + Round(BaseBlock.Canvas.Font.Size * CorrectionToCanv) + YIndentText,
+               BaseBlock.Canvas, Action);
+
+      DrawBlock(SVG, Blocks[0]);
+    end;
+  end;
+
+  procedure DrawBlock(const SVG: TStringList; const ABlock: TBlock);
+  var
+    I: Integer;
+  begin
+    for I := 0 to ABlock.Statements.Count - 1 do
+      case ABlock.Statements[I].GetSerialNumber of
+        0: DrawProcess(SVG, TProcessStatement(ABlock.Statements[I]));
+        1: DrawIfBranching(SVG, TIfBranching(ABlock.Statements[I]));
+        2: DrawCaseBranching(SVG, TCaseBranching(ABlock.Statements[I]));
+        3: DrawFirstLoop(SVG, TFirstLoop(ABlock.Statements[I]));
+        4: DrawLastLoop(SVG, TLastLoop(ABlock.Statements[I]));
+      end;
+  end;
+
+  procedure SaveSVGFile(const ABlockManager: TBlockManager; const AFileName: string);
+  var
+    SVG: TStringList;
+    PrevHeight, PrevWidth: Integer;
+  begin
+    PrevHeight := ABlockManager.Font.Height;
+    PrevWidth := ABlockManager.Pen.Width;
+
+    ABlockManager.Font.Height := ABlockManager.FontHeightWithoutScale;
+    ABlockManager.Pen.Width := ABlockManager.PenWidthWithoutScale;
+
+    ABlockManager.MainBlock.SetStartIndent(SchemeIndent);
+    ABlockManager.RedefineMainBlock;
+    ABlockManager.PaintBox.Canvas.Font.Size := Round(CorrectionToSvg * ABlockManager.Font.Size);
+
+    SVG := TStringList.Create;
+    try
+      SetSVGOpenTag(SVG, ABlockManager.MainBlock.XLast + SchemeIndent,
+                    ABlockManager.MainBlock.Statements[ABlockManager.MainBlock.
+                    Statements.Count - 1].GetYBottom + SchemeIndent);
+
+      DrawBlock(SVG, ABlockManager.MainBlock);
+
+      SVG.Add('</svg>');
+
+      TFile.WriteAllText(AFileName, SVG.Text, TEncoding.UTF8);
+    finally
+      SVG.Destroy;
+    end;
+
+    ABlockManager.Pen.Width := PrevWidth;
+    ABlockManager.Font.Height := PrevHeight;
+    ABlockManager.MainBlock.SetStartIndent(Round(SchemeIndent * ABlockManager.ZoomFactor));
+    ABlockManager.RedefineMainBlock;
+  end;
+
+end.

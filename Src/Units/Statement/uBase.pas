@@ -238,6 +238,7 @@ type
   var
     DefaultStatement: TStatementClass = nil;
     DefaultAction : string;
+    isHighlightDefaultBlocks: boolean = true;
   function isDefaultStatement(const AStatement: TStatement): Boolean;
 
 implementation
