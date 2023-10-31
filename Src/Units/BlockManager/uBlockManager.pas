@@ -45,7 +45,7 @@ type
     FUndoStack, FRedoStack: TAutoClearStack<ICommand>;
 
     FZoomFactor : Real;
-    FPenWidthWithoutScale, FFontHeightWithoutScale : Integer;
+    FPenWidthWithoutZoom, FFontHeightWithoutZoom : Integer;
     FPen: TPen;
     FFont: TFont;
 
@@ -60,7 +60,7 @@ type
     procedure SetPathToFile(const APath: string);
   public
     constructor Create(const APaintBox: TPaintBox; const ASchemeName: string);
-    destructor Destroy;
+    destructor Destroy; override;
     property SchemeName: string read FSchemeName write FSchemeName;
     property MainBlock: TBlock read FMainBlock write ChangeMainBlock;
 
@@ -71,9 +71,9 @@ type
     procedure RecoverAfterZoom;
 
     property ZoomFactor: Real read FZoomFactor write FZoomFactor;
-    property PenWidthWithoutScale: Integer read FPenWidthWithoutScale  write FPenWidthWithoutScale;
+    property PenWidthWithoutZoom: Integer read FPenWidthWithoutZoom write FPenWidthWithoutZoom;
     procedure SetPenWidth; inline;
-    property FontHeightWithoutScale: Integer read FFontHeightWithoutScale write FFontHeightWithoutScale;
+    property FontHeightWithoutZoom: Integer read FFontHeightWithoutZoom write FFontHeightWithoutZoom;
     procedure SetFontHeight; inline;
     property Font: TFont read FFont;
     property Pen: TPen read FPen;
@@ -142,14 +142,14 @@ implementation
 
   procedure TBlockManager.SetFontHeight;
   begin
-    FFont.Height := Round(FFontHeightWithoutScale * FZoomFactor);
+    FFont.Height := Round(FFontHeightWithoutZoom * FZoomFactor);
     if FFont.Height = 0 then
       FFont.Height := 1;
   end;
 
   procedure TBlockManager.SetPenWidth;
   begin
-    FPen.Width := Round(FPenWidthWithoutScale * FZoomFactor);
+    FPen.Width := Round(FPenWidthWithoutZoom * FZoomFactor);
     if FPen.Width = 0 then
       FPen.Width := 1;
   end;
@@ -202,8 +202,8 @@ implementation
     FPen.Style := SchemeInitialPenStyle;
     FPen.Mode := SchemeInitialPenMode;
 
-    FPenWidthWithoutScale := FPen.Width;
-    FFontHeightWithoutScale := FFont.Height;
+    FPenWidthWithoutZoom := FPen.Width;
+    FFontHeightWithoutZoom := FFont.Height;
 
     FPaintBox.Canvas.Font := FFont;
     FPaintBox.Canvas.Pen := FPen;

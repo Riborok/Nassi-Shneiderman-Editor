@@ -888,7 +888,7 @@ implementation
     StartTime: TDateTime;
   begin
     StartTime := Now;
-    FBlockManagers[FCurrPos].Font.Height := FBlockManagers[FCurrPos].FontHeightWithoutScale;
+    FBlockManagers[FCurrPos].Font.Height := FBlockManagers[FCurrPos].FontHeightWithoutZoom;
 
     // Initialize the font dialog with the current font settings
     FontDialog.Font := FBlockManagers[FCurrPos].Font;
@@ -898,7 +898,7 @@ implementation
     begin
       // Update the font settings in the block manager with the selected font
       FBlockManagers[FCurrPos].Font.Assign(FontDialog.Font);
-      FBlockManagers[FCurrPos].FontHeightWithoutScale := FontDialog.Font.Height;
+      FBlockManagers[FCurrPos].FontHeightWithoutZoom := FontDialog.Font.Height;
 
       FBlockManagers[FCurrPos].SetFontHeight;
 
@@ -919,7 +919,7 @@ implementation
     StartTime: TDateTime;
   begin
     StartTime := Now;
-    FBlockManagers[FCurrPos].Pen.Width := FBlockManagers[FCurrPos].PenWidthWithoutScale;
+    FBlockManagers[FCurrPos].Pen.Width := FBlockManagers[FCurrPos].PenWidthWithoutZoom;
 
     // Initialize the pen dialog with the current pen settings
     FPenDialog.Pen := FBlockManagers[FCurrPos].Pen;
@@ -927,7 +927,7 @@ implementation
     // Prompt the user to select new pen settings using the pen dialog
     if FPenDialog.Execute then
     begin
-      FBlockManagers[FCurrPos].PenWidthWithoutScale := FBlockManagers[FCurrPos].Pen.Width;
+      FBlockManagers[FCurrPos].PenWidthWithoutZoom := FBlockManagers[FCurrPos].Pen.Width;
 
       FBlockManagers[FCurrPos].SetPenWidth;
 

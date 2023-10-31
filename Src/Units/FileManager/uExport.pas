@@ -4,7 +4,7 @@ interface
 uses
   uBlockManager, Vcl.Graphics, Vcl.ExtCtrls, uAdditionalTypes, uConstants, PNGImage,
   System.SysUtils, Classes, uBase, uCaseBranching, uFirstLoop, uIfBranching, uLastLoop,
-  uProcessStatement, System.UITypes, System.IOUtils, System.Types;
+  uProcessStatement, System.UITypes, System.IOUtils, System.Types, uScaleControlUtils;
 
 procedure SaveBMPFile(const ABlockManager: TBlockManager; const AFileName: string);
 procedure SavePNGFile(const ABlockManager: TBlockManager; const AFileName: string);
@@ -37,16 +37,10 @@ implementation
     PrevHeight, PrevWidth: Integer;
     prevFlagValue: boolean;
   begin
-    PrevHeight := ABlockManager.Font.Height;
-    PrevWidth := ABlockManager.Pen.Width;
-
-    ABlockManager.Font.Height := ABlockManager.FontHeightWithoutScale;
-    ABlockManager.Pen.Width := ABlockManager.PenWidthWithoutScale;
+    SetDefaultScale(ABlockManager, PrevHeight, PrevWidth);
 
     prevFlagValue := isHighlightDefaultBlocks;
     isHighlightDefaultBlocks := false;
-    ABlockManager.MainBlock.SetStartIndent(SchemeIndent);
-    ABlockManager.RedefineMainBlock;
 
     Bitmap := TBitmap.Create;
     try
@@ -61,14 +55,12 @@ implementation
       Bitmap.SaveToFile(AFileName);
     finally
       Bitmap.Destroy;
-    end;
 
-    ABlockManager.MainBlock.InstallCanvas(ABlockManager.PaintBox.Canvas);
-    ABlockManager.Pen.Width := PrevWidth;
-    ABlockManager.Font.Height := PrevHeight;
-    isHighlightDefaultBlocks := prevFlagValue;
-    ABlockManager.MainBlock.SetStartIndent(Round(SchemeIndent * ABlockManager.ZoomFactor));
-    ABlockManager.RedefineMainBlock;
+      ABlockManager.MainBlock.InstallCanvas(ABlockManager.PaintBox.Canvas);
+
+      RestorePreviousScale(ABlockManager, PrevHeight, PrevWidth);
+      isHighlightDefaultBlocks := prevFlagValue;
+    end;
   end;
 
   procedure SavePNGFile(const ABlockManager: TBlockManager; const AFileName: string);
@@ -79,16 +71,10 @@ implementation
     PrevHeight, PrevWidth: Integer;
     prevFlagValue: boolean;
   begin
-    PrevHeight := ABlockManager.Font.Height;
-    PrevWidth := ABlockManager.Pen.Width;
-
-    ABlockManager.Font.Height := ABlockManager.FontHeightWithoutScale;
-    ABlockManager.Pen.Width := ABlockManager.PenWidthWithoutScale;
+    SetDefaultScale(ABlockManager, PrevHeight, PrevWidth);
 
     prevFlagValue := isHighlightDefaultBlocks;
     isHighlightDefaultBlocks := false;
-    ABlockManager.MainBlock.SetStartIndent(SchemeIndent);
-    ABlockManager.RedefineMainBlock;
 
     Bitmap := TBitmap.Create;
     try
@@ -109,14 +95,12 @@ implementation
       end;
     finally
       Bitmap.Destroy;
-    end;
 
-    ABlockManager.MainBlock.InstallCanvas(ABlockManager.PaintBox.Canvas);
-    ABlockManager.Pen.Width := PrevWidth;
-    ABlockManager.Font.Height := PrevHeight;
-    isHighlightDefaultBlocks := prevFlagValue;
-    ABlockManager.MainBlock.SetStartIndent(Round(SchemeIndent * ABlockManager.ZoomFactor));
-    ABlockManager.RedefineMainBlock;
+      ABlockManager.MainBlock.InstallCanvas(ABlockManager.PaintBox.Canvas);
+
+      RestorePreviousScale(ABlockManager, PrevHeight, PrevWidth);
+      isHighlightDefaultBlocks := prevFlagValue;
+    end;
   end;
 
   { SVG }
@@ -377,22 +361,14 @@ implementation
     SVG: TStringList;
     PrevHeight, PrevWidth: Integer;
   begin
-    PrevHeight := ABlockManager.Font.Height;
-    PrevWidth := ABlockManager.Pen.Width;
-
-    ABlockManager.Font.Height := ABlockManager.FontHeightWithoutScale;
-    ABlockManager.Pen.Width := ABlockManager.PenWidthWithoutScale;
-
-    ABlockManager.MainBlock.SetStartIndent(SchemeIndent);
-    ABlockManager.RedefineMainBlock;
-    ABlockManager.PaintBox.Canvas.Font.Size := Round(CorrectionToSvg * ABlockManager.Font.Size);
-
+    SetDefaultScale(ABlockManager, PrevHeight, PrevWidth);
     SVG := TStringList.Create;
     try
       SetSVGOpenTag(SVG, ABlockManager.MainBlock.XLast + SchemeIndent,
                     ABlockManager.MainBlock.Statements[ABlockManager.MainBlock.
                     Statements.Count - 1].GetYBottom + SchemeIndent);
 
+      ABlockManager.PaintBox.Canvas.Font.Size := Round(CorrectionToSvg * ABlockManager.Font.Size);
       DrawBlock(SVG, ABlockManager.MainBlock);
 
       SVG.Add('</svg>');
@@ -400,12 +376,8 @@ implementation
       TFile.WriteAllText(AFileName, SVG.Text, TEncoding.UTF8);
     finally
       SVG.Destroy;
+      RestorePreviousScale(ABlockManager, PrevHeight, PrevWidth);
     end;
-
-    ABlockManager.Pen.Width := PrevWidth;
-    ABlockManager.Font.Height := PrevHeight;
-    ABlockManager.MainBlock.SetStartIndent(Round(SchemeIndent * ABlockManager.ZoomFactor));
-    ABlockManager.RedefineMainBlock;
   end;
 
 end.

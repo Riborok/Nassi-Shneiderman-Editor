@@ -1,0 +1,30 @@
+unit uScaleControlUtils;
+
+interface
+uses
+  uBlockManager, uConstants;
+
+procedure SetDefaultScale(const ABlockManager: TBlockManager; var PrevHeight, PrevWidth: Integer);
+procedure RestorePreviousScale(const ABlockManager: TBlockManager; PrevHeight, PrevWidth: Integer);
+
+implementation
+
+  procedure SetDefaultScale(const ABlockManager: TBlockManager; var PrevHeight, PrevWidth: Integer);
+  begin
+    PrevHeight := ABlockManager.Font.Height;
+    PrevWidth := ABlockManager.Pen.Width;
+
+    ABlockManager.Font.Height := ABlockManager.FontHeightWithoutZoom;
+    ABlockManager.Pen.Width := ABlockManager.PenWidthWithoutZoom;
+
+    ABlockManager.MainBlock.SetStartIndent(SchemeIndent);
+    ABlockManager.RedefineMainBlock;
+  end;
+  procedure RestorePreviousScale(const ABlockManager: TBlockManager; PrevHeight, PrevWidth: Integer);
+  begin
+    ABlockManager.Pen.Width := PrevWidth;
+    ABlockManager.Font.Height := PrevHeight;
+    ABlockManager.MainBlock.SetStartIndent(Round(SchemeIndent * ABlockManager.ZoomFactor));
+    ABlockManager.RedefineMainBlock;
+  end;
+end.

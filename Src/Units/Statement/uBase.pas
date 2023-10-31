@@ -187,7 +187,7 @@ type
     constructor Create(const AXStart: Integer; const ABaseOperator: TOperator); overload;
     constructor Create(const AXStart, AXLast: Integer; const ABaseOperator: TOperator;
                        const ACanvas: TCanvas); overload;
-    destructor Destroy;
+    destructor Destroy; override;
 
     property XStart: Integer read FXStart;
     property XLast: Integer read FXLast;

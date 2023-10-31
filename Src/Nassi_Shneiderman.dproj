@@ -157,6 +157,7 @@
         <DCCReference Include="Units\FileManager\uExport.pas"/>
         <DCCReference Include="Units\FileManager\uStatistics.pas"/>
         <DCCReference Include="Units\Support\uZoomAndPositionTransfer.pas"/>
+        <DCCReference Include="Units\BlockManager\uScaleControlUtils.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
@@ -187,6 +188,12 @@
             <Deployment Version="4">
                 <DeployFile LocalName="Win32\Debug\Nassi_Shneiderman.exe" Configuration="Debug" Class="ProjectOutput"/>
                 <DeployFile LocalName="Win32\Debug\Nassi_Shneiderman.exe" Configuration="Debug" Class="ProjectOutput">
+                    <Platform Name="Win32">
+                        <RemoteName>Nassi_Shneiderman.exe</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="Win32\Release\Nassi_Shneiderman.exe" Configuration="Release" Class="ProjectOutput">
                     <Platform Name="Win32">
                         <RemoteName>Nassi_Shneiderman.exe</RemoteName>
                         <Overwrite>true</Overwrite>

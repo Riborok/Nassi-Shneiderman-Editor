@@ -4,7 +4,7 @@ interface
 uses
   UBlockManager, uBase, System.JSON, System.Classes, uIfBranching, Vcl.Graphics,
   System.SysUtils, System.IOUtils, System.UITypes, uCaseBranching, uAdditionalTypes,
-  uStatementConverter, System.Generics.Collections, Vcl.Dialogs, uDialogMessages, uConstants;
+  uStatementConverter, System.Generics.Collections, Vcl.Dialogs, uDialogMessages, uConstants, uScaleControlUtils;
 
   procedure SaveSchema(const ABlockManager: TBlockManager);
   procedure LoadSchema(const ABlockManager: TBlockManager);
@@ -212,15 +212,7 @@ implementation
   begin
     if ABlockManager.PathToFile <> '' then
     begin
-      PrevHeight := ABlockManager.Font.Height;
-      PrevWidth := ABlockManager.Pen.Width;
-
-      ABlockManager.Font.Height := ABlockManager.FontHeightWithoutScale;
-      ABlockManager.Pen.Width := ABlockManager.PenWidthWithoutScale;
-
-      ABlockManager.MainBlock.SetStartIndent(SchemeIndent);
-      ABlockManager.RedefineMainBlock;
-
+      SetDefaultScale(ABlockManager, PrevHeight, PrevWidth);
       Json := TJSONObject.Create;
       try
         with Json do
@@ -237,12 +229,8 @@ implementation
         TFile.WriteAllText(ABlockManager.PathToFile, Json.ToJSON, TEncoding.UTF8);
       finally
         Json.Destroy;
+        RestorePreviousScale(ABlockManager, PrevHeight, PrevWidth);
       end;
-
-      ABlockManager.Pen.Width := PrevWidth;
-      ABlockManager.Font.Height := PrevHeight;
-      ABlockManager.MainBlock.SetStartIndent(Round(SchemeIndent * ABlockManager.ZoomFactor));
-      ABlockManager.RedefineMainBlock;
     end;
   end;
 
