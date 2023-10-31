@@ -25,7 +25,7 @@ implementation
   begin
     DrawRect(BaseBlock.XStart, BaseBlock.XLast, FYStart, FYLast, BaseBlock.Canvas);
 
-    if isDefaultStatement(self) then
+    if isDefaultStatement(self) and isHighlightDefaultBlocks then
       DrawRect (
         BaseBlock.XStart + (FXMinIndentText shr 1),
         BaseBlock.XLast - (FXMinIndentText shr 1),
