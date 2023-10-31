@@ -25,17 +25,17 @@ implementation
   begin
     DrawRect(BaseBlock.XStart, BaseBlock.XLast, FYStart, FYLast, BaseBlock.Canvas);
 
-    if not isDefaultStatement(self) then
-      DrawText(BaseBlock.Canvas, BaseBlock.XStart + ((BaseBlock.XLast - BaseBlock.XStart) shr 1)
-        - (FActionSize.Width shr 1), FYStart + FYIndentText, Action)
-    else if isHighlightDefaultBlocks then
+    if isDefaultStatement(self) then
       DrawRect (
-        BaseBlock.XStart + FXMinIndentText,
-        BaseBlock.XLast - FXMinIndentText,
-        FYStart + FYIndentText,
-        FYLast - FYIndentText,
+        BaseBlock.XStart + (FXMinIndentText shr 1),
+        BaseBlock.XLast - (FXMinIndentText shr 1),
+        FYStart + (FYIndentText shr 1),
+        FYLast - (FYIndentText shr 1),
         BaseBlock.Canvas
       );
+
+    DrawText(BaseBlock.Canvas, BaseBlock.XStart + ((BaseBlock.XLast - BaseBlock.XStart) shr 1)
+      - (FActionSize.Width shr 1), FYStart + FYIndentText, Action)
   end;
 
   function TProcessStatement.GetOptimalYLast: Integer;
