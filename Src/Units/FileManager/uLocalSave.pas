@@ -142,7 +142,7 @@ implementation
     if StatementIndex = 2 {2: TCaseBranching} then
     begin
       MyJSONArray := TJSONArray.Create;
-      var StringArr : TStringArr := TCaseBranching(CurrOperator).Conds;
+      var StringArr : TStringArr := TCaseBranching(AStatement).Conds;
       for I := 0 to High(StringArr) do
         MyJSONArray.Add(StringArr[I]);
       Result.AddPair('Conds', MyJSONArray);
